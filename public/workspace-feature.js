@@ -27,6 +27,23 @@ function initializeWorkspaceFeatures() {
 
   // Profile functions
   window.updateProfile = updateProfile;
+
+  // Form handlers
+  setupWorkspaceFormHandlers();
+}
+
+function setupWorkspaceFormHandlers() {
+  // Create workspace form
+  const createForm = document.getElementById('create-workspace-form');
+  if (createForm) {
+    createForm.addEventListener('submit', handleCreateWorkspace);
+  }
+
+  // Invite member form
+  const inviteForm = document.getElementById('invite-form');
+  if (inviteForm) {
+    inviteForm.addEventListener('submit', handleInviteMember);
+  }
 }
 
 async function loadCurrentUser() {
@@ -258,18 +275,58 @@ function switchSettingsTab(tabName) {
   if (selectedTab) selectedTab.classList.add('active');
 }
 
-function switchWorkspace() {
-  const select = document.getElementById('workspace-select');
-  if (!select) return;
+async function switchWorkspace(workspaceId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
 
-  const workspaceId = select.value;
-  // TODO: Implement workspace switching
-  showNotification('Workspace switching not yet implemented', 'info');
+    // If workspaceId is null, switch to personal account
+    if (!workspaceId) {
+      localStorage.removeItem('activeWorkspaceId');
+      currentWorkspace = null;
+      updateWorkspaceDisplay();
+      showNotification('Switched to personal account', 'success');
+      // Reload dashboard data
+      if (typeof loadExpenses === 'function') loadExpenses();
+      if (typeof loadBudgets === 'function') loadBudgets();
+      return;
+    }
+
+    // Switch to workspace
+    const response = await fetch(`/api/workspaces/${workspaceId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      currentWorkspace = data.workspace;
+      localStorage.setItem('activeWorkspaceId', workspaceId);
+      updateWorkspaceDisplay();
+      loadMembers();
+      showNotification(`Switched to workspace: ${currentWorkspace.name}`, 'success');
+
+      // Reload dashboard data with workspace context
+      if (typeof loadExpenses === 'function') loadExpenses();
+      if (typeof loadBudgets === 'function') loadBudgets();
+      if (typeof loadGoals === 'function') loadGoals();
+    } else {
+      showNotification(data.message || 'Failed to switch workspace', 'error');
+    }
+  } catch (error) {
+    console.error('Error switching workspace:', error);
+    showNotification('Error switching workspace', 'error');
+  }
 }
 
 function openCreateWorkspaceModal() {
-  // TODO: Implement create workspace modal
-  showNotification('Create workspace feature not yet implemented', 'info');
+  const modal = document.getElementById('workspace-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.getElementById('create-workspace-form').reset();
+  }
 }
 
 function openInviteModal() {
@@ -492,6 +549,109 @@ async function updateProfile() {
   } catch (error) {
     console.error('Error updating profile:', error);
     showNotification('Error updating profile', 'error');
+  }
+}
+
+// Form Handlers
+async function handleCreateWorkspace(e) {
+  e.preventDefault();
+
+  const name = document.getElementById('workspace-name-input').value.trim();
+  const description = document.getElementById('workspace-desc-input').value.trim();
+
+  if (!name) {
+    showNotification('Workspace name is required', 'error');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    const response = await fetch('/api/workspaces', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, description })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      showNotification('Workspace created successfully!', 'success');
+      closeWorkspaceModal();
+      // Reload workspaces and switch to the new one
+      if (typeof loadWorkspaces === 'function') {
+        loadWorkspaces();
+      }
+      switchWorkspace(data.workspace._id);
+    } else {
+      showNotification(data.message || 'Failed to create workspace', 'error');
+    }
+  } catch (error) {
+    console.error('Error creating workspace:', error);
+    showNotification('Error creating workspace', 'error');
+  }
+}
+
+async function handleInviteMember(e) {
+  e.preventDefault();
+
+  if (!currentWorkspace) {
+    showNotification('No workspace selected', 'error');
+    return;
+  }
+
+  const email = document.getElementById('invite-email-input').value.trim();
+  const role = document.getElementById('invite-role-select').value;
+
+  if (!email) {
+    showNotification('Email is required', 'error');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace._id}/invite`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, role })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      showNotification('Invitation sent successfully!', 'success');
+      closeInviteModal();
+      loadMembers(); // Refresh members list
+    } else {
+      showNotification(data.message || 'Failed to send invitation', 'error');
+    }
+  } catch (error) {
+    console.error('Error sending invitation:', error);
+    showNotification('Error sending invitation', 'error');
+  }
+}
+
+// Modal close functions
+function closeWorkspaceModal() {
+  const modal = document.getElementById('workspace-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+
+function closeInviteModal() {
+  const modal = document.getElementById('invite-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
   }
 }
 

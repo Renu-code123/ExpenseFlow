@@ -10,6 +10,14 @@ const workspaceSchema = new mongoose.Schema({
     permissions: [String],
     joinedAt: { type: Date, default: Date.now }
   }],
+  inviteTokens: [{
+    token: { type: String, required: true },
+    email: { type: String, required: true },
+    role: { type: String, enum: ['admin', 'manager', 'member'], default: 'member' },
+    invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    expiresAt: { type: Date, default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }, // 7 days
+    used: { type: Boolean, default: false }
+  }],
   settings: {
     currency: { type: String, default: 'USD' },
     approvalRequired: { type: Boolean, default: false },
