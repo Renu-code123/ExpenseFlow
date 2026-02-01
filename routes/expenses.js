@@ -1,5 +1,4 @@
 const express = require('express');
-const Joi = require('joi');
 const Expense = require('../models/Expense');
 const budgetService = require('../services/budgetService');
 const categorizationService = require('../services/categorizationService');
@@ -8,24 +7,14 @@ const currencyService = require('../services/currencyService');
 const aiService = require('../services/aiService');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { ExpenseSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const router = express.Router();
 
-const expenseSchema = Joi.object({
-  description: Joi.string().trim().max(100).required(),
-  amount: Joi.number().min(0.01).required(),
-  currency: Joi.string().uppercase().optional(),
-  category: Joi.string().valid('food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'other').required(),
-  type: Joi.string().valid('income', 'expense').required(),
-  merchant: Joi.string().trim().max(50).optional(),
-  date: Joi.date().optional(),
-  workspaceId: Joi.string().hex().length(24).optional()
-});
-
 // GET all expenses for authenticated user with pagination support
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, validateQuery(ExpenseSchemas.filter), async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 50;
     const skip = (page - 1) * limit;
 
     const user = await User.findById(req.user._id);
@@ -87,13 +76,10 @@ router.get('/', auth, async (req, res) => {
 });
 
 // POST new expense for authenticated user
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, validateRequest(ExpenseSchemas.create), async (req, res) => {
   try {
-    const { error, value } = expenseSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
     const user = await User.findById(req.user._id);
-    const expenseCurrency = value.currency || user.preferredCurrency;
+    const expenseCurrency = req.body.currency || user.preferredCurrency;
 
     // Validate currency
     if (!currencyService.isValidCurrency(expenseCurrency)) {
@@ -115,7 +101,7 @@ router.post('/', auth, async (req, res) => {
     if (expenseCurrency !== user.preferredCurrency) {
       try {
         const conversion = await currencyService.convertCurrency(
-          value.amount,
+          req.body.amount,
           expenseCurrency,
           user.preferredCurrency
         );

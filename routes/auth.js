@@ -1,6 +1,5 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const Joi = require('joi');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Session = require('../models/Session');
@@ -8,47 +7,23 @@ const AuditLog = require('../models/AuditLog');
 const emailService = require('../services/emailService');
 const securityMonitor = require('../services/securityMonitor');
 const SecurityService = require('../services/securityService');
-const { validateUser } = require('../middleware/sanitization');
 const auth = require('../middleware/auth');
+const { AuthSchemas, validateRequest } = require('../middleware/inputValidator');
 const router = express.Router();
 
 /**
- * Authentication Routes with 2FA Support
+ * Authentication Routes with 2FA Support & Enhanced Validation
  * Issue #338: Enterprise-Grade Audit Trail & TOTP Security Suite
+ * Issue #461: Missing Input Validation on User Data
  */
 
-const registerSchema = Joi.object({
-  name: Joi.string().trim().max(50).required(),
-  email: Joi.string().email().required(),
-  password: Joi.string()
-    .min(12)
-    .max(128)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .required()
-    .messages({
-      'string.min': 'Password must be at least 12 characters long',
-      'string.max': 'Password must not exceed 128 characters',
-      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)'
-    })
-});
-
-const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().required(),
-  totpToken: Joi.string().length(6).optional(),
-  rememberMe: Joi.boolean().optional()
-});
-
 // Register
-router.post('/register', validateUser, async (req, res) => {
+router.post('/register', validateRequest(AuthSchemas.register), async (req, res) => {
   try {
-    const { error, value } = registerSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    const existingUser = await User.findOne({ email: value.email });
+    const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) return res.status(400).json({ error: 'User already exists' });
 
-    const user = new User(value);
+    const user = new User(req.body);
     await user.save();
 
     // Generate JWT with unique ID for session tracking
@@ -89,15 +64,12 @@ router.post('/register', validateUser, async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', validateRequest(AuthSchemas.login), async (req, res) => {
   try {
-    const { error, value } = loginSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    const user = await User.findOne({ email: value.email });
+    const user = await User.findOne({ email: req.body.email });
     if (!user) {
       await securityMonitor.logSecurityEvent(req, 'failed_login', {
-        email: value.email,
+        email: req.body.email,
         reason: 'User not found'
       });
       return res.status(400).json({ error: 'Invalid credentials' });
@@ -116,7 +88,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const isMatch = await user.comparePassword(value.password);
+    const isMatch = await user.comparePassword(req.body.password);
     if (!isMatch) {
       await user.incrementFailedLogins();
       await AuditLog.logAuthEvent(user._id, 'login_failed', req, {
@@ -131,7 +103,7 @@ router.post('/login', async (req, res) => {
 
     // Check if 2FA is enabled
     if (user.twoFactorAuth?.enabled) {
-      if (!value.totpToken) {
+      if (!req.body.totpToken) {
         // Return indication that 2FA is required
         return res.status(200).json({
           requires2FA: true,
@@ -141,7 +113,7 @@ router.post('/login', async (req, res) => {
       }
 
       // Verify TOTP token
-      const verification = await SecurityService.verifyToken(user._id, value.totpToken, req);
+      const verification = await SecurityService.verifyToken(user._id, req.body.totpToken, req);
       if (!verification.valid) {
         return res.status(400).json({ error: 'Invalid 2FA code' });
       }
@@ -152,7 +124,7 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT with unique ID
     const jwtId = crypto.randomBytes(16).toString('hex');
-    const expiresIn = value.rememberMe ? '30d' : (process.env.JWT_EXPIRE || '24h');
+    const expiresIn = req.body.rememberMe ? '30d' : (process.env.JWT_EXPIRE || '24h');
     const token = jwt.sign(
       { id: user._id, jti: jwtId },
       process.env.JWT_SECRET,
@@ -162,7 +134,7 @@ router.post('/login', async (req, res) => {
     // Create session
     const session = await Session.createSession(user._id, jwtId, req, {
       loginMethod: 'password',
-      rememberMe: value.rememberMe || false,
+      rememberMe: req.body.rememberMe || false,
       totpVerified: user.twoFactorAuth?.enabled || false
     });
 

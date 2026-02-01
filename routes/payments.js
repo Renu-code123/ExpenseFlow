@@ -4,15 +4,8 @@ const Payment = require('../models/Payment');
 const PaymentService = require('../services/paymentService');
 const PDFService = require('../services/pdfService');
 const { authenticateToken } = require('../middleware/auth');
+const { PaymentSchemas, validateRequest, validateQuery, validateParams } = require('../middleware/inputValidator');
 const { body, param, query, validationResult } = require('express-validator');
-
-// Validation middleware
-const validatePayment = [
-    body('invoice').isMongoId().withMessage('Valid invoice ID is required'),
-    body('amount').isFloat({ min: 0.01 }).withMessage('Amount must be greater than 0'),
-    body('payment_method').isIn(['bank_transfer', 'paypal', 'stripe', 'cash', 'check', 'credit_card', 'debit_card', 'other'])
-        .withMessage('Invalid payment method')
-];
 
 // GET /api/payments - Get all payments for user
 router.get('/', authenticateToken, async (req, res) => {
@@ -151,13 +144,8 @@ router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // POST /api/payments - Create new payment
-router.post('/', authenticateToken, validatePayment, async (req, res) => {
+router.post('/', authenticateToken, validateRequest(PaymentSchemas.create), async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ success: false, errors: errors.array() });
-        }
-        
         const payment = await PaymentService.createPayment(req.user.userId, req.body);
         
         res.status(201).json({

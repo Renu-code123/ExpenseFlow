@@ -1,27 +1,14 @@
 const express = require('express');
-const Joi = require('joi');
 const auth = require('../middleware/auth');
 const Budget = require('../models/Budget');
 const budgetService = require('../services/budgetService');
+const { BudgetSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const router = express.Router();
 
-const budgetSchema = Joi.object({
-  name: Joi.string().trim().max(100).required(),
-  category: Joi.string().valid('food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'other', 'all').required(),
-  amount: Joi.number().min(0).required(),
-  period: Joi.string().valid('monthly', 'weekly', 'yearly').default('monthly'),
-  startDate: Joi.date().required(),
-  endDate: Joi.date().required(),
-  alertThreshold: Joi.number().min(0).max(100).default(80)
-});
-
 // Create budget
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, validateRequest(BudgetSchemas.create), async (req, res) => {
   try {
-    const { error, value } = budgetSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    const budget = new Budget({ ...value, user: req.user._id });
+    const budget = new Budget({ ...req.body, user: req.user._id });
     await budget.save();
 
     res.status(201).json(budget);
@@ -31,7 +18,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Get all budgets
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, validateQuery(BudgetSchemas.create), async (req, res) => {
   try {
     const { period, active } = req.query;
     const query = { user: req.user._id };
@@ -74,14 +61,11 @@ router.get('/alerts', auth, async (req, res) => {
 });
 
 // Update budget
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, validateRequest(BudgetSchemas.create), async (req, res) => {
   try {
-    const { error, value } = budgetSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
     const budget = await Budget.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
-      value,
+      req.body,
       { new: true }
     );
 
@@ -104,10 +88,9 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Create monthly budgets
-router.post('/monthly', auth, async (req, res) => {
+router.post('/monthly', auth, validateRequest(BudgetSchemas.monthly), async (req, res) => {
   try {
-    const budgetData = req.body; // { food: 10000, transport: 5000, ... }
-    const budgets = await budgetService.createMonthlyBudgets(req.user._id, budgetData);
+    const budgets = await budgetService.createMonthlyBudgets(req.user._id, req.body);
     res.status(201).json(budgets);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -115,13 +98,10 @@ router.post('/monthly', auth, async (req, res) => {
 });
 
 // Set monthly budget limit
-router.post('/monthly-limit', auth, async (req, res) => {
+router.post('/monthly-limit', auth, validateRequest(BudgetSchemas.limit), async (req, res) => {
   try {
     const { limit } = req.body;
-    if (typeof limit !== 'number' || limit < 0) {
-      return res.status(400).json({ error: 'Invalid budget limit' });
-    }
-
+    
     const User = require('../models/User');
     await User.findByIdAndUpdate(req.user._id, { monthlyBudgetLimit: limit });
 

@@ -1,30 +1,9 @@
 const express = require('express');
-const Joi = require('joi');
 const auth = require('../middleware/auth');
 const Goal = require('../models/Goal');
 const goalService = require('../services/goalService');
+const { GoalSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const router = express.Router();
-
-const goalValidationSchema = Joi.object({
-  title: Joi.string().trim().max(100).required(),
-  description: Joi.string().trim().max(500).optional(),
-  targetAmount: Joi.number().min(0.01).required(),
-  currentAmount: Joi.number().min(0).default(0),
-  goalType: Joi.string().valid('savings', 'expense_reduction', 'income_increase', 'debt_payoff', 'emergency_fund').required(),
-  category: Joi.string().valid('food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'other', 'general', 'travel', 'car', 'house', 'education').default('general'),
-  targetDate: Joi.date().required(),
-  priority: Joi.string().valid('low', 'medium', 'high', 'critical').default('medium'),
-  reminderFrequency: Joi.string().valid('daily', 'weekly', 'monthly', 'none').default('weekly'),
-  autoAllocate: Joi.boolean().default(false),
-  milestones: Joi.array().items(
-    Joi.object({
-      percentage: Joi.number().min(1).max(100).required(),
-      achieved: Joi.boolean().default(false),
-      achievedDate: Joi.date().optional()
-    })
-  ).optional(),
-  color: Joi.string().optional()
-});
 
 /**
  * @route   GET /api/goals
@@ -45,12 +24,9 @@ router.get('/', auth, async (req, res) => {
  * @desc    Create a new goal
  * @access  Private
  */
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, validateRequest(GoalSchemas.create), async (req, res) => {
   try {
-    const { error, value } = goalValidationSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    const goal = new Goal({ ...value, user: req.user._id });
+    const goal = new Goal({ ...req.body, user: req.user._id });
 
     // Add default milestones if not provided
     if (!goal.milestones || goal.milestones.length === 0) {

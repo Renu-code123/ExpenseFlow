@@ -17,7 +17,7 @@ const cors = require('cors');
 const socketAuth = require('./middleware/socketAuth');
 const CronJobs = require('./services/cronJobs');
 const { generalLimiter } = require('./middleware/rateLimiter');
-const { sanitizeInput, mongoSanitizeMiddleware } = require('./middleware/sanitization');
+const { sanitizeInput, sanitizationMiddleware, validateDataTypes } = require('./middleware/sanitizer');
 const securityMonitor = require('./services/securityMonitor');
 require('dotenv').config();
 
@@ -81,9 +81,10 @@ app.use(cors({
 // Rate limiting
 app.use(generalLimiter);
 
-// Input sanitization
-app.use(mongoSanitizeMiddleware);
-app.use(sanitizeInput);
+// Comprehensive input sanitization and validation middleware
+// Issue #461: Missing Input Validation on User Data
+app.use(sanitizationMiddleware);
+app.use(validateDataTypes);
 
 // Security monitoring
 app.use(securityMonitor.blockSuspiciousIPs());
