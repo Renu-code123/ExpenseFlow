@@ -610,6 +610,54 @@
         </div>
     </section>
 
+    <!-- Subscription Manager Section -->
+    <section id="subscriptions" class="subscriptions-section" style="display: none;">
+      <div class="section-header">
+        <h3><i class="fas fa-calendar-check"></i> Subscription Manager</h3>
+        <div class="subscription-actions">
+          <button id="add-subscription-btn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Subscription
+          </button>
+          <button id="detect-subscriptions-btn" class="btn btn-secondary">
+            <i class="fas fa-magic"></i> Detect Subscriptions
+          </button>
+          <button id="export-subscriptions-btn" class="btn btn-secondary">
+            <i class="fas fa-download"></i> Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Subscription Statistics -->
+      <div id="subscription-statistics" class="subscription-statistics">
+        <!-- Statistics will be rendered here by subscription-manager.js -->
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="subscription-filters">
+        <button class="subscription-filter active" data-filter="all">
+          <i class="fas fa-list"></i> All
+        </button>
+        <button class="subscription-filter" data-filter="active">
+          <i class="fas fa-check-circle"></i> Active
+        </button>
+        <button class="subscription-filter" data-filter="unused">
+          <i class="fas fa-ghost"></i> Ghost
+        </button>
+        <button class="subscription-filter" data-filter="upcoming">
+          <i class="fas fa-clock"></i> Upcoming
+        </button>
+      </div>
+
+      <!-- Subscriptions List -->
+      <div id="subscription-list" class="subscription-list">
+        <!-- Subscriptions will be rendered here by subscription-manager.js -->
+        <div class="loading-placeholder">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Loading subscriptions...</span>
+        </div>
+      </div>
+    </section>
+
     <!-- Goals Section -->
     <section id="goals" class="goals-section" style="display: none;">
       <div class="section-header">
@@ -1002,6 +1050,7 @@
   <script src="settings.js"></script>
   <script src="workspace-feature.js"></script>
   <script src="smart-triggers.js"></script>
+  <script src="subscription-manager.js"></script>
   <script src="index.js"> </script>
 
   </body >

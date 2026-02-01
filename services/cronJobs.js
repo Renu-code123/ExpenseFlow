@@ -10,6 +10,7 @@ const currencyService = require('../services/currencyService');
 const InvoiceService = require('../services/invoiceService');
 const ReminderService = require('../services/reminderService');
 const intelligenceService = require('../services/intelligenceService');
+const subscriptionService = require('../services/subscriptionService');
 
 class CronJobs {
   static init() {
@@ -137,6 +138,18 @@ class CronJobs {
     cron.schedule('0 * * * *', async () => {
       console.log('[CronJobs] Processing pending reminders...');
       await this.processPendingReminders();
+    });
+
+    // Send subscription renewal reminders - Daily at 8 AM
+    cron.schedule('0 8 * * *', async () => {
+      console.log('[CronJobs] Sending subscription renewal reminders...');
+      await this.sendSubscriptionReminders();
+    });
+
+    // Send trial ending reminders - Daily at 9 AM
+    cron.schedule('0 9 * * *', async () => {
+      console.log('[CronJobs] Sending trial ending reminders...');
+      await this.sendTrialReminders();
     });
 
     console.log('Cron jobs initialized successfully');
@@ -790,6 +803,24 @@ class CronJobs {
       console.log(`[CronJobs] Intelligence analysis complete: ${analyzed} users analyzed, ${alertsSent} alerts sent`);
     } catch (error) {
       console.error('[CronJobs] Intelligence analysis error:', error);
+    }
+  }
+
+  static async sendSubscriptionReminders() {
+    try {
+      const count = await subscriptionService.sendRenewalReminders();
+      console.log(`[CronJobs] Sent ${count} subscription renewal reminders`);
+    } catch (error) {
+      console.error('[CronJobs] Error sending subscription reminders:', error);
+    }
+  }
+
+  static async sendTrialReminders() {
+    try {
+      const count = await subscriptionService.sendTrialReminders();
+      console.log(`[CronJobs] Sent ${count} trial ending reminders`);
+    } catch (error) {
+      console.error('[CronJobs] Error sending trial reminders:', error);
     }
   }
 }

@@ -254,6 +254,7 @@ app.use('/api/bills', protect, require('./routes/bills'));
 app.use('/api/calendar', protect, require('./routes/calendar'));
 app.use('/api/reminders', protect, require('./routes/reminders'));
 app.use('/api/audit', protect, require('./routes/audit'));
+app.use('/api/subscriptions', protect, require('./routes/subscriptions'));
 
 // Root route to serve the UI
 app.get('/', (req, res) => {
