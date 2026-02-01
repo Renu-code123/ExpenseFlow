@@ -3,10 +3,11 @@ const auth = require('../middleware/auth');
 const Budget = require('../models/Budget');
 const budgetService = require('../services/budgetService');
 const { BudgetSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
+const { budgetLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 // Create budget
-router.post('/', auth, validateRequest(BudgetSchemas.create), async (req, res) => {
+router.post('/', auth, budgetLimiter, validateRequest(BudgetSchemas.create), async (req, res) => {
   try {
     const budget = new Budget({ ...req.body, user: req.user._id });
     await budget.save();

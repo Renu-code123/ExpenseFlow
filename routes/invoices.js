@@ -6,6 +6,7 @@ const PDFService = require('../services/pdfService');
 const ReminderService = require('../services/reminderService');
 const { authenticateToken } = require('../middleware/auth');
 const { InvoiceSchemas, validateRequest, validateQuery, validateParams } = require('../middleware/inputValidator');
+const { invoiceLimiter, invoicePaymentLimiter, exportLimiter, reportLimiter } = require('../middleware/rateLimiter');
 const { body, param, query, validationResult } = require('express-validator');
 
 // GET /api/invoices - Get all invoices for user
@@ -157,7 +158,7 @@ router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // POST /api/invoices - Create new invoice
-router.post('/', authenticateToken, validateRequest(InvoiceSchemas.create), async (req, res) => {
+router.post('/', authenticateToken, invoiceLimiter, validateRequest(InvoiceSchemas.create), async (req, res) => {
     try {
         const invoice = await InvoiceService.createInvoice(req.user.userId, req.body);
         

@@ -3,6 +3,7 @@ const auth = require('../middleware/auth');
 const Goal = require('../models/Goal');
 const goalService = require('../services/goalService');
 const { GoalSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
+const { goalLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 /**
@@ -24,7 +25,7 @@ router.get('/', auth, async (req, res) => {
  * @desc    Create a new goal
  * @access  Private
  */
-router.post('/', auth, validateRequest(GoalSchemas.create), async (req, res) => {
+router.post('/', auth, goalLimiter, validateRequest(GoalSchemas.create), async (req, res) => {
   try {
     const goal = new Goal({ ...req.body, user: req.user._id });
 

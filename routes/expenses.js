@@ -8,6 +8,7 @@ const aiService = require('../services/aiService');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { ExpenseSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
+const { expenseLimiter, exportLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 // GET all expenses for authenticated user with pagination support
@@ -76,7 +77,7 @@ router.get('/', auth, validateQuery(ExpenseSchemas.filter), async (req, res) => 
 });
 
 // POST new expense for authenticated user
-router.post('/', auth, validateRequest(ExpenseSchemas.create), async (req, res) => {
+router.post('/', auth, expenseLimiter, validateRequest(ExpenseSchemas.create), async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     const expenseCurrency = req.body.currency || user.preferredCurrency;

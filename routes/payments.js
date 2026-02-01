@@ -5,6 +5,7 @@ const PaymentService = require('../services/paymentService');
 const PDFService = require('../services/pdfService');
 const { authenticateToken } = require('../middleware/auth');
 const { PaymentSchemas, validateRequest, validateQuery, validateParams } = require('../middleware/inputValidator');
+const { paymentLimiter, invoicePaymentLimiter } = require('../middleware/rateLimiter');
 const { body, param, query, validationResult } = require('express-validator');
 
 // GET /api/payments - Get all payments for user
@@ -144,7 +145,7 @@ router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // POST /api/payments - Create new payment
-router.post('/', authenticateToken, validateRequest(PaymentSchemas.create), async (req, res) => {
+router.post('/', authenticateToken, paymentLimiter, validateRequest(PaymentSchemas.create), async (req, res) => {
     try {
         const payment = await PaymentService.createPayment(req.user.userId, req.body);
         

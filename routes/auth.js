@@ -9,16 +9,24 @@ const securityMonitor = require('../services/securityMonitor');
 const SecurityService = require('../services/securityService');
 const auth = require('../middleware/auth');
 const { AuthSchemas, validateRequest } = require('../middleware/inputValidator');
+const { 
+  loginLimiter, 
+  registerLimiter, 
+  passwordResetLimiter, 
+  emailVerifyLimiter,
+  totpVerifyLimiter 
+} = require('../middleware/rateLimiter');
 const router = express.Router();
 
 /**
- * Authentication Routes with 2FA Support & Enhanced Validation
+ * Authentication Routes with 2FA Support & Enhanced Validation & Rate Limiting
  * Issue #338: Enterprise-Grade Audit Trail & TOTP Security Suite
  * Issue #461: Missing Input Validation on User Data
+ * Issue #460: Rate Limiting for Critical Endpoints
  */
 
 // Register
-router.post('/register', validateRequest(AuthSchemas.register), async (req, res) => {
+router.post('/register', registerLimiter, validateRequest(AuthSchemas.register), async (req, res) => {
   try {
     const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) return res.status(400).json({ error: 'User already exists' });
@@ -64,7 +72,7 @@ router.post('/register', validateRequest(AuthSchemas.register), async (req, res)
 });
 
 // Login
-router.post('/login', validateRequest(AuthSchemas.login), async (req, res) => {
+router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
