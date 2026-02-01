@@ -1389,7 +1389,333 @@ IntelligenceDashboard.prototype.loadCachedForecast = async function() {
   return null;
 };
 
+// ========================
+// Financial Health Score & Wellness (Issue #481)
+// ========================
+
+class WellnessWidget {
+  constructor() {
+    this.healthScore = null;
+    this.insights = [];
+    this.activeInsights = [];
+  }
+
+  async init() {
+    await this.loadHealthScore();
+    await this.loadInsights();
+    this.renderHealthGauge();
+    this.renderInsights();
+    this.bindInsightActions();
+  }
+
+  async loadHealthScore() {
+    try {
+      const response = await fetch('/api/analytics/wellness/health-score', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        this.healthScore = data.data;
+        return this.healthScore;
+      }
+    } catch (error) {
+      console.error('Error loading health score:', error);
+    }
+    return null;
+  }
+
+  async loadInsights() {
+    try {
+      const response = await fetch('/api/analytics/wellness/insights?limit=10', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        this.activeInsights = data.data.insights;
+        return this.activeInsights;
+      }
+    } catch (error) {
+      console.error('Error loading insights:', error);
+    }
+    return [];
+  }
+
+  renderHealthGauge() {
+    if (!this.healthScore) return;
+
+    const container = document.getElementById('health-gauge-container');
+    if (!container) return;
+
+    const { score, grade, status, color, trend, scoreChange, components, strengths, weaknesses } = this.healthScore;
+
+    container.innerHTML = `
+      <div class="health-gauge-widget">
+        <div class="health-gauge-header">
+          <h3>Financial Health Score</h3>
+          <span class="health-trend health-trend-${trend}">
+            ${trend === 'improving' ? '📈' : trend === 'declining' ? '📉' : '➡️'}
+            ${Math.abs(scoreChange)} points
+          </span>
+        </div>
+        
+        <div class="health-gauge">
+          <svg viewBox="0 0 200 120" class="gauge-svg">
+            <defs>
+              <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#ff855e;stop-opacity:1" />
+                <stop offset="33%" style="stop-color:#ffc107;stop-opacity:1" />
+                <stop offset="66%" style="stop-color:#4facfe;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#00b75e;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2a3e" stroke-width="20" stroke-linecap="round"/>
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGradient)" stroke-width="20" 
+                  stroke-linecap="round" stroke-dasharray="${score * 2.51} 251" />
+            <text x="100" y="80" text-anchor="middle" class="gauge-score" fill="${color}">${score}</text>
+            <text x="100" y="105" text-anchor="middle" class="gauge-grade" fill="#888">${grade} - ${status}</text>
+          </svg>
+        </div>
+
+        <div class="health-components">
+          <div class="component-section">
+            <h4>💪 Strengths</h4>
+            ${strengths.map(s => `
+              <div class="component-item strength">
+                <span class="component-label">${s.label}</span>
+                <span class="component-score">${s.score}</span>
+              </div>
+            `).join('')}
+          </div>
+          
+          ${weaknesses.length > 0 ? `
+            <div class="component-section">
+              <h4>⚠️ Areas to Improve</h4>
+              ${weaknesses.map(w => `
+                <div class="component-item weakness">
+                  <span class="component-label">${w.label}</span>
+                  <span class="component-score">${w.score}</span>
+                  <span class="priority-badge priority-${w.priority}">${w.priority}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="health-actions">
+          <button class="btn btn-primary" onclick="wellnessWidget.refreshScore()">
+            <i class="fas fa-sync-alt"></i> Refresh Score
+          </button>
+          <button class="btn btn-secondary" onclick="wellnessWidget.viewDetails()">
+            <i class="fas fa-chart-line"></i> View Details
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  renderInsights() {
+    const container = document.getElementById('smart-insights-container');
+    if (!container || !this.activeInsights) return;
+
+    if (this.activeInsights.length === 0) {
+      container.innerHTML = `
+        <div class="insights-empty">
+          <i class="fas fa-lightbulb" style="font-size: 3rem; color: #888; margin-bottom: 1rem;"></i>
+          <p>No insights yet. Keep tracking your expenses!</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="smart-insights">
+        <div class="insights-header">
+          <h3>💡 Smart Insights</h3>
+          <button class="btn btn-sm" onclick="wellnessWidget.loadInsights().then(() => wellnessWidget.renderInsights())">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+        </div>
+        <div class="insights-list">
+          ${this.activeInsights.map(insight => this.renderInsightCard(insight)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  renderInsightCard(insight) {
+    const priorityIcons = {
+      critical: '🚨',
+      high: '⚠️',
+      medium: '⚡',
+      low: 'ℹ️',
+      info: '💡'
+    };
+
+    const icon = priorityIcons[insight.priority] || '💡';
+
+    return `
+      <div class="insight-card insight-${insight.priority}" data-insight-id="${insight._id}">
+        <div class="insight-header">
+          <span class="insight-icon">${icon}</span>
+          <div class="insight-title-section">
+            <h4>${insight.title}</h4>
+            <span class="insight-type">${insight.type.replace(/_/g, ' ')}</span>
+          </div>
+          <span class="insight-confidence">${insight.confidence}% confident</span>
+        </div>
+        
+        <p class="insight-message">${insight.message}</p>
+        
+        ${insight.metrics ? `
+          <div class="insight-metrics">
+            ${insight.metrics.current_velocity ? `<span>📊 Velocity: ₹${insight.metrics.current_velocity}/day</span>` : ''}
+            ${insight.metrics.budget_utilization ? `<span>📈 Budget: ${insight.metrics.budget_utilization}%</span>` : ''}
+            ${insight.metrics.days_until_budget_exhausted ? `<span>⏰ ${insight.metrics.days_until_budget_exhausted} days left</span>` : ''}
+            ${insight.metrics.potential_savings ? `<span>💰 Save: ₹${insight.metrics.potential_savings}</span>` : ''}
+          </div>
+        ` : ''}
+        
+        ${insight.actions && insight.actions.length > 0 ? `
+          <div class="insight-actions">
+            ${insight.actions.map((action, idx) => `
+              <button class="btn btn-sm btn-action" onclick="wellnessWidget.executeAction('${insight._id}', ${idx})">
+                ${action.label}
+              </button>
+            `).join('')}
+          </div>
+        ` : ''}
+        
+        <div class="insight-footer">
+          <span class="insight-age">${this.getRelativeTime(insight.createdAt)}</span>
+          <div class="insight-controls">
+            <button class="btn-text" onclick="wellnessWidget.acknowledgeInsight('${insight._id}')">Acknowledge</button>
+            <button class="btn-text" onclick="wellnessWidget.dismissInsight('${insight._id}')">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  getRelativeTime(date) {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
+
+  async acknowledgeInsight(insightId) {
+    try {
+      const response = await fetch(`/api/analytics/wellness/insights/${insightId}/acknowledge`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (response.ok) {
+        await this.loadInsights();
+        this.renderInsights();
+        this.showToast('Insight acknowledged', 'success');
+      }
+    } catch (error) {
+      console.error('Error acknowledging insight:', error);
+      this.showToast('Failed to acknowledge insight', 'error');
+    }
+  }
+
+  async dismissInsight(insightId) {
+    try {
+      const response = await fetch(`/api/analytics/wellness/insights/${insightId}/dismiss`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (response.ok) {
+        await this.loadInsights();
+        this.renderInsights();
+        this.showToast('Insight dismissed', 'success');
+      }
+    } catch (error) {
+      console.error('Error dismissing insight:', error);
+      this.showToast('Failed to dismiss insight', 'error');
+    }
+  }
+
+  async refreshScore() {
+    const btn = event.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
+    
+    await this.loadHealthScore();
+    this.renderHealthGauge();
+    
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Score';
+    this.showToast('Health score updated!', 'success');
+  }
+
+  viewDetails() {
+    // Show detailed breakdown modal
+    if (this.healthScore && this.healthScore.components) {
+      alert('Detailed component breakdown:\n\n' + 
+        Object.entries(this.healthScore.components)
+          .map(([key, val]) => `${key}: ${val.score}/100`)
+          .join('\n'));
+    }
+  }
+
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
+  }
+
+  bindInsightActions() {
+    // Socket listener for real-time health score updates
+    if (typeof io !== 'undefined' && socket) {
+      socket.on('health_score_update', (data) => {
+        this.healthScore.score = data.score;
+        this.healthScore.grade = data.grade;
+        this.healthScore.scoreChange = data.change;
+        this.healthScore.trend = data.trend;
+        this.renderHealthGauge();
+        this.showToast(`Health score updated: ${data.score} (${data.change > 0 ? '+' : ''}${data.change})`, 
+          data.trend === 'improving' ? 'success' : data.trend === 'declining' ? 'warning' : 'info');
+      });
+    }
+  }
+
+  async executeAction(insightId, actionIndex) {
+    const insight = this.activeInsights.find(i => i._id === insightId);
+    if (!insight || !insight.actions[actionIndex]) return;
+
+    const action = insight.actions[actionIndex];
+    // Handle action based on type
+    this.showToast(`Action "${action.label}" executed`, 'info');
+    await this.acknowledgeInsight(insightId);
+  }
+}
+
+// Initialize wellness widget if containers exist
+let wellnessWidget;
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('health-gauge-container') || document.getElementById('smart-insights-container')) {
+    wellnessWidget = new WellnessWidget();
+    wellnessWidget.init();
+  }
+});
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = IntelligenceDashboard;
+  module.exports.WellnessWidget = WellnessWidget;
 }

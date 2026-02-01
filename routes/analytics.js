@@ -1315,4 +1315,183 @@ router.get('/forecast/complete', auth, async (req, res) => {
   }
 });
 
+// ========================
+// FINANCIAL WELLNESS & HEALTH SCORE ROUTES (Issue #481)
+// ========================
+
+const wellnessService = require('../services/wellnessService');
+const analysisEngine = require('../services/analysisEngine');
+const Insight = require('../models/Insight');
+
+/**
+ * GET /api/analytics/wellness/health-score
+ * Get comprehensive financial health score
+ */
+router.get('/wellness/health-score', auth, async (req, res) => {
+  try {
+    const timeWindow = parseInt(req.query.timeWindow) || 30;
+    const healthScore = await wellnessService.calculateHealthScore(req.user.id, { timeWindow });
+
+    res.json({
+      success: true,
+      data: healthScore
+    });
+  } catch (error) {
+    console.error('Health score calculation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to calculate health score'
+    });
+  }
+});
+
+/**
+ * GET /api/analytics/wellness/insights
+ * Get active financial insights and recommendations
+ */
+router.get('/wellness/insights', auth, async (req, res) => {
+  try {
+    const priority = req.query.priority;
+    const type = req.query.type;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const insights = await Insight.getActiveInsights(req.user.id, {
+      priority,
+      type,
+      limit
+    });
+
+    const statistics = await Insight.getStatistics(req.user.id);
+
+    res.json({
+      success: true,
+      data: {
+        insights,
+        statistics,
+        count: insights.length
+      }
+    });
+  } catch (error) {
+    console.error('Insights fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch insights'
+    });
+  }
+});
+
+/**
+ * POST /api/analytics/wellness/analyze
+ * Run comprehensive financial analysis
+ */
+router.post('/wellness/analyze', auth, async (req, res) => {
+  try {
+    const analysis = await analysisEngine.runComprehensiveAnalysis(req.user.id);
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+  } catch (error) {
+    console.error('Analysis error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to run analysis'
+    });
+  }
+});
+
+/**
+ * POST /api/analytics/wellness/insights/:id/acknowledge
+ * Acknowledge an insight
+ */
+router.post('/wellness/insights/:id/acknowledge', auth, async (req, res) => {
+  try {
+    const insight = await Insight.findOne({ 
+      _id: req.params.id, 
+      user: req.user.id 
+    });
+
+    if (!insight) {
+      return res.status(404).json({
+        success: false,
+        message: 'Insight not found'
+      });
+    }
+
+    await insight.acknowledge();
+
+    res.json({
+      success: true,
+      message: 'Insight acknowledged',
+      data: insight
+    });
+  } catch (error) {
+    console.error('Acknowledge insight error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to acknowledge insight'
+    });
+  }
+});
+
+/**
+ * POST /api/analytics/wellness/insights/:id/dismiss
+ * Dismiss an insight
+ */
+router.post('/wellness/insights/:id/dismiss', auth, async (req, res) => {
+  try {
+    const insight = await Insight.findOne({ 
+      _id: req.params.id, 
+      user: req.user.id 
+    });
+
+    if (!insight) {
+      return res.status(404).json({
+        success: false,
+        message: 'Insight not found'
+      });
+    }
+
+    await insight.dismiss();
+
+    res.json({
+      success: true,
+      message: 'Insight dismissed',
+      data: insight
+    });
+  } catch (error) {
+    console.error('Dismiss insight error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to dismiss insight'
+    });
+  }
+});
+
+/**
+ * GET /api/analytics/wellness/velocity/:category
+ * Get spending velocity analysis for specific category
+ */
+router.get('/wellness/velocity/:category', auth, async (req, res) => {
+  try {
+    const timeWindow = parseInt(req.query.timeWindow) || 7;
+    const velocity = await analysisEngine.analyzeSpendingVelocity(req.user.id, {
+      category: req.params.category,
+      timeWindow
+    });
+
+    res.json({
+      success: true,
+      data: velocity
+    });
+  } catch (error) {
+    console.error('Velocity analysis error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to analyze velocity'
+    });
+  }
+});
+
 module.exports = router;

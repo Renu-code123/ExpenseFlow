@@ -10,6 +10,9 @@ const currencyService = require('../services/currencyService');
 const InvoiceService = require('../services/invoiceService');
 const ReminderService = require('../services/reminderService');
 const intelligenceService = require('../services/intelligenceService');
+const subscriptionService = require('../services/subscriptionService');
+const wellnessService = require('../services/wellnessService');
+const analysisEngine = require('../services/analysisEngine');
 
 class CronJobs {
   static init() {
@@ -137,6 +140,30 @@ class CronJobs {
     cron.schedule('0 * * * *', async () => {
       console.log('[CronJobs] Processing pending reminders...');
       await this.processPendingReminders();
+    });
+
+    // Send subscription renewal reminders - Daily at 8 AM
+    cron.schedule('0 8 * * *', async () => {
+      console.log('[CronJobs] Sending subscription renewal reminders...');
+      await this.sendSubscriptionReminders();
+    });
+
+    // Send trial ending reminders - Daily at 9 AM
+    cron.schedule('0 9 * * *', async () => {
+      console.log('[CronJobs] Sending trial ending reminders...');
+      await this.sendTrialReminders();
+    });
+
+    // Financial wellness deep scan - Weekly on Sunday at 2 AM (Issue #481)
+    cron.schedule('0 2 * * 0', async () => {
+      console.log('[CronJobs] Running weekly financial wellness scan...');
+      await this.runWeeklyWellnessScan();
+    });
+
+    // Daily smart insights generation - Every day at 7 AM (Issue #481)
+    cron.schedule('0 7 * * *', async () => {
+      console.log('[CronJobs] Generating daily smart insights...');
+      await this.generateDailyInsights();
     });
 
     console.log('Cron jobs initialized successfully');
@@ -790,6 +817,85 @@ class CronJobs {
       console.log(`[CronJobs] Intelligence analysis complete: ${analyzed} users analyzed, ${alertsSent} alerts sent`);
     } catch (error) {
       console.error('[CronJobs] Intelligence analysis error:', error);
+    }
+  }
+
+  static async sendSubscriptionReminders() {
+    try {
+      const count = await subscriptionService.sendRenewalReminders();
+      console.log(`[CronJobs] Sent ${count} subscription renewal reminders`);
+    } catch (error) {
+      console.error('[CronJobs] Error sending subscription reminders:', error);
+    }
+  }
+
+  static async sendTrialReminders() {
+    try {
+      const count = await subscriptionService.sendTrialReminders();
+      console.log(`[CronJobs] Sent ${count} trial ending reminders`);
+    } catch (error) {
+      console.error('[CronJobs] Error sending trial reminders:', error);
+    }
+  }
+
+  static async runWeeklyWellnessScan() {
+    try {
+      console.log('[CronJobs] Starting weekly wellness scan...');
+      const User = require('../models/User');
+      const users = await User.find({});
+      
+      let scanned = 0;
+      let scoresGenerated = 0;
+      
+      for (const user of users) {
+        try {
+          // Calculate health score
+          const healthScore = await wellnessService.calculateHealthScore(user._id, { timeWindow: 30 });
+          
+          // Run comprehensive analysis
+          await analysisEngine.runComprehensiveAnalysis(user._id);
+          
+          scoresGenerated++;
+          scanned++;
+        } catch (userError) {
+          console.error(`[CronJobs] Wellness scan error for user ${user._id}:`, userError);
+        }
+      }
+      
+      console.log(`[CronJobs] Weekly wellness scan complete: ${scanned} users scanned, ${scoresGenerated} scores generated`);
+    } catch (error) {
+      console.error('[CronJobs] Weekly wellness scan error:', error);
+    }
+  }
+
+  static async generateDailyInsights() {
+    try {
+      console.log('[CronJobs] Generating daily insights...');
+      const User = require('../models/User');
+      const users = await User.find({});
+      
+      let processed = 0;
+      let insightsGenerated = 0;
+      
+      for (const user of users) {
+        try {
+          // Analyze spending velocity
+          const velocityResult = await analysisEngine.analyzeSpendingVelocity(user._id, { timeWindow: 7 });
+          insightsGenerated += velocityResult.insights?.length || 0;
+          
+          // Analyze budget predictions
+          const budgetResult = await analysisEngine.analyzeBudgetPredictions(user._id);
+          insightsGenerated += budgetResult.insights?.length || 0;
+          
+          processed++;
+        } catch (userError) {
+          console.error(`[CronJobs] Insight generation error for user ${user._id}:`, userError);
+        }
+      }
+      
+      console.log(`[CronJobs] Daily insights complete: ${processed} users processed, ${insightsGenerated} insights generated`);
+    } catch (error) {
+      console.error('[CronJobs] Daily insights error:', error);
     }
   }
 }

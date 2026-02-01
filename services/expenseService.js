@@ -86,7 +86,30 @@ class ExpenseService {
             }
         });
 
-        // 8. Emit WebSocket
+        // 8. Trigger Wellness Score Recalculation (async, non-blocking) - Issue #481
+        setImmediate(async () => {
+            try {
+                const wellnessService = require('./wellnessService');
+                const healthScore = await wellnessService.calculateHealthScore(userId, { timeWindow: 30 });
+                
+                // Emit health score update to client if score changed significantly
+                if (io && healthScore.previousScore) {
+                    const scoreDiff = Math.abs(healthScore.score - healthScore.previousScore);
+                    if (scoreDiff >= 5) {
+                        io.to(`user_${userId}`).emit('health_score_update', {
+                            score: healthScore.score,
+                            grade: healthScore.grade,
+                            change: healthScore.scoreChange,
+                            trend: healthScore.trend
+                        });
+                    }
+                }
+            } catch (wellnessError) {
+                console.error('[ExpenseService] Wellness calculation error:', wellnessError);
+            }
+        });
+
+        // 9. Emit WebSocket
         if (io) {
             const socketData = expense.toObject();
             socketData.displayAmount = finalData.convertedAmount || expense.amount;
