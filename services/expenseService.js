@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const Policy = require('../models/Policy');
 const ruleEngine = require('./ruleEngine');
 const User = require('../models/User');
 const currencyService = require('./currencyService');
@@ -47,44 +48,77 @@ class ExpenseService {
 
         // 5. Handle Approvals
         if (finalData.workspace) {
+        // 4. Check governance policies
+        if (finalData.workspace) {
+            const policies = await Policy.find({
+                workspaceId: finalData.workspace,
+                isActive: true,
+                deletedAt: null
+            }).sort({ priority: -1 });
+
+            const transaction = {
+                amount: finalData.amount,
+                category: finalData.category,
+                resourceType: 'expense',
+                requesterRole: user.role,
+                department: modifiedData.department || 'default'
+            };
+
+            let violations = [];
+            let requiresApproval = false;
+
+            for (const policy of policies) {
+                if (policy.matchesTransaction(transaction)) {
+                    violations.push({
+                        policyId: policy._id,
+                        policyName: policy.name,
+                        riskScore: policy.riskScore,
+                        approvalChain: policy.getApprovalChain()
+                    });
+                    requiresApproval = true;
+                }
+            }
+
+            if (requiresApproval) {
+                finalData.approvalStatus = 'pending_approval';
+                finalData.requiresApproval = true;
+                finalData.policyFlags = violations;
+                finalData.fundHeld = true;
+
+                // Create approval chain from first policy
+                if (violations[0]) {
+                    const approvalChain = violations[0].approvalChain;
+                    finalData.approvals = approvalChain.map(stage => ({
+                        stage: stage.stage,
+                        approverId: stage.specificApprovers?.[0],
+                        approverRole: stage.approverRole,
+                        status: 'pending'
+                    })).filter(a => a.approverId);
+                }
+            }
+        }
+
+        // 5. Save Expense
+        const expense = new Expense(finalData);
+        await expense.save();
+
+        // 6. Handle Approvals (fallback for non-workspace expenses)
+        if (finalData.workspace && !finalData.requiresApproval) {
             const requiresApproval = await approvalService.requiresApproval(finalData, finalData.workspace);
             if (requiresApproval) {
                 const workflow = await approvalService.submitForApproval(expense._id, userId);
-                expense.status = 'pending_approval';
+                expense.approvalStatus = 'pending_approval';
                 expense.approvalWorkflow = workflow._id;
                 await expense.save();
             }
         }
 
-        // 6. Budget Alerts & Goals
+        // 7. Budget Alerts & Goals
         const amountForBudget = finalData.convertedAmount || finalData.amount;
         if (finalData.type === 'expense') {
             await budgetService.checkBudgetAlerts(userId);
         }
         await budgetService.updateGoalProgress(userId, finalData.type === 'expense' ? -amountForBudget : amountForBudget, finalData.category);
-
-        // 7. Trigger Intelligence Analysis (async, non-blocking)
-        setImmediate(async () => {
-            try {
-                const burnRate = await intelligenceService.calculateBurnRate(userId, {
-                    categoryId: finalData.category,
-                    workspaceId: finalData.workspace
-                });
-                
-                // Emit burn rate update to client
-                if (io && burnRate.trend === 'increasing' && burnRate.trendPercentage > 15) {
-                    io.to(`user_${userId}`).emit('burn_rate_alert', {
-                        type: 'warning',
-                        category: finalData.category,
-                        burnRate: burnRate.dailyBurnRate,
-                        trend: burnRate.trend,
-                        trendPercentage: burnRate.trendPercentage
-                    });
-                }
-            } catch (intelligenceError) {
-                console.error('[ExpenseService] Intelligence analysis error:', intelligenceError);
-            }
-        });
 
         // 8. Emit WebSocket
         if (io) {
@@ -95,6 +129,16 @@ class ExpenseService {
         }
 
         return expense;
+    }
+
+    /**
+     * Get expenses by approval status
+     */
+    async getExpensesByStatus(workspaceId, status) {
+        return await Expense.find({
+            workspace: workspaceId,
+            approvalStatus: status
+        }).populate('createdBy', 'name email');
     }
 }
 

@@ -7821,3 +7821,203 @@ input:checked + .toggle-slider::before {
     padding: 1.5rem;
   }
 }
+
+/* ============================
+   GOVERNANCE & APPROVAL STYLES
+   ============================ */
+
+/* Policy Cards */
+.policy-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-left: 4px solid var(--accent-primary);
+  transition: transform 0.2s;
+}
+
+.policy-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.policy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.policy-header h5 {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.policy-desc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.policy-meta {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.policy-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Approval Cards */
+.approval-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-left: 4px solid var(--warning);
+}
+
+.approval-card h5 {
+  color: var(--text-primary);
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* Approval Status Badges */
+.approval-status.draft {
+  background: rgba(180, 180, 180, 0.2);
+  color: var(--text-secondary);
+}
+
+.approval-status.pending_approval {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  animation: pulse 2s infinite;
+}
+
+.approval-status.approved {
+  background: rgba(0, 230, 118, 0.2);
+  color: var(--success);
+}
+
+.approval-status.rejected {
+  background: rgba(255, 87, 34, 0.2);
+  color: var(--error);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Balance Display */
+.balance-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  padding: 15px;
+  background: var(--bg-glass);
+  border-radius: 12px;
+}
+
+.balance-display strong {
+  display: block;
+  font-size: 18px;
+  margin-top: 5px;
+  color: var(--accent-primary);
+}
+
+/* Policy Tabs */
+.policy-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--bg-glass);
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tab-button.active {
+  color: var(--accent-primary);
+  border-bottom: 2px solid var(--accent-primary);
+}
+
+.policy-tab {
+  display: none;
+}
+
+.policy-tab.active {
+  display: block;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.active {
+  background: rgba(0, 230, 118, 0.2);
+  color: var(--success);
+}
+
+.badge.inactive {
+  background: rgba(180, 180, 180, 0.2);
+  color: var(--text-secondary);
+}
+
+/* Expense List Indicators */
+.expense-item.pending_approval {
+  border-left: 4px solid #ffc107;
+  background: rgba(255, 193, 7, 0.05);
+}
+
+.expense-item.rejected {
+  border-left: 4px solid var(--error);
+  background: rgba(255, 87, 34, 0.05);
+  opacity: 0.7;
+}
+
+.expense-item.approved {
+  border-left: 4px solid var(--success);
+}
+
+/* Policy Flag Indicators */
+.policy-flag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff5722;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+/* Small Button Styles */
+.btn-small {
+  padding: 6px 12px;
+  font-size: 13px;
+}

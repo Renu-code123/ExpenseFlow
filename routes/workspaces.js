@@ -3,6 +3,7 @@ const Workspace = require('../models/Workspace');
 const WorkspaceInvite = require('../models/WorkspaceInvite');
 const User = require('../models/User');
 const collaborationService = require('../services/collaborationService');
+const workspaceService = require('../services/workspaceService');
 const inviteService = require('../services/inviteService');
 const auth = require('../middleware/auth');
 const { 
@@ -709,213 +710,186 @@ router.get('/:id/activity', auth, checkPermission('audit:view'), async (req, res
 });
 
 // ============================================
-// Collaboration Features (#471)
+// Governance & Policy Management
 // ============================================
 
-const workspaceService = require('../services/workspaceService');
-
 /**
- * Get workspace with collaboration state
- * GET /api/workspaces/:workspaceId/collaboration
+ * Create spending policy
+ * POST /api/workspaces/:workspaceId/policies
  */
-router.get('/:workspaceId/collaboration', auth, workspaceAccess, async (req, res) => {
+router.post('/:workspaceId/policies', auth, requireManager, async (req, res) => {
   try {
-    const workspace = await workspaceService.getWorkspaceWithCollaboration(
-      req.params.workspaceId,
-      req.user._id
-    );
-
-    res.json({
-      success: true,
-      data: {
-        id: workspace._id,
-        name: workspace.name,
-        activeUsers: workspace.activeUsers,
-        locks: workspace.locks.filter(l => l.expiresAt > new Date()),
-        discussions: workspace.discussions,
-        settings: workspace.collaborationSettings
-      }
+    const { workspaceId } = req.params;
+    const workspace = await Workspace.findById(workspaceId);
+    
+    if (!workspace) return res.status(404).json({ error: 'Workspace not found' });
+    
+    const { name, description, conditions, approvalChain, actions, riskScore } = req.body;
+    
+    if (!name) return res.status(400).json({ error: 'Policy name required' });
+    
+    const policy = await workspaceService.createPolicy(workspaceId, req.user._id, {
+      name,
+      description,
+      conditions,
+      approvalChain,
+      actions,
+      riskScore
     });
-  } catch (error) {
-    console.error('Get collaboration state error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Get collaboration statistics
- * GET /api/workspaces/:workspaceId/collaboration/stats
- */
-router.get('/:workspaceId/collaboration/stats', auth, workspaceAccess, async (req, res) => {
-  try {
-    const stats = await workspaceService.getCollaborationStats(req.params.workspaceId);
-    res.json({ success: true, data: stats });
-  } catch (error) {
-    console.error('Get collaboration stats error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Acquire lock on resource
- * POST /api/workspaces/:workspaceId/locks
- */
-router.post('/:workspaceId/locks', auth, workspaceAccess, async (req, res) => {
-  try {
-    const { resourceType, resourceId, lockDuration } = req.body;
-
-    if (!resourceType || !resourceId) {
-      return res.status(400).json({ error: 'Missing resourceType or resourceId' });
-    }
-
-    const result = await workspaceService.acquireLock(
-      req.params.workspaceId,
-      req.user._id,
-      resourceType,
-      resourceId,
-      lockDuration
-    );
-
-    res.json({ success: result.success, expiresAt: result.expiresAt, lockedBy: result.lockedBy });
-  } catch (error) {
-    console.error('Acquire lock error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Release lock on resource
- * DELETE /api/workspaces/:workspaceId/locks/:resourceType/:resourceId
- */
-router.delete('/:workspaceId/locks/:resourceType/:resourceId', auth, workspaceAccess, async (req, res) => {
-  try {
-    const result = await workspaceService.releaseLock(
-      req.params.workspaceId,
-      req.user._id,
-      req.params.resourceType,
-      req.params.resourceId
-    );
-
-    res.json(result);
-  } catch (error) {
-    console.error('Release lock error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Check lock status
- * GET /api/workspaces/:workspaceId/locks/:resourceType/:resourceId
- */
-router.get('/:workspaceId/locks/:resourceType/:resourceId', auth, workspaceAccess, async (req, res) => {
-  try {
-    const lockStatus = await workspaceService.checkLock(
-      req.params.workspaceId,
-      req.params.resourceType,
-      req.params.resourceId,
-      req.user._id
-    );
-
-    res.json({ success: true, ...lockStatus });
-  } catch (error) {
-    console.error('Check lock error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Get discussions
- * GET /api/workspaces/:workspaceId/discussions
- */
-router.get('/:workspaceId/discussions', auth, workspaceAccess, async (req, res) => {
-  try {
-    const { parentType, parentId } = req.query;
-    const discussions = await workspaceService.getDiscussions(
-      req.params.workspaceId,
-      parentType,
-      parentId
-    );
-
-    res.json({ success: true, data: discussions });
-  } catch (error) {
-    console.error('Get discussions error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Create discussion
- * POST /api/workspaces/:workspaceId/discussions
- */
-router.post('/:workspaceId/discussions', auth, workspaceAccess, async (req, res) => {
-  try {
-    const { parentType, parentId, title, initialMessage } = req.body;
-
-    if (!parentType || !title) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const discussion = await workspaceService.createDiscussion(
-      req.params.workspaceId,
-      req.user._id,
-      parentType,
-      parentId,
-      title,
-      initialMessage
-    );
-
-    res.status(201).json({ success: true, data: discussion });
-  } catch (error) {
-    console.error('Create discussion error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Add message to discussion
- * POST /api/workspaces/:workspaceId/discussions/:discussionId/messages
- */
-router.post('/:workspaceId/discussions/:discussionId/messages', auth, workspaceAccess, async (req, res) => {
-  try {
-    const { text, mentions } = req.body;
-
-    if (!text) {
-      return res.status(400).json({ error: 'Message text is required' });
-    }
-
-    const result = await workspaceService.addDiscussionMessage(
-      req.params.workspaceId,
-      req.user._id,
-      req.params.discussionId,
-      text,
-      mentions
-    );
-
-    res.status(201).json({ success: true, data: result.message });
-  } catch (error) {
-    console.error('Add discussion message error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Update collaboration settings
- * PUT /api/workspaces/:workspaceId/collaboration/settings
- */
-router.put('/:workspaceId/collaboration/settings', auth, requireManager, async (req, res) => {
-  try {
-    const workspace = await Workspace.findById(req.params.workspaceId);
-    if (!workspace) {
-      return res.status(404).json({ error: 'Workspace not found' });
-    }
-
-    Object.assign(workspace.collaborationSettings, req.body);
+    
+    workspace.logActivity('policy:created', req.user._id, { policyId: policy._id });
     await workspace.save();
-
-    res.json({ success: true, data: workspace.collaborationSettings });
+    
+    res.status(201).json({ success: true, data: policy });
   } catch (error) {
-    console.error('Update collaboration settings error:', error);
+    console.error('Create policy error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get workspace policies
+ * GET /api/workspaces/:workspaceId/policies
+ */
+router.get('/:workspaceId/policies', auth, workspaceAccess, async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const { resourceType, active } = req.query;
+    
+    const policies = await workspaceService.getPolicies(workspaceId, {
+      resourceType,
+      active: active === 'true'
+    });
+    
+    res.json({ success: true, data: policies });
+  } catch (error) {
+    console.error('Get policies error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Update policy
+ * PUT /api/workspaces/:workspaceId/policies/:policyId
+ */
+router.put('/:workspaceId/policies/:policyId', auth, requireManager, async (req, res) => {
+  try {
+    const { workspaceId, policyId } = req.params;
+    
+    const policy = await workspaceService.updatePolicy(
+      workspaceId,
+      policyId,
+      req.user._id,
+      req.body
+    );
+    
+    res.json({ success: true, data: policy });
+  } catch (error) {
+    console.error('Update policy error:', error);
+    res.status(error.message.includes('not found') ? 404 : 500)
+      .json({ error: error.message });
+  }
+});
+
+/**
+ * Delete policy
+ * DELETE /api/workspaces/:workspaceId/policies/:policyId
+ */
+router.delete('/:workspaceId/policies/:policyId', auth, requireManager, async (req, res) => {
+  try {
+    const { workspaceId, policyId } = req.params;
+    
+    await workspaceService.deletePolicy(workspaceId, policyId, req.user._id);
+    
+    res.json({ success: true, message: 'Policy deleted' });
+  } catch (error) {
+    console.error('Delete policy error:', error);
+    res.status(error.message.includes('not found') ? 404 : 500)
+      .json({ error: error.message });
+  }
+});
+
+/**
+ * Get workspace available balance
+ * GET /api/workspaces/:workspaceId/balance
+ */
+router.get('/:workspaceId/balance', auth, workspaceAccess, async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    
+    const balance = await workspaceService.calculateAvailableBalance(workspaceId);
+    
+    res.json({ success: true, data: balance });
+  } catch (error) {
+    console.error('Get balance error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get pending approvals
+ * GET /api/workspaces/:workspaceId/approvals/pending
+ */
+router.get('/:workspaceId/approvals/pending', auth, workspaceAccess, async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    
+    const pendingApprovals = await workspaceService.getPendingApprovals(workspaceId, req.user._id);
+    
+    res.json({ success: true, data: pendingApprovals });
+  } catch (error) {
+    console.error('Get pending approvals error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Approve expense
+ * POST /api/workspaces/:workspaceId/expenses/:expenseId/approve
+ */
+router.post('/:workspaceId/expenses/:expenseId/approve', auth, async (req, res) => {
+  try {
+    const { workspaceId, expenseId } = req.params;
+    const { notes } = req.body;
+    
+    const expense = await workspaceService.approveExpense(
+      workspaceId,
+      expenseId,
+      req.user._id,
+      notes
+    );
+    
+    res.json({ success: true, data: expense });
+  } catch (error) {
+    console.error('Approve expense error:', error);
+    res.status(error.message.includes('not found') ? 404 : 500)
+      .json({ error: error.message });
+  }
+});
+
+/**
+ * Reject expense
+ * POST /api/workspaces/:workspaceId/expenses/:expenseId/reject
+ */
+router.post('/:workspaceId/expenses/:expenseId/reject', auth, async (req, res) => {
+  try {
+    const { workspaceId, expenseId } = req.params;
+    const { reason } = req.body;
+    
+    if (!reason) return res.status(400).json({ error: 'Rejection reason required' });
+    
+    const expense = await workspaceService.rejectExpense(
+      workspaceId,
+      expenseId,
+      req.user._id,
+      reason
+    );
+    
+    res.json({ success: true, data: expense });
+  } catch (error) {
+    console.error('Reject expense error:', error);
+    res.status(error.message.includes('not found') ? 404 : 500)
+      .json({ error: error.message });
   }
 });
 

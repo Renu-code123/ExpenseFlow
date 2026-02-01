@@ -1,5 +1,6 @@
 const Workspace = require('../models/Workspace');
 const Expense = require('../models/Expense');
+const Policy = require('../models/Policy');
 const mongoose = require('mongoose');
 
 class WorkspaceService {
@@ -139,136 +140,170 @@ class WorkspaceService {
     }
 
     /**
-     * Get workspace with active collaboration state (#471)
+     * Create governance policy
      */
-    async getWorkspaceWithCollaboration(workspaceId, userId) {
-        const workspace = await Workspace.findById(workspaceId)
-            .populate('owner', 'name email avatar')
-            .populate('members.user', 'name email avatar')
-            .populate('activeUsers.user', 'name email avatar')
-            .populate('locks.lockedBy', 'name email')
-            .populate('discussions.messages.user', 'name email avatar');
-
-        if (!workspace) {
-            throw new Error('Workspace not found');
-        }
-
-        // Check user has access
-        const hasAccess = workspace.hasPermission(userId, 'expenses:view');
-        if (!hasAccess) {
-            throw new Error('Access denied');
-        }
-
-        // Filter expired locks and typing indicators
-        workspace.cleanExpiredLocks();
-        workspace.typingUsers = workspace.typingUsers.filter(t => t.expiresAt > new Date());
-
-        return workspace;
+    async createPolicy(workspaceId, userId, policyData) {
+        const policy = new Policy({
+            workspaceId,
+            createdBy: userId,
+            ...policyData
+        });
+        await policy.save();
+        return policy;
     }
 
     /**
-     * Acquire lock on resource (#471)
+     * Get workspace policies
      */
-    async acquireLock(workspaceId, userId, resourceType, resourceId, lockDuration = 300) {
+    async getPolicies(workspaceId, filters = {}) {
+        const query = { workspaceId, deletedAt: null };
+        if (filters.active === true) query.isActive = true;
+        if (filters.resourceType) query['conditions.resourceType'] = filters.resourceType;
+        
+        return await Policy.find(query).sort({ priority: -1 });
+    }
+
+    /**
+     * Update policy
+     */
+    async updatePolicy(workspaceId, policyId, userId, updateData) {
+        const policy = await Policy.findOne({ _id: policyId, workspaceId });
+        if (!policy) throw new Error('Policy not found');
+        
+        Object.assign(policy, updateData);
+        policy.updatedBy = userId;
+        policy.updatedAt = Date.now();
+        await policy.save();
+        return policy;
+    }
+
+    /**
+     * Delete policy (soft delete)
+     */
+    async deletePolicy(workspaceId, policyId, userId) {
+        const policy = await Policy.findOne({ _id: policyId, workspaceId });
+        if (!policy) throw new Error('Policy not found');
+        
+        policy.deletedAt = Date.now();
+        policy.deletedBy = userId;
+        await policy.save();
+        return policy;
+    }
+
+    /**
+     * Calculate workspace available balance (considering held funds)
+     */
+    async calculateAvailableBalance(workspaceId) {
         const workspace = await Workspace.findById(workspaceId);
         if (!workspace) throw new Error('Workspace not found');
 
-        const permission = `${resourceType}s:edit`;
-        const hasPermission = workspace.hasPermission(userId, permission);
-        if (!hasPermission) throw new Error('Permission denied');
+        // Get total expenses approved and available
+        const expenses = await Expense.aggregate([
+            { 
+                $match: { 
+                    workspace: new mongoose.Types.ObjectId(workspaceId),
+                    type: 'expense'
+                } 
+            },
+            {
+                $group: {
+                    _id: '$approvalStatus',
+                    total: { $sum: '$amount' }
+                }
+            }
+        ]);
 
-        const result = await workspace.acquireLock(resourceType, resourceId, userId, null, lockDuration);
-        return result;
-    }
+        const balanceBreakdown = {
+            total: workspace.budget || 0,
+            spent: 0,
+            pending: 0,
+            held: 0
+        };
 
-    /**
-     * Release lock on resource (#471)
-     */
-    async releaseLock(workspaceId, userId, resourceType, resourceId) {
-        const workspace = await Workspace.findById(workspaceId);
-        if (!workspace) throw new Error('Workspace not found');
-
-        await workspace.releaseLock(resourceType, resourceId, userId);
-        return { success: true };
-    }
-
-    /**
-     * Check if resource is locked (#471)
-     */
-    async checkLock(workspaceId, resourceType, resourceId, userId = null) {
-        const workspace = await Workspace.findById(workspaceId);
-        if (!workspace) throw new Error('Workspace not found');
-
-        const lockStatus = workspace.isLocked(resourceType, resourceId, userId);
-        return lockStatus;
-    }
-
-    /**
-     * Get discussions (#471)
-     */
-    async getDiscussions(workspaceId, parentType = null, parentId = null) {
-        const workspace = await Workspace.findById(workspaceId)
-            .populate('discussions.messages.user', 'name email avatar')
-            .populate('discussions.resolvedBy', 'name email');
-
-        if (!workspace) throw new Error('Workspace not found');
-
-        let discussions = workspace.discussions;
-        if (parentType) {
-            discussions = discussions.filter(d => d.parentType === parentType);
-            if (parentId) discussions = discussions.filter(d => d.parentId === parentId);
-        }
-
-        return discussions.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
-    }
-
-    /**
-     * Create discussion (#471)
-     */
-    async createDiscussion(workspaceId, userId, parentType, parentId, title, initialMessage) {
-        const workspace = await Workspace.findById(workspaceId);
-        if (!workspace) throw new Error('Workspace not found');
-        if (!workspace.collaborationSettings?.enableDiscussions) {
-            throw new Error('Discussions are disabled');
-        }
-
-        await workspace.createDiscussion(parentType, parentId, title, userId, initialMessage);
-        await workspace.populate('discussions.messages.user', 'name email avatar');
-
-        return workspace.discussions[workspace.discussions.length - 1];
-    }
-
-    /**
-     * Add message to discussion (#471)
-     */
-    async addDiscussionMessage(workspaceId, userId, discussionId, text, mentions = []) {
-        const workspace = await Workspace.findById(workspaceId);
-        if (!workspace) throw new Error('Workspace not found');
-
-        await workspace.addMessage(discussionId, userId, text, mentions);
-        await workspace.populate('discussions.messages.user', 'name email avatar');
-
-        const discussion = workspace.discussions.id(discussionId);
-        return { discussion, message: discussion.messages[discussion.messages.length - 1] };
-    }
-
-    /**
-     * Get collaboration statistics (#471)
-     */
-    async getCollaborationStats(workspaceId) {
-        const workspace = await Workspace.findById(workspaceId);
-        if (!workspace) throw new Error('Workspace not found');
-
-        const now = new Date();
-        const fiveMinutesAgo = new Date(now - 5 * 60 * 1000);
+        expenses.forEach(exp => {
+            if (exp._id === 'approved') balanceBreakdown.spent += exp.total;
+            if (exp._id === 'pending_approval') balanceBreakdown.pending += exp.total;
+            if (exp._id === 'draft') balanceBreakdown.held += exp.total;
+        });
 
         return {
-            activeUsers: workspace.activeUsers?.filter(u => u.lastSeen > fiveMinutesAgo).length || 0,
-            activeLocks: workspace.locks?.filter(l => l.expiresAt > now).length || 0,
-            totalDiscussions: workspace.discussions?.length || 0,
-            openDiscussions: workspace.discussions?.filter(d => d.status === 'open').length || 0,
-            settings: workspace.collaborationSettings || {}
+            ...balanceBreakdown,
+            available: balanceBreakdown.total - balanceBreakdown.spent
         };
+    }
+
+    /**
+     * Get pending approvals for workspace
+     */
+    async getPendingApprovals(workspaceId, userId) {
+        const expenses = await Expense.find({
+            workspace: workspaceId,
+            approvalStatus: 'pending_approval'
+        })
+        .populate('createdBy', 'name email')
+        .populate('policyFlags.policyId', 'name description')
+        .sort({ createdAt: -1 });
+
+        // Filter by user's approval responsibilities
+        return expenses.filter(exp => {
+            if (!exp.approvals) return false;
+            return exp.approvals.some(approval => 
+                approval.approverId.toString() === userId.toString() && 
+                approval.status === 'pending'
+            );
+        });
+    }
+
+    /**
+     * Approve expense
+     */
+    async approveExpense(workspaceId, expenseId, userId, notes = '') {
+        const expense = await Expense.findOne({ _id: expenseId, workspace: workspaceId });
+        if (!expense) throw new Error('Expense not found');
+        if (expense.approvalStatus === 'rejected') throw new Error('Cannot approve rejected expense');
+
+        // Find pending approval for this user
+        const approval = expense.approvals.find(a => a.approverId.toString() === userId.toString());
+        if (!approval) throw new Error('No approval required from this user');
+
+        approval.status = 'approved';
+        approval.approvedAt = Date.now();
+        approval.notes = notes;
+
+        // Check if all approvals complete
+        const allApproved = expense.approvals.every(a => a.status === 'approved');
+        if (allApproved) {
+            expense.approvalStatus = 'approved';
+            expense.approverId = userId;
+            expense.approvedAt = Date.now();
+            expense.fundHeld = false;
+        }
+
+        await expense.save();
+        return expense;
+    }
+
+    /**
+     * Reject expense
+     */
+    async rejectExpense(workspaceId, expenseId, userId, reason) {
+        const expense = await Expense.findOne({ _id: expenseId, workspace: workspaceId });
+        if (!expense) throw new Error('Expense not found');
+
+        // Find approval for this user
+        const approval = expense.approvals.find(a => a.approverId.toString() === userId.toString());
+        if (!approval) throw new Error('No approval required from this user');
+
+        approval.status = 'rejected';
+        approval.rejectionReason = reason;
+        approval.approvedAt = Date.now();
+
+        expense.approvalStatus = 'rejected';
+        expense.fundHeld = false;
+        expense.rejectionReason = reason;
+
+        await expense.save();
+        return expense;
     }
 }
 

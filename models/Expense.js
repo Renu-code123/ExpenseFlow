@@ -84,6 +84,68 @@ const expenseSchema = new mongoose.Schema({
   lastSyncedAt: {
     type: Date,
     default: Date.now
+  },
+  
+  // Approval workflow fields
+  approvalStatus: {
+    type: String,
+    enum: ['draft', 'pending_approval', 'approved', 'rejected'],
+    default: 'draft',
+    index: true
+  },
+  policyFlags: [{
+    policyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Policy'
+    },
+    policyName: String,
+    riskScore: Number,
+    flaggedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  requiresApproval: {
+    type: Boolean,
+    default: false
+  },
+  escalatedApproval: {
+    type: Boolean,
+    default: false
+  },
+  fundHeld: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  
+  // Approval chain
+  approvals: [{
+    stage: Number,
+    approverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    approverRole: String,
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    notes: String,
+    approvedAt: Date,
+    rejectionReason: String
+  }],
+  
+  approverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  approvedAt: Date,
+  rejectionReason: String,
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true
@@ -105,6 +167,9 @@ expenseSchema.index({ user: 1, type: 1, date: -1 });
 expenseSchema.index({ workspace: 1, type: 1, date: -1 });
 expenseSchema.index({ user: 1, category: 1, date: -1 });
 expenseSchema.index({ workspace: 1, category: 1, date: -1 });
+expenseSchema.index({ approvalStatus: 1, workspace: 1 });
+expenseSchema.index({ fundHeld: 1, workspace: 1 });
+expenseSchema.index({ createdBy: 1, approvalStatus: 1 });
 expenseSchema.index({ receiptId: 1 });
 expenseSchema.index({ source: 1, user: 1 });
 
