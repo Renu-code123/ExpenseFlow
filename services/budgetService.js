@@ -3,8 +3,8 @@
  * Handles budget operations with AI-driven self-healing capabilities
  */
 
-const Budget = require('../models/Budget');
-const Expense = require('../models/Expense');
+const budgetRepository = require('../repositories/budgetRepository');
+const expenseRepository = require('../repositories/expenseRepository');
 const budgetIntelligenceService = require('./budgetIntelligenceService');
 const intelligenceService = require('./intelligenceService');
 const mongoose = require('mongoose');
@@ -15,13 +15,13 @@ class BudgetService {
    */
   async checkBudgetAlerts(userId) {
     try {
-      const budgets = await Budget.find({ user: userId, isActive: true });
+      const budgets = await budgetRepository.findActiveByUser(userId);
       const alerts = [];
       const now = new Date();
 
       for (const budget of budgets) {
         const usagePercent = budget.usagePercent;
-        
+
         // Standard threshold alerts
         if (usagePercent >= 100) {
           alerts.push({
@@ -48,11 +48,11 @@ class BudgetService {
             message: `Budget "${budget.name}" is at ${Math.round(usagePercent)}% usage`
           });
         }
-        
+
         // Predictive burn rate alerts (Early Warning System)
         try {
           const exhaustionPrediction = await intelligenceService.predictBudgetExhaustion(userId, budget._id);
-          
+
           if (exhaustionPrediction.willExceedBudget && exhaustionPrediction.status !== 'safe') {
             alerts.push({
               type: 'predictive',
@@ -80,7 +80,7 @@ class BudgetService {
           const recentAnomalies = budget.intelligence.anomalies.filter(
             a => new Date(a.detectedAt) > new Date(now - 7 * 24 * 60 * 60 * 1000)
           );
-          
+
           if (recentAnomalies.length > 0) {
             alerts.push({
               type: 'anomaly',
@@ -98,7 +98,7 @@ class BudgetService {
         if (budget.intelligence.predictedSpend > budget.amount) {
           const predicted = budget.intelligence.predictedSpend;
           const confidence = budget.intelligence.predictionConfidence;
-          
+
           if (confidence >= 60) {
             alerts.push({
               type: 'prediction',
@@ -117,7 +117,7 @@ class BudgetService {
         const pendingReallocations = budget.intelligence.reallocations.filter(
           r => r.status === 'pending'
         );
-        
+
         if (pendingReallocations.length > 0) {
           alerts.push({
             type: 'reallocation',
@@ -148,7 +148,7 @@ class BudgetService {
   async updateGoalProgress(userId, amount, category) {
     try {
       // Find active budget for this category
-      const budget = await Budget.findOne({
+      const budget = await budgetRepository.findOne({
         user: userId,
         category,
         isActive: true
@@ -167,7 +167,7 @@ class BudgetService {
       budget.addSpendingRecord(amount, currentPeriod);
 
       // Trigger intelligence update
-      await budget.save();
+      await budgetRepository.updateById(budget._id, budget);
       await budgetIntelligenceService.processBudgetIntelligence(budget);
 
       // Analyze transaction for anomalies
@@ -217,11 +217,11 @@ class BudgetService {
    */
   async recalculateBudgets(userId) {
     try {
-      const budgets = await Budget.find({ user: userId, isActive: true });
+      const budgets = await budgetRepository.findActiveByUser(userId);
       const results = [];
 
       for (const budget of budgets) {
-        const spent = await Expense.aggregate([
+        const spent = await expenseRepository.aggregate([
           {
             $match: {
               user: new mongoose.Types.ObjectId(userId),
@@ -235,7 +235,7 @@ class BudgetService {
 
         budget.spent = spent[0]?.total || 0;
         budget.lastCalculated = new Date();
-        await budget.save();
+        await budgetRepository.updateById(budget._id, budget);
 
         results.push({
           category: budget.category,
@@ -265,7 +265,7 @@ class BudgetService {
    */
   async createBudget(userId, budgetData) {
     try {
-      const budget = new Budget({
+      const budget = await budgetRepository.create({
         user: userId,
         ...budgetData,
         originalAmount: budgetData.amount,
@@ -274,8 +274,6 @@ class BudgetService {
           healingThreshold: budgetData.healingThreshold || 2
         }
       });
-
-      await budget.save();
 
       // Sync historical data if available
       await budgetIntelligenceService.syncSpendingHistory(userId);
@@ -293,8 +291,10 @@ class BudgetService {
    */
   async getBudgetsWithIntelligence(userId) {
     try {
-      const budgets = await Budget.find({ user: userId, isActive: true })
-        .sort({ category: 1 });
+      const budgets = await budgetRepository.findAll(
+        { user: userId, isActive: true },
+        { sort: { category: 1 } }
+      );
 
       return budgets.map(budget => ({
         _id: budget._id,

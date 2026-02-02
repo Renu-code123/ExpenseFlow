@@ -1,12 +1,13 @@
 const express = require('express');
 const auth = require('../middleware/auth');
-const Goal = require('../models/Goal');
+const goalRepository = require('../repositories/goalRepository');
 const goalService = require('../services/goalService');
-const { GoalSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
-const { goalLimiter } = require('../middleware/rateLimiter');
 const ResponseFactory = require('../utils/ResponseFactory');
 const { asyncHandler } = require('../middleware/errorMiddleware');
+const { GoalSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
+const { goalLimiter } = require('../middleware/rateLimiter');
 const { NotFoundError, BadRequestError } = require('../utils/AppError');
+
 const router = express.Router();
 
 /**
@@ -15,7 +16,7 @@ const router = express.Router();
  * @access  Private
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
-  const goals = await Goal.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const goals = await goalRepository.findByUser(req.user._id, {}, { sort: { createdAt: -1 } });
   return ResponseFactory.success(res, goals);
 }));
 
@@ -25,11 +26,11 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  * @access  Private
  */
 router.post('/', auth, goalLimiter, validateRequest(GoalSchemas.create), asyncHandler(async (req, res) => {
-  const goal = new Goal({ ...req.body, user: req.user._id });
+  const data = { ...req.body, user: req.user._id };
 
   // Add default milestones if not provided
-  if (!goal.milestones || goal.milestones.length === 0) {
-    goal.milestones = [
+  if (!data.milestones || data.milestones.length === 0) {
+    data.milestones = [
       { percentage: 25 },
       { percentage: 50 },
       { percentage: 75 },
@@ -37,7 +38,7 @@ router.post('/', auth, goalLimiter, validateRequest(GoalSchemas.create), asyncHa
     ];
   }
 
-  await goal.save();
+  const goal = await goalRepository.create(data);
   return ResponseFactory.created(res, goal, 'Goal created successfully');
 }));
 
@@ -62,7 +63,7 @@ router.get('/analyze/impact', auth, asyncHandler(async (req, res) => {
  * @access  Private
  */
 router.get('/:id', auth, asyncHandler(async (req, res) => {
-  const goal = await Goal.findOne({ _id: req.params.id, user: req.user._id });
+  const goal = await goalRepository.findOne({ _id: req.params.id, user: req.user._id });
   if (!goal) throw new NotFoundError('Goal not found');
 
   const prediction = await goalService.predictCompletion(goal._id, req.user._id);
@@ -79,10 +80,9 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
  * @access  Private
  */
 router.put('/:id', auth, asyncHandler(async (req, res) => {
-  const goal = await Goal.findOneAndUpdate(
+  const goal = await goalRepository.updateOne(
     { _id: req.params.id, user: req.user._id },
-    req.body,
-    { new: true }
+    req.body
   );
 
   if (!goal) throw new NotFoundError('Goal not found');
@@ -95,7 +95,7 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
  * @access  Private
  */
 router.delete('/:id', auth, asyncHandler(async (req, res) => {
-  const goal = await Goal.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+  const goal = await goalRepository.deleteOne({ _id: req.params.id, user: req.user._id });
   if (!goal) throw new NotFoundError('Goal not found');
 
   return ResponseFactory.success(res, null, 'Goal deleted successfully');
@@ -108,21 +108,17 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
  */
 router.post('/:id/contribute', auth, asyncHandler(async (req, res) => {
   const { amount } = req.body;
-
   if (!amount || amount <= 0) {
     throw new BadRequestError('Valid amount is required');
   }
 
-  const goal = await Goal.findOne({ _id: req.params.id, user: req.user._id });
-  if (!goal) throw new NotFoundError('Goal not found');
-
-  goal.currentAmount += parseFloat(amount);
-  goal.contributions.push({
+  const goal = await goalRepository.addContribution(req.params.id, {
     amount: parseFloat(amount),
     date: new Date()
   });
 
-  await goal.save();
+  if (!goal) throw new NotFoundError('Goal not found');
+
   return ResponseFactory.success(res, goal, 'Contribution added successfully');
 }));
 

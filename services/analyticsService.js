@@ -1,5 +1,5 @@
-const Transaction = require('../models/Transaction');
-const Budget = require('../models/Budget');
+const expenseRepository = require('../repositories/expenseRepository');
+const budgetRepository = require('../repositories/budgetRepository');
 const AnalyticsCache = require('../models/AnalyticsCache');
 const mongoose = require('mongoose');
 
@@ -80,11 +80,11 @@ class AnalyticsService {
         startDate.setMonth(startDate.getMonth() - months);
 
         // Get all expenses grouped by category and date
-        const expenses = await Transaction.find({
+        const expenses = await expenseRepository.findAll({
             user: userId,
             type: 'expense',
             date: { $gte: startDate }
-        }).sort({ date: 1 });
+        }, { sort: { date: 1 } });
 
         // Group by category
         const categoryData = {};
@@ -206,7 +206,7 @@ class AnalyticsService {
         startDate.setMonth(startDate.getMonth() - months);
 
         // Get monthly spending by category
-        const monthlyData = await Transaction.aggregate([
+        const monthlyData = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -357,7 +357,7 @@ class AnalyticsService {
                 groupFormat = { $dateToString: { format: '%Y-%m', date: '$date' } };
         }
 
-        const trends = await Transaction.aggregate([
+        const trends = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -496,7 +496,7 @@ class AnalyticsService {
             matchQuery.date.$lte = new Date(endDate);
         }
 
-        const breakdown = await Transaction.aggregate([
+        const breakdown = await expenseRepository.aggregate([
             { $match: matchQuery },
             {
                 $group: {
@@ -550,7 +550,7 @@ class AnalyticsService {
         const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
 
         // Optimize: Use a single aggregation to get all monthly stats instead of multiple queries in a loop
-        const allStats = await Transaction.aggregate([
+        const allStats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -612,7 +612,7 @@ class AnalyticsService {
      * Get stats for a specific month
      */
     async getMonthStats(userId, startDate, endDate) {
-        const stats = await Transaction.aggregate([
+        const stats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -660,7 +660,7 @@ class AnalyticsService {
         // Get last 3 months of data using aggregation for better performance
         const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
 
-        const [aggregateData] = await Transaction.aggregate([
+        const [aggregateData] = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -785,14 +785,15 @@ class AnalyticsService {
 
         // Insight 4: Unusual expenses - fetch separately with limit to avoid fetching everything
         const avgExpense = totalExpense / expenseCount;
-        const unusualExpenses = await Transaction.find({
+        const unusualExpenses = await expenseRepository.findAll({
             user: userId,
             type: 'expense',
             date: { $gte: threeMonthsAgo },
             amount: { $gt: avgExpense * 3 }
-        })
-            .sort({ amount: -1 })
-            .limit(3);
+        }, {
+            sort: { amount: -1 },
+            limit: 3
+        });
 
         if (unusualExpenses.length > 0) {
             insights.push({
@@ -840,7 +841,7 @@ class AnalyticsService {
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-        const monthlyData = await Transaction.aggregate([
+        const monthlyData = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),

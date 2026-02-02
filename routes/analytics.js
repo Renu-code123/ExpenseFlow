@@ -7,11 +7,14 @@ const gamificationService = require('../services/scoreService');
 const discoveryService = require('../services/discoveryService');
 const forecastingService = require('../services/forecastingService');
 const intelligenceService = require('../services/intelligenceService');
-const analyticsService = require('../services/analyticsService');
+const budgetRepository = require('../repositories/budgetRepository');
+const expenseRepository = require('../repositories/expenseRepository');
+const userRepository = require('../repositories/userRepository');
 const DataWarehouse = require('../models/DataWarehouse');
 const CustomDashboard = require('../models/CustomDashboard');
 const FinancialHealthScore = require('../models/FinancialHealthScore');
-const Budget = require('../models/Budget');
+const ResponseFactory = require('../utils/ResponseFactory');
+const { asyncHandler } = require('../middleware/errorMiddleware');
 
 // ========================
 // SUBSCRIPTION DETECTION & RUNWAY ROUTES (Issue #444)
@@ -440,7 +443,7 @@ router.get('/trends', auth, async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(timeRange));
 
-    const expenses = await Expense.aggregate([
+    const expenses = await expenseRepository.aggregate([
       {
         $match: {
           userId: userId,
@@ -478,7 +481,7 @@ router.get('/categories', auth, async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(timeRange));
 
-    const categoryData = await Expense.aggregate([
+    const categoryData = await expenseRepository.aggregate([
       {
         $match: {
           userId: userId,
@@ -522,7 +525,7 @@ router.get('/merchants', auth, async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(timeRange));
 
-    const merchants = await Expense.aggregate([
+    const merchants = await expenseRepository.aggregate([
       {
         $match: {
           userId: userId,
@@ -561,7 +564,7 @@ router.get('/income-expense', auth, async (req, res) => {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - parseInt(months));
 
-    const monthlyData = await Expense.aggregate([
+    const monthlyData = await expenseRepository.aggregate([
       {
         $match: {
           userId: userId,
@@ -609,7 +612,7 @@ router.get('/report/:type', auth, async (req, res) => {
 
     switch (type) {
       case 'category':
-        reportData = await Expense.aggregate([
+        reportData = await expenseRepository.aggregate([
           {
             $match: {
               userId: userId,
@@ -630,7 +633,7 @@ router.get('/report/:type', auth, async (req, res) => {
         break;
 
       case 'monthly':
-        reportData = await Expense.aggregate([
+        reportData = await expenseRepository.aggregate([
           {
             $match: {
               userId: userId,
@@ -650,7 +653,7 @@ router.get('/report/:type', auth, async (req, res) => {
         break;
 
       case 'yearly':
-        reportData = await Expense.aggregate([
+        reportData = await expenseRepository.aggregate([
           {
             $match: {
               userId: userId,
@@ -683,7 +686,7 @@ router.get('/insights', auth, async (req, res) => {
     const insights = [];
 
     // Weekend vs weekday spending
-    const weekendSpending = await Expense.aggregate([
+    const weekendSpending = await expenseRepository.aggregate([
       {
         $match: {
           userId: userId,
@@ -724,7 +727,7 @@ router.get('/insights', auth, async (req, res) => {
     });
 
     // Savings opportunity
-    const foodExpenses = await Expense.aggregate([
+    const foodExpenses = await expenseRepository.aggregate([
       {
         $match: {
           userId: userId,
@@ -893,7 +896,7 @@ router.post('/intelligence/analyze-transaction', auth, [
 // Get reallocation suggestions
 router.get('/intelligence/reallocations', auth, async (req, res) => {
   try {
-    const budgets = await Budget.find({
+    const budgets = await budgetRepository.findAll({
       user: req.user.id,
       isActive: true
     });
@@ -1012,7 +1015,7 @@ router.post('/intelligence/reallocations/reject', auth, [
 
     const { budgetId, toCategory } = req.body;
 
-    const budget = await Budget.findOne({
+    const budget = await budgetRepository.findOne({
       _id: budgetId,
       user: req.user.id
     });
@@ -1030,7 +1033,7 @@ router.post('/intelligence/reallocations/reject', auth, [
 
     if (suggestion) {
       suggestion.status = 'rejected';
-      await budget.save();
+      await budgetRepository.updateById(budget._id, budget);
     }
 
     res.json({
