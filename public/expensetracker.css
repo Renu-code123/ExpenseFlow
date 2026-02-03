@@ -8555,3 +8555,377 @@ input:checked + .toggle-slider::before {
         height: 300px;
     }
 }
+
+/* ============================================
+   MULTI-CURRENCY INTELLIGENCE STYLES
+   Issue #521: Advanced Multi-Currency Intelligence
+   ============================================ */
+
+.currency-selector {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.currency-selector:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-primary);
+}
+
+.rates-list,
+.pl-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.rate-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.rate-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-primary);
+}
+
+.rate-currency {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.currency-code {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cached-badge,
+.live-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.cached-badge {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.live-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.rate-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-primary);
+}
+
+/* P&L Items */
+.pl-item {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pl-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pl-currency {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--accent-primary);
+}
+
+.pl-account {
+    color: var(--text-secondary);
+}
+
+.pl-values {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pl-value {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.pl-value .label {
+    color: var(--text-secondary);
+}
+
+.pl-profit .pl-amount {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.pl-loss .pl-amount {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* Risk Assessment */
+.risk-assessment {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.risk-summary {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.risk-score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid;
+}
+
+.risk-score-circle.low {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.risk-score-circle.medium {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.risk-score-circle.high {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.risk-score-circle .score {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.risk-score-circle .label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.risk-details h4 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.recommendations {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.recommendation-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.recommendation-item.high {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.recommendation-item.medium {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: #f59e0b;
+}
+
+.recommendation-item.low {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+}
+
+.rec-icon {
+    font-size: 1.2rem;
+}
+
+/* Converter Widget */
+.converter-widget {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    min-width: 400px;
+    z-index: 1000;
+}
+
+.converter-widget h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.converter-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.converter-form input,
+.converter-form select {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-primary);
+}
+
+.converter-form input {
+    flex: 1;
+    min-width: 100px;
+}
+
+.converter-form select {
+    min-width: 80px;
+}
+
+.convert-arrow {
+    font-size: 1.2rem;
+    color: var(--accent-primary);
+}
+
+.conversion-result {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(100, 255, 218, 0.1);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.conversion-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.from-amount {
+    color: var(--text-primary);
+}
+
+.equals {
+    color: var(--accent-primary);
+}
+
+.to-amount {
+    color: var(--accent-primary);
+    font-size: 1.4rem;
+}
+
+.conversion-rate {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Date Range Selector */
+.date-range-selector {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.date-input {
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-primary);
+}
+
+/* Report Summary */
+.report-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.summary-item .label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.summary-item .positive {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.summary-item .negative {
+    color: #ef4444;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .converter-widget {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+        min-width: auto;
+    }
+
+    .risk-summary {
+        flex-direction: column;
+    }
+
+    .date-range-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
