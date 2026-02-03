@@ -86,7 +86,7 @@ function getAuthToken() {
   return localStorage.getItem('token');
 }
 
-async function fetchExpenses(page = 1, limit = 50) {
+async function fetchTransactions(page = 1, limit = 50) {
   try {
     // 1. Try to get from local DB first (Offline-First)
     const localExpenses = await dbManager.getAll('expenses');
@@ -98,7 +98,7 @@ async function fetchExpenses(page = 1, limit = 50) {
     const token = getAuthToken();
     if (!token) return [];
 
-    let url = `${API_BASE_URL}/expenses?page=${page}&limit=${limit}`;
+    let url = `${API_BASE_URL}/transactions?page=${page}&limit=${limit}`;
     const activeWs = localStorage.getItem('activeWorkspaceId');
     if (activeWs && activeWs !== 'personal') {
       url += `&workspaceId=${activeWs}`;
@@ -110,7 +110,8 @@ async function fetchExpenses(page = 1, limit = 50) {
     if (!response.ok) throw new Error('Failed to fetch expenses');
     const result = await response.json();
 
-    const data = result.success ? result.data : result;
+    // Handle standardized response format: { success: true, data: [...], meta: {...} }
+    const data = result.data || result;
 
     // Save to local DB for future offline use
     for (const expense of data) {
@@ -125,12 +126,12 @@ async function fetchExpenses(page = 1, limit = 50) {
   }
 }
 
-async function saveExpense(expense, workspaceId = null) {
+async function saveTransaction(transaction, workspaceId = null) {
   if (window.ExpenseSync) {
-    return await window.ExpenseSync.saveExpense(expense);
+    return await window.ExpenseSync.saveExpense(transaction);
   }
   // Fallback for safety (though ExpenseSync should be loaded)
-  const response = await fetch(`${API_BASE_URL}/expenses`, {
+  const response = await fetch(`${API_BASE_URL}/transactions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -141,11 +142,11 @@ async function saveExpense(expense, workspaceId = null) {
   return await response.json();
 }
 
-async function deleteExpense(id) {
+async function deleteTransaction(id) {
   if (window.ExpenseSync) {
     return await window.ExpenseSync.deleteExpense(id);
   }
-  const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${getAuthToken()}` }
   });

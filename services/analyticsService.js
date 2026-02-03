@@ -89,14 +89,14 @@ class AnalyticsService {
         // Group by category
         const categoryData = {};
         expenses.forEach(expense => {
-            if (!categoryData[expense.category]) {
-                categoryData[expense.category] = [];
+            if (!categoryData[Transaction.category]) {
+                categoryData[Transaction.category] = [];
             }
-            categoryData[expense.category].push({
-                id: expense._id,
-                amount: expense.amount,
-                date: expense.date,
-                description: expense.description
+            categoryData[Transaction.category].push({
+                id: Transaction._id,
+                amount: Transaction.amount,
+                date: Transaction.date,
+                description: Transaction.description
             });
         });
 
@@ -907,7 +907,7 @@ class AnalyticsService {
      * Predict spending by category
      */
     async predictCategorySpending(userId, startDate) {
-        const categoryData = await Expense.aggregate([
+        const categoryData = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -951,7 +951,7 @@ class AnalyticsService {
 
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const currentMonthExpenses = await Expense.aggregate([
+        const currentMonthExpenses = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),

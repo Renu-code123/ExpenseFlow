@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Expense Split Calculator | ExpenseFlow</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="ExpenseSplitcalc.css">
+
+
+
+</head>     
+
+<body>
+<!-- NAVBAR -->
+<header class="header">
+  <nav class="nav-container">
+    <div class="nav-logo">
+      <i class="fas fa-wallet"></i> ExpenseFlow
+    </div>
+    <div class="nav-menu">
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="ExpenseSplitcalc.html" class="nav-link active">Expense Split Calculator</a>
+      <span class="theme-toggle" onclick="toggleTheme()">🌙</span>
+    </div>
+  </nav>
+</header>
+
+<main class="main-content">
+   <section class="hero-section">
+    <h1 class="hero-title">Expense Split Calculator</h1>
+    <p class="hero-subtitle">Easily split expenses among friends or roommates with a clear, intuitive interface.</p>
+  </section>
+  <div class="expense-container">
+		<div class="expense-header-bar">
+      <i class="fas fa-users"></i>
+			<h2>Expense Splitter</h2> 
+		</div>
+		<form class="expense-form" id="personForm">
+			<input type="text" id="personName" placeholder="Add person (e.g. Alice)" required />
+			<button type="submit">Add Person</button>
+		</form>
+		<div class="people-list" id="peopleList"></div>
+		<form class="expense-form" id="expenseForm">
+			<input type="text" id="expenseDesc" placeholder="Expense description (e.g. Dinner)" required />
+			<input type="number" id="expenseAmount" placeholder="Amount" min="0" step="0.01" required />
+			<select id="expensePayer"></select>
+			<button type="submit">Add Expense</button>
+		</form>
+		<table class="expense-table" id="expenseTable">
+			<thead>
+				<tr>
+					<th>Description</th>
+					<th>Amount</th>
+					<th>Payer</th>
+					<th>Split Among</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+		<div class="split-summary" id="splitSummary">
+			<h3>Settlement Summary</h3>
+			<ul id="summaryList"></ul>
+		</div>
+	</div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-logo">
+        <i class="fas fa-wallet"></i> ExpenseFlow
+      </div>
+      <p class="footer-description">Smart money management made simple. Track, convert, and optimize your finances effortlessly.</p>
+      <div class="social-links">
+        <a href="#" class="social-link"><i class="fab fa-x-twitter"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4>Resources</h4>
+      <ul class="footer-links">
+        <li><a href="finance-tips.html"><i class="fas fa-lightbulb"></i> Finance Tips</a></li>
+        <li><a href="Help-Center.html"><i class="fas fa-question-circle"></i> Help Center</a></li>
+        <li><a href="community.html"><i class="fas fa-users"></i> Community</a></li>
+        <li><a href="blog.html"><i class="fas fa-blog"></i> Blog</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul class="footer-links">
+        <li><a href="privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+        <li><a href="terms.html"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+        <li><a href="cookies.html"><i class="fas fa-cookie-bite"></i> Cookie Policy</a></li>
+        <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact Us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+      <p id="copyright" style="text-align:center;"></p>
+      <script>
+        document.getElementById("copyright").innerHTML =
+          `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+      </script>
+
+  </div>
+</footer>
+
+<script src="ExpenseSplitcalc.js"></script>
+</body>
+</html>

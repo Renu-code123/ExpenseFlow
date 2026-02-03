@@ -59,22 +59,22 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('Connected to real-time sync');
     });
 
-    socket.on('expense_created', (expense) => {
+    socket.on('transaction_created', (transaction) => {
       // Use display amount if available, otherwise convert
-      const displayAmount = expense.displayAmount || expense.amount;
-      const transaction = {
-        id: expense._id,
-        text: expense.description,
-        amount: expense.type === 'expense' ? -displayAmount : displayAmount,
-        category: expense.category,
-        type: expense.type,
-        date: expense.date,
-        displayCurrency: expense.displayCurrency || 'INR'
+      const displayAmount = transaction.displayAmount || transaction.amount;
+      const newTransaction = {
+        id: transaction._id,
+        text: transaction.description,
+        amount: transaction.type === 'expense' ? -displayAmount : displayAmount,
+        category: transaction.category,
+        type: transaction.type,
+        date: transaction.date,
+        displayCurrency: transaction.displayCurrency || 'INR'
       };
-      transactions.push(transaction);
+      transactions.push(newTransaction);
       displayTransactions();
       updateValues();
-      showNotification('New expense synced from another device', 'info');
+      showNotification('New transaction synced from another device', 'info');
     });
 
     socket.on('expense_updated', (expense) => {
@@ -111,45 +111,45 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =====================
      API FUNCTIONS
   ====================== */
- async function fetchExpenses() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/expenses`, {
-      headers: getAuthHeaders()
-    });
-
-    if (response.status === 401) {
-      localStorage.clear();
-      window.location.replace('/login.html');
-      return [];
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch expenses');
-    }
-
-    const data = await response.json();
-    return data.data.map(expense => ({
-      id: expense._id,
-      text: expense.description,
-      amount: expense.type === 'expense'
-        ? -(expense.displayAmount || expense.amount)
-        : (expense.displayAmount || expense.amount),
-      category: expense.category,
-      type: expense.type,
-      date: expense.date,
-      displayCurrency: expense.displayCurrency || 'INR',
-      approvalStatus: expense.approvalStatus || 'approved'
-    }));
-  } catch (error) {
-    console.error('Network error, loading offline data:', error);
-    return JSON.parse(localStorage.getItem('transactions') || '[]');
-  }
-}
-
-
-  async function saveExpense(expense) {
+  async function fetchTransactions() {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses`, {
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
+        headers: getAuthHeaders()
+      });
+
+      if (response.status === 401) {
+        localStorage.clear();
+        window.location.replace('/login.html');
+        return [];
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch expenses');
+      }
+
+      const data = await response.json();
+      return data.data.map(expense => ({
+        id: expense._id,
+        text: expense.description,
+        amount: expense.type === 'expense'
+          ? -(expense.displayAmount || expense.amount)
+          : (expense.displayAmount || expense.amount),
+        category: expense.category,
+        type: expense.type,
+        date: expense.date,
+        displayCurrency: expense.displayCurrency || 'INR',
+        approvalStatus: expense.approvalStatus || 'approved'
+      }));
+    } catch (error) {
+      console.error('Network error, loading offline data:', error);
+      return JSON.parse(localStorage.getItem('transactions') || '[]');
+    }
+  }
+
+
+  async function saveTransaction(transaction) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,9 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function updateExpense(id, expense) {
+  async function updateTransaction(id, transaction) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -183,9 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function deleteExpense(id) {
+  async function deleteTransaction(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -289,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
       item.className = `suggestion-item ${index === 0 ? 'primary' : ''}`;
 
       const confidenceLevel = suggestion.confidence > 0.75 ? 'high' :
-                              suggestion.confidence > 0.5 ? 'medium' : 'low';
+        suggestion.confidence > 0.5 ? 'medium' : 'low';
 
       item.innerHTML = `
         <div class="suggestion-content">
@@ -512,9 +512,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const date = new Date(transaction.date);
     const formattedDate = date.toLocaleDateString('en-IN');
     const categoryInfo = categories[transaction.category] || categories.other;
-    const currencySymbol = transaction.displayCurrency === 'INR' ? '₹' : 
-                          transaction.displayCurrency === 'USD' ? '$' : 
-                          transaction.displayCurrency === 'EUR' ? '€' : transaction.displayCurrency;
+    const currencySymbol = transaction.displayCurrency === 'INR' ? '₹' :
+      transaction.displayCurrency === 'USD' ? '$' :
+        transaction.displayCurrency === 'EUR' ? '€' : transaction.displayCurrency;
 
     // Determine approval status
     let statusBadge = '';
@@ -556,10 +556,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const expense = amounts.filter(item => item < 0).reduce((acc, item) => acc + item, 0) * -1;
 
     // Use the currency from the first transaction or default to INR
-    const currencySymbol = transactions.length > 0 ? 
-      (transactions[0].displayCurrency === 'INR' ? '₹' : 
-       transactions[0].displayCurrency === 'USD' ? '$' : 
-       transactions[0].displayCurrency === 'EUR' ? '€' : transactions[0].displayCurrency) : '₹';
+    const currencySymbol = transactions.length > 0 ?
+      (transactions[0].displayCurrency === 'INR' ? '₹' :
+        transactions[0].displayCurrency === 'USD' ? '$' :
+          transactions[0].displayCurrency === 'EUR' ? '€' : transactions[0].displayCurrency) : '₹';
 
     balance.innerHTML = `${currencySymbol}${total.toFixed(2)}`;
     moneyPlus.innerHTML = `+${currencySymbol}${income.toFixed(2)}`;

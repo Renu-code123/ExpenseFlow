@@ -1,14 +1,4 @@
-(function () {
-  const token = localStorage.getItem("token");
 
-  // If no token, go to login
-  if (!token) {
-    window.location.replace("login.html");
-    return;
-  }
-
-  // If token exists, DO NOTHING
-})();
 
 
 

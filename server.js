@@ -248,15 +248,14 @@ app.use('/api/forecast', require('./routes/forecast'));
 
 app.use('/api/accounts', require('./routes/accounts'));
 
-// Express error handler middleware (must be after all routes)
-app.use((err, req, res, next) => {
-  console.error('Express route error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'production' ? undefined : err.stack
-  });
-});
+// Import error handling middleware
+const { errorHandler, notFoundHandler } = require('./middleware/errorMiddleware');
+
+// 404 handler for undefined routes (must be before global error handler)
+app.use(notFoundHandler);
+
+// Global error handler middleware (must be after all routes)
+app.use(errorHandler);
 
 // Root route to serve the UI
 app.get('/', (req, res) => {

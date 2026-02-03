@@ -8,6 +8,7 @@ const approvalService = require('./approvalService');
 const intelligenceService = require('./intelligenceService');
 const mongoose = require('mongoose');
 
+// Wrapper for backward compatibility
 class ExpenseService {
     async createExpense(rawData, userId, io) {
         const user = await userRepository.findById(userId);
