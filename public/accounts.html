@@ -136,10 +136,15 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2024 ExpenseFlow. All rights reserved.</p>
+      <p id="copyright" style="text-align:center;"></p>
+      <script>
+        document.getElementById("copyright").innerHTML =
+          `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+      </script>
+
     </div>
   </footer>
-
+<script src="protect.js"></script>
   <!-- Scripts -->
   <script src="auth-check.js"></script>
   <script src="auth.js"></script>
@@ -149,7 +154,7 @@
     // Initialize page
     document.addEventListener('DOMContentLoaded', () => {
       // Check authentication
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      const token = localStorage.getItem('token') || localStorage.getItem('token');
       if (!token) {
         window.location.href = 'index.html';
         return;
@@ -175,7 +180,7 @@
     // Logout function
     function logout() {
       localStorage.removeItem('token');
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
       window.location.href = 'index.html';
     }
 

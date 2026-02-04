@@ -3415,3 +3415,904 @@ button {
     margin-right: 50px;
   }
 }
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-color);
+  margin-left: auto;
+}
+
+/* Default Light Theme Variables */
+:root {
+  --bg-color: #f3f6f9;
+  --text-color: #0f0f23;
+  --card-bg: #42779b;
+  --nav-bg: #0f0f23;
+}
+
+/* Dark Theme Variables */
+.dark-theme {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --nav-bg: #0a0a0a;
+}
+
+/* Apply Variables */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Example component styling */
+.header,
+.navbar {
+  background-color: var(--nav-bg);
+}
+
+.balance-card,
+.income-card,
+.expense-card,
+.footer {
+  background-color: var(--card-bg);
+}
+
+/* Subscription Manager Styles */
+.subscriptions-section {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.subscription-statistics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.stat-card.stat-warning {
+  border-left: 4px solid var(--warning);
+}
+
+.stat-card.stat-info {
+  border-left: 4px solid var(--accent-primary);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  opacity: 0.8;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.stat-sublabel {
+  font-size: 0.8rem;
+  color: var(--warning);
+  margin-top: 0.25rem;
+}
+
+.subscription-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.subscription-filter {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--bg-tertiary);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subscription-filter:hover {
+  background: var(--bg-tertiary);
+}
+
+.subscription-filter.active {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+}
+
+.subscription-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.subscription-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.subscription-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.subscription-card.subscription-active {
+  border-left-color: var(--success);
+}
+
+.subscription-card.subscription-cancelled {
+  border-left-color: var(--error);
+  opacity: 0.7;
+}
+
+.subscription-card.subscription-paused {
+  border-left-color: var(--warning);
+}
+
+.subscription-card.subscription-trial {
+  border-left-color: var(--accent-primary);
+}
+
+.subscription-card.subscription-unused {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(255, 107, 157, 0.1) 100%);
+}
+
+.subscription-card.subscription-upcoming {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(255, 193, 7, 0.1) 100%);
+}
+
+.subscription-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.subscription-logo {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+}
+
+.subscription-info {
+  flex: 1;
+}
+
+.subscription-info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.subscription-category {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.subscription-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: var(--bg-glass);
+  transform: scale(1.1);
+}
+
+.subscription-details {
+  margin: 1rem 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.detail-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.detail-value.text-warning {
+  color: var(--warning);
+  font-weight: bold;
+}
+
+.subscription-status {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.subscription-active .status-badge {
+  background: rgba(0, 183, 94, 0.2);
+  color: var(--success);
+}
+
+.subscription-cancelled .status-badge {
+  background: rgba(255, 133, 94, 0.2);
+  color: var(--error);
+}
+
+.subscription-paused .status-badge {
+  background: rgba(255, 193, 7, 0.2);
+  color: var(--warning);
+}
+
+.subscription-trial .status-badge {
+  background: rgba(64, 252, 208, 0.2);
+  color: var(--accent-primary);
+}
+
+.badge-auto {
+  background: rgba(103, 126, 234, 0.2);
+  color: #667eea;
+}
+
+.badge-ghost {
+  background: rgba(255, 107, 157, 0.2);
+  color: var(--accent-secondary);
+}
+
+.badge-upcoming {
+  background: rgba(255, 193, 7, 0.2);
+  color: var(--warning);
+}
+
+.subscription-alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.alert-warning {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid var(--warning);
+  color: var(--text-primary);
+}
+
+.subscription-footer {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.btn-sm:hover {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.btn-sm.btn-warning {
+  background: var(--warning);
+  color: var(--bg-primary);
+}
+
+/* Modals */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content.large {
+  max-width: 900px;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--bg-tertiary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  color: var(--error);
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.detected-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detected-item {
+  background: var(--bg-tertiary);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.detected-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.detected-logo {
+  font-size: 2rem;
+}
+
+.detected-info h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.detected-confidence {
+  font-size: 0.85rem;
+  color: var(--success);
+}
+
+.detected-details {
+  margin: 1rem 0;
+  color: var(--text-secondary);
+}
+
+.detected-details p {
+  margin: 0.5rem 0;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-hover);
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  z-index: 2000;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast-success {
+  border-left: 4px solid var(--success);
+}
+
+.toast-error {
+  border-left: 4px solid var(--error);
+}
+
+.toast-info {
+  border-left: 4px solid var(--accent-primary);
+}
+
+/* Loading Placeholder */
+.loading-placeholder {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.loading-placeholder i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--accent-primary);
+}
+
+/* ========================
+   Financial Wellness & Health Score Styles (Issue #481)
+   ======================== */
+
+.wellness-row {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.health-gauge-card, .insights-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: var(--shadow-card);
+}
+
+.health-gauge-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.health-gauge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.health-gauge-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.health-trend {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.health-trend-improving {
+  background: rgba(0, 183, 94, 0.2);
+  color: var(--success);
+}
+
+.health-trend-declining {
+  background: rgba(255, 133, 94, 0.2);
+  color: var(--error);
+}
+
+.health-trend-stable {
+  background: rgba(79, 172, 254, 0.2);
+  color: #4facfe;
+}
+
+.health-gauge {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.gauge-svg {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+}
+
+.gauge-score {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.gauge-grade {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.health-components {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.component-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.component-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+}
+
+.component-item.strength {
+  border-left-color: var(--success);
+}
+
+.component-item.weakness {
+  border-left-color: var(--warning);
+}
+
+.component-label {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.component-score {
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--accent-primary);
+}
+
+.priority-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.priority-critical {
+  background: rgba(255, 133, 94, 0.2);
+  color: var(--error);
+}
+
+.priority-high {
+  background: rgba(255, 193, 7, 0.2);
+  color: var(--warning);
+}
+
+.priority-medium {
+  background: rgba(79, 172, 254, 0.2);
+  color: #4facfe;
+}
+
+.health-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.health-actions .btn {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.health-actions .btn-primary {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.health-actions .btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.health-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Smart Insights Styles */
+.smart-insights {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.insights-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.insights-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.insights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.insights-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.insight-card {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 1.25rem;
+  border-left: 4px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.insight-card:hover {
+  background: var(--bg-glass);
+  transform: translateX(4px);
+}
+
+.insight-critical {
+  border-left-color: var(--error);
+}
+
+.insight-high {
+  border-left-color: var(--warning);
+}
+
+.insight-medium {
+  border-left-color: #4facfe;
+}
+
+.insight-low, .insight-info {
+  border-left-color: var(--accent-primary);
+}
+
+.insight-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.insight-icon {
+  font-size: 1.5rem;
+}
+
+.insight-title-section {
+  flex: 1;
+}
+
+.insight-title-section h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.insight-type {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.insight-confidence {
+  font-size: 0.8rem;
+  color: var(--success);
+  padding: 0.2rem 0.6rem;
+  background: rgba(0, 183, 94, 0.1);
+  border-radius: 4px;
+}
+
+.insight-message {
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0.75rem 0;
+}
+
+.insight-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.insight-metrics span {
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.insight-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.insight-actions .btn-action {
+  padding: 0.5rem 1rem;
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.insight-actions .btn-action:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.insight-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bg-secondary);
+}
+
+.insight-age {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.insight-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.btn-text:hover {
+  color: var(--accent-secondary);
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .wellness-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .health-gauge-card, .insights-card {
+    padding: 1rem;
+  }
+  
+  .health-actions {
+    flex-direction: column;
+  }
+  
+  .insight-header {
+    flex-direction: column;
+  }
+}
+
+
+
+

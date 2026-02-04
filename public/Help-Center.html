@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -13,651 +12,11 @@
 
   <!-- SAME CSS FILE -->
   <link rel="stylesheet" href="expensetracker.css">
-  <style>
-    /* =========================
-   HELP CENTER – SAFE UI ENHANCEMENTS
-   (NO PARENT LAYOUT CHANGES)
-========================= */
-
-/* Improve card alignment only */
-.balance-card {
-  border-radius: 16px;
-  padding: 1.6rem;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Hover effect */
-.balance-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.14);
-}
-
-/* Top accent line (subtle) */
-.balance-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 4px;
-  width: 100%;
-  background: linear-gradient(90deg, #6366f1, #64ffda);
-  opacity: 0.85;
-}
-
-/* Header alignment */
-.balance-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.6rem;
-}
-
-/* Icon styling */
-.balance-header i {
-  font-size: 1.4rem;
-  color: #6366f1;
-  transition: transform 0.3s ease;
-}
-
-/* Icon animation on hover */
-.balance-card:hover .balance-header i {
-  transform: scale(1.15) rotate(-4deg);
-}
-
-/* Title */
-.balance-header h4 {
-  font-size: 1.15rem;
-  font-weight: 600;
-}
-
-/* Text polish */
-.balance-card p {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  opacity: 0.9;
-}
-
-/* Contact support section – keep layout, just polish */
-.data-management-section {
-  border-radius: 18px;
-  padding: 2rem;
-  transition: transform 0.3s ease;
-}
-
-.data-management-section:hover {
-  transform: translateY(-4px);
-}
-
-/* List spacing */
-.data-management-section ul li {
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-}
-
-/* Navbar active link clarity */
-.nav-link.active {
-  font-weight: 600;
-  position: relative;
-}
-
-.nav-link.active::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: #6366f1;
-}
-/* =========================
-   HELP CENTER – CENTER + ANIMATION LAYER
-   (WORKS WITH EXISTING STYLES)
-========================= */
-
-/* ---------- CENTER MAIN HEADING ---------- */
-.hero-section {
-  text-align: center;
-}
-
-.hero-title {
-  display: inline-block;
-  position: relative;
-  animation: titleReveal 1.2s ease forwards;
-}
-
-@keyframes titleReveal {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* underline animation */
-.hero-title::after {
-  content: "";
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  width: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #6366f1, #64ffda);
-  border-radius: 10px;
-  transform: translateX(-50%);
-  animation: underlineGrow 1s ease forwards;
-  animation-delay: 0.5s;
-}
-
-@keyframes underlineGrow {
-  to {
-    width: 60%;
-  }
-}
-
-/* ---------- CENTER CARD HEADINGS ---------- */
-.balance-header {
-  justify-content: center;
-  text-align: center;
-}
-
-/* stack icon + text visually centered */
-.balance-header i {
-  margin-right: 0;
-}
-
-/* ---------- EXTRA CARD ANIMATIONS ---------- */
-
-/* initial fade-in */
-.balance-card {
-  animation: cardFadeIn 0.8s ease forwards;
-}
-
-.balance-card:nth-child(1) { animation-delay: 0.1s; }
-.balance-card:nth-child(2) { animation-delay: 0.2s; }
-.balance-card:nth-child(3) { animation-delay: 0.3s; }
-.balance-card:nth-child(4) { animation-delay: 0.4s; }
-.balance-card:nth-child(5) { animation-delay: 0.5s; }
-
-@keyframes cardFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(25px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* ---------- RIPPLE GLOW ON HOVER ---------- */
-.balance-card::after {
-  content: "";
-  position: absolute;
-  inset: -60%;
-  background: radial-gradient(
-    circle,
-    rgba(99, 102, 241, 0.18),
-    transparent 60%
-  );
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-}
-
-.balance-card:hover::after {
-  opacity: 1;
-}
-
-/* ---------- DEEPER HOVER MOTION ---------- */
-.balance-card:hover {
-  transform: translateY(-10px) scale(1.03);
-}
-
-/* ---------- ICON PULSE ---------- */
-.balance-header i {
-  animation: iconFloat 4s ease-in-out infinite;
-}
-
-@keyframes iconFloat {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-  100% { transform: translateY(0); }
-}
-
-/* ---------- TEXT SMOOTH LIFT ---------- */
-.balance-card p {
-  transition: transform 0.4s ease, opacity 0.4s ease;
-}
-
-.balance-card:hover p {
-  transform: translateY(-3px);
-  opacity: 1;
-}
-
-/* ---------- SUPPORT SECTION CENTER ---------- */
-.data-management-section {
-  text-align: center;
-  animation: supportFade 1s ease forwards;
-}
-
-@keyframes supportFade {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-/* =========================
-   HELP CENTER – EXTRA INTERACTION LAYER
-   (ONLY ENHANCEMENTS)
-========================= */
-
-/* Smooth everything */
-.balance-card,
-.balance-header,
-.balance-header h4,
-.balance-header i,
-.balance-card p {
-  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ---- Card border glow ---- */
-.balance-card {
-  border: 1px solid transparent;
-}
-
-.balance-card:hover {
-  border-color: rgba(99, 102, 241, 0.35);
-}
-
-/* ---- Soft inner glow ---- */
-.balance-card::before {
-  transition: opacity 0.4s ease;
-}
-
-.balance-card:hover::before {
-  opacity: 1;
-}
-
-/* ---- Card tilt effect (very subtle) ---- */
-.balance-card:hover {
-  transform: translateY(-10px) scale(1.03) rotateX(2deg);
-}
-
-/* ---- Heading hover effect ---- */
-.balance-header h4 {
-  position: relative;
-}
-
-.balance-header h4::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #6366f1, #64ffda);
-  transform: translateX(-50%);
-  transition: width 0.4s ease;
-}
-
-.balance-card:hover h4::after {
-  width: 60%;
-}
-
-/* ---- Icon glow pulse on hover ---- */
-.balance-card:hover .balance-header i {
-  text-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
-}
-
-/* ---- Text color enhancement ---- */
-.balance-card:hover p {
-  color: #111827;
-}
-
-/* ---- Ripple expansion effect ---- */
-.balance-card::after {
-  transform: scale(0.9);
-  transition: opacity 0.5s ease, transform 0.6s ease;
-}
-
-.balance-card:hover::after {
-  transform: scale(1.05);
-}
-
-/* ---- Support section breathing animation ---- */
-.data-management-section {
-  animation: softBreath 6s ease-in-out infinite;
-}
-
-@keyframes softBreath {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.015); }
-  100% { transform: scale(1); }
-}
-
-/* ---- Support list hover ---- */
-.data-management-section ul li {
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.data-management-section ul li:hover {
-  transform: translateX(6px);
-  opacity: 1;
-}
-
-/* ---- Navbar active underline animation ---- */
-.nav-link.active::after {
-  animation: underlinePulse 2s ease-in-out infinite;
-}
-
-@keyframes underlinePulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-/* =========================
-   HELP CENTER – YELLOW CARD ONLY
-   (TEXT COLORS PRESERVED)
-========================= */
-
-/* Card background turns yellow on hover */
-.balance-card:hover {
-  background: linear-gradient(
-    135deg,
-    #facc15,
-    #fde047
-  );
-}
-
-/* Keep text color same as normal */
-.balance-card:hover h4,
-.balance-card:hover p,
-.balance-card:hover i {
-  color: inherit;
-}
-
-/* Prevent glow from affecting text */
-.balance-card:hover .balance-header i {
-  text-shadow: none;
-  filter: none;
-}
-
-/* Keep top accent subtle */
-.balance-card:hover::before {
-  background: linear-gradient(90deg, #6366f1, #64ffda);
-}
-
-/* Soften ripple to avoid text tint */
-.balance-card:hover::after {
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.25),
-    transparent 60%
-  );
-}
-/* =========================
-   HELP CENTER – TEXT SIZE BOOST
-   (NORMAL + HOVER)
-========================= */
-
-/* ----- NORMAL TEXT SIZE INCREASE ----- */
-.balance-header h4 {
-  font-size: 1.3rem;   /* was ~1.15rem */
-}
-
-.balance-card p {
-  font-size: 1.05rem;  /* was ~0.95rem */
-  line-height: 1.75;
-}
-
-/* ----- SMOOTH TEXT SCALE ON HOVER ----- */
-.balance-card h4,
-.balance-card p {
-  transition: font-size 0.35s ease, transform 0.35s ease;
-}
-
-/* Slight zoom on hover (premium feel) */
-.balance-card:hover h4 {
-  transform: scale(1.05);
-}
-
-.balance-card:hover p {
-  transform: scale(1.04);
-}
-
-/* ----- KEEP TEXT COLORS SAME ----- */
-.balance-card:hover h4,
-.balance-card:hover p {
-  color: inherit;
-}
-/* =========================
-   TEXT COLOR BLACK ON HOVER
-========================= */
-
-.balance-card:hover h4,
-.balance-card:hover p {
-  color: #000; /* pure black */
-}
-
-  </style>
+  <link rel="stylesheet" href="helpcenter.css">
 </head>
 
 <body>
-
-        <!-- Smooth Cursor Trail -->
-<style>
-  .cursor-trail-container {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 999999;
-  }
-
-  .trail-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 15px rgba(100, 255, 218, 0.8),
-      0 0 30px rgba(100, 255, 218, 0.4);
-    transform: translate(-50%, -50%);
-    will-change: transform, opacity;
-    mix-blend-mode: screen;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-
-  .trail-dot:first-child {
-    width: 12px;
-    height: 12px;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 20px rgba(100, 255, 218, 0.9),
-      0 0 40px rgba(100, 255, 218, 0.6);
-    z-index: 2;
-  }
-
-  .cursor-clicking {
-    transform: translate(-50%, -50%) scale(1.5);
-    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
-    box-shadow: 
-      0 0 25px rgba(255, 107, 157, 0.9),
-      0 0 50px rgba(255, 107, 157, 0.6) !important;
-  }
-
-  .cursor-hovering {
-    transform: translate(-50%, -50%) scale(1.3);
-    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
-  }
-</style>
-
-<div class="cursor-trail-container" id="cursor-trail"></div>
-
-<script>
-(function() {
-  // Hide default cursor
-  document.body.style.cursor = 'none';
-
-  const container = document.getElementById('cursor-trail');
-  const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  const trailCircles = [];
-  const COUNT = 12; // Fewer circles for smoother trail
-
-  // Create trail circles
-  for (let i = 0; i < COUNT; i++) {
-    const circle = document.createElement('div');
-    circle.className = 'trail-dot';
-
-    // Opacity decreases along the trail
-    const opacity = 0.9 - (i / COUNT) * 0.8;
-    circle.style.opacity = opacity.toString();
-
-    // Size decreases along the trail
-    const scale = 1 - (i / COUNT) * 0.5;
-    circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-    container.appendChild(circle);
-    trailCircles.push({ 
-      element: circle, 
-      x: coords.x, 
-      y: coords.y,
-      targetX: coords.x,
-      targetY: coords.y
-    });
-  }
-
-  // Track mouse position
-  let isMoving = false;
-  let lastMouseX = coords.x;
-  let lastMouseY = coords.y;
-  let velocity = { x: 0, y: 0 };
-
-  window.addEventListener('mousemove', e => {
-    coords.x = e.clientX;
-    coords.y = e.clientY;
-
-    // Calculate velocity for smooth movement
-    velocity.x = e.clientX - lastMouseX;
-    velocity.y = e.clientY - lastMouseY;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-
-    isMoving = true;
-
-    // Reset movement timeout
-    clearTimeout(window.movementTimeout);
-    window.movementTimeout = setTimeout(() => {
-      isMoving = false;
-    }, 50);
-  });
-
-  // Click effect
-  window.addEventListener('mousedown', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.add('cursor-clicking');
-    });
-  });
-
-  window.addEventListener('mouseup', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.remove('cursor-clicking');
-    });
-  });
-
-  // Hover effect for interactive elements
-  window.addEventListener('mouseover', e => {
-    const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
-    trailCircles.forEach(circle => {
-      circle.element.classList.toggle('cursor-hovering', !!interactive);
-    });
-  });
-
-  // Smooth animation function
-  function animateTrail() {
-    let targetX = coords.x;
-    let targetY = coords.y;
-
-    // Add velocity offset to first circle for more natural feel
-    const velocityOffset = 0.5;
-    const offsetX = velocity.x * velocityOffset;
-    const offsetY = velocity.y * velocityOffset;
-
-    trailCircles.forEach((circle, index) => {
-      // First circle follows cursor exactly
-      if (index === 0) {
-        circle.x = targetX + offsetX;
-        circle.y = targetY + offsetY;
-      } 
-      // Other circles follow with smooth delay
-      else {
-        const prevCircle = trailCircles[index - 1];
-
-        // Smooth interpolation factor (changes based on movement speed)
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const lerpFactor = isMoving ? 
-          Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
-          0.1; // Slow movement = more spread
-
-        circle.x += (prevCircle.x - circle.x) * lerpFactor;
-        circle.y += (prevCircle.y - circle.y) * lerpFactor;
-      }
-
-      // Apply position with easing
-      circle.element.style.left = circle.x + 'px';
-      circle.element.style.top = circle.y + 'px';
-
-      // Dynamic opacity based on speed and position
-      if (index > 0) {
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const baseOpacity = 0.9 - (index / COUNT) * 0.8;
-        const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
-        circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
-      }
-
-      // Update target for next circle
-      targetX = circle.x;
-      targetY = circle.y;
-    });
-
-    requestAnimationFrame(animateTrail);
-  }
-
-  // Handle window resize
-  window.addEventListener('resize', () => {
-    // Adjust if cursor goes out of bounds
-    if (coords.x > window.innerWidth) coords.x = window.innerWidth;
-    if (coords.y > window.innerHeight) coords.y = window.innerHeight;
-  });
-
-  // Handle mouse leave/enter
-  window.addEventListener('mouseleave', () => {
-    trailCircles.forEach(circle => {
-      circle.element.style.opacity = '0';
-    });
-  });
-
-  window.addEventListener('mouseenter', () => {
-    trailCircles.forEach((circle, index) => {
-      const opacity = 0.9 - (index / COUNT) * 0.8;
-      circle.element.style.opacity = opacity.toString();
-    });
-  });
-
-  // Start animation
-  animateTrail();
-})();
-</script>
+<div class="circle-container" id="cursorTrail"></div>
 
 <!-- HEADER -->
 <header class="header">
@@ -674,6 +33,22 @@
         <a href="finance-tips.html" class="nav-link">Finance Tips</a>
         <a href="Help-Center.html" class="nav-link active">Help Center</a>
         <a href="#" class="nav-link">Settings</a>
+<div class="lang-wrapper">
+  <i class="fas fa-language"></i>
+  <select id="languageSelect">
+    <option value="en">English</option>
+    <option value="hi">हिन्दी</option>
+    <option value="ta">தமிழ்</option>
+    <option value="te">తెలుగు</option>
+    <option value="bn">বাংলা</option>
+    <option value="mr">मराठी</option>
+    <option value="kn">ಕನ್ನಡ</option>
+    <option value="ml">മലയാളം</option>
+    <option value="gu">ગુજરાતી</option>
+    <option value="pa">ਪੰਜਾਬੀ</option>
+  </select>
+</div>
+
       </div>
     </div>
   </nav>
@@ -689,9 +64,9 @@
       Find answers to common questions and learn how to use ExpenseFlow effectively
     </p>
   </section>
-
+  
   <div class="container">
-
+    
     <!-- HELP CARD 1 -->
     <div class="balance-card">
       <div class="balance-header">
@@ -787,11 +162,83 @@
   </div>
 
   <div class="footer-bottom">
-    <div class="footer-container">
-      <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
+    <div class="footer-bottom">
+      <p id="copyright" style="text-align:center;"></p>
+      <script src="protect.js"></script>
+      <script>
+        document.getElementById("copyright").innerHTML =
+        `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+      </script>
     </div>
   </div>
-</footer>
+<script>
+    
+/* ============================= */
+/* 🔵 Blue Cursor Trail Script  */
+/* ============================= */
+
+const container = document.getElementById('cursorTrail');
+const circleCount = 12;
+const circles = [];
+
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+
+if (container) {
+  for (let i = 0; i < circleCount; i++) {
+    const circle = document.createElement('div');
+    circle.classList.add('cursor-circle');
+    container.appendChild(circle);
+    circles.push({ el: circle, x: mouseX, y: mouseY });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  document.addEventListener('mousedown', () => {
+    circles.forEach(c => c.el.classList.add('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseup', () => {
+    circles.forEach(c => c.el.classList.remove('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.add('cursor-hovering'));
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.remove('cursor-hovering'));
+    }
+  });
+
+  function animateCursor() {
+    let x = mouseX;
+    let y = mouseY;
+
+    circles.forEach(circle => {
+      circle.x += (x - circle.x) * 0.25;
+      circle.y += (y - circle.y) * 0.25;
+
+      circle.el.style.left = circle.x + 'px';
+      circle.el.style.top = circle.y + 'px';
+
+      x = circle.x;
+      y = circle.y;
+    });
+
+    requestAnimationFrame(animateCursor);
+  }
+
+  animateCursor();
+}
+</script>
+<script src="helpcenter.js"></script>
 
 </body>
 </html>

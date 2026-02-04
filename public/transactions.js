@@ -1,3 +1,7 @@
+if (!localStorage.getItem('token')) {
+    window.location.replace('/login.html');
+}
+
 // Transactions Page JavaScript
 class TransactionsManager {
     constructor() {
@@ -77,28 +81,35 @@ class TransactionsManager {
     }
 
     async loadTransactions() {
-        try {
-            // Try to load from API first
-            const response = await fetch('/api/expenses', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                this.transactions = await response.json();
-            } else {
-                throw new Error('API not available');
+    try {
+        const response = await fetch('/api/expenses', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
             }
-        } catch (error) {
-            console.log('Using mock data for demo');
-            this.transactions = this.generateMockTransactions();
+        });
+
+        if (response.status === 401) {
+            // Token invalid or missing → logout
+            localStorage.clear();
+            window.location.replace('/login.html');
+            return;
         }
-        
-        this.applyFilters();
-        this.hideLoading();
+
+        if (!response.ok) {
+            throw new Error('API error');
+        }
+
+        this.transactions = await response.json();
+    } catch (error) {
+        console.error('Failed to load transactions:', error);
+        this.showNotification('Unable to load transactions', 'error');
     }
+
+    this.applyFilters();
+    this.hideLoading();
+}
+
 
     hideLoading() {
         document.getElementById('loadingState').style.display = 'none';

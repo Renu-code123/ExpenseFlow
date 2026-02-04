@@ -4,6 +4,199 @@ const Goal = require('../models/Goal');
 const mongoose = require('mongoose');
 
 class ForecastingService {
+    constructor() {
+        // Runway calculation thresholds
+        this.CRITICAL_RUNWAY_DAYS = 7;
+        this.WARNING_RUNWAY_DAYS = 14;
+        this.COMFORTABLE_RUNWAY_DAYS = 30;
+    }
+
+    /**
+     * Calculate Liquidity Runway - days until funds depleted
+     * Issue #444: Predictive Subscription Detection & Cashflow Runway
+     * @param {string} userId - User ID
+     * @returns {Object} Runway calculation with breakdown
+     */
+    async calculateRunway(userId) {
+        const now = new Date();
+        
+        // 1. Get current balance
+        const balanceData = await Expense.aggregate([
+            { $match: { user: new mongoose.Types.ObjectId(userId) } },
+            {
+                $group: {
+                    _id: null,
+                    income: { $sum: { $cond: [{ $eq: ['$type', 'income'] }, '$amount', 0] } },
+                    expense: { $sum: { $cond: [{ $eq: ['$type', 'expense'] }, '$amount', 0] } }
+                }
+            }
+        ]);
+
+        const currentBalance = balanceData.length > 0 
+            ? (balanceData[0].income - balanceData[0].expense) 
+            : 0;
+
+        // 2. Calculate burn rate from recurring expenses
+        const recurringExpenses = await RecurringExpense.find({
+            user: userId,
+            isActive: true,
+            isPaused: false,
+            type: 'expense'
+        });
+
+        const monthlyRecurringBurn = recurringExpenses.reduce((total, item) => {
+            return total + item.getMonthlyEstimate();
+        }, 0);
+
+        // 3. Calculate variable spending from historical data (last 90 days)
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        const variableSpending = await Expense.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(userId),
+                    type: 'expense',
+                    date: { $gte: ninetyDaysAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: '$amount' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const avgDailyVariable = variableSpending.length > 0 
+            ? (variableSpending[0].total / 90)
+            : 0;
+
+        // 4. Get expected income (from recurring income entries)
+        const recurringIncome = await RecurringExpense.find({
+            user: userId,
+            isActive: true,
+            isPaused: false,
+            type: 'income'
+        });
+
+        const monthlyRecurringIncome = recurringIncome.reduce((total, item) => {
+            return total + item.getMonthlyEstimate();
+        }, 0);
+
+        // 5. Calculate net burn rate
+        const dailyRecurringBurn = monthlyRecurringBurn / 30;
+        const dailyRecurringIncome = monthlyRecurringIncome / 30;
+        const netDailyBurn = (dailyRecurringBurn + avgDailyVariable) - dailyRecurringIncome;
+
+        // 6. Calculate runway days
+        let runwayDays = 0;
+        let runwayStatus = 'critical';
+        let runwayMessage = '';
+
+        if (netDailyBurn <= 0) {
+            // Positive cash flow
+            runwayDays = Infinity;
+            runwayStatus = 'positive';
+            runwayMessage = 'Your income exceeds your expenses. You have positive cash flow!';
+        } else if (currentBalance <= 0) {
+            runwayDays = 0;
+            runwayStatus = 'depleted';
+            runwayMessage = 'Your balance is depleted or negative.';
+        } else {
+            runwayDays = Math.floor(currentBalance / netDailyBurn);
+            
+            if (runwayDays >= this.COMFORTABLE_RUNWAY_DAYS) {
+                runwayStatus = 'comfortable';
+                runwayMessage = `You have ${runwayDays} days of runway. You're in a comfortable position.`;
+            } else if (runwayDays >= this.WARNING_RUNWAY_DAYS) {
+                runwayStatus = 'moderate';
+                runwayMessage = `You have ${runwayDays} days of runway. Consider reducing expenses.`;
+            } else if (runwayDays >= this.CRITICAL_RUNWAY_DAYS) {
+                runwayStatus = 'warning';
+                runwayMessage = `Only ${runwayDays} days of runway remaining. Review your subscriptions.`;
+            } else {
+                runwayStatus = 'critical';
+                runwayMessage = `Critical: Only ${runwayDays} days until funds depleted!`;
+            }
+        }
+
+        // 7. Project balance for next 30 days
+        const projectedBalances = [];
+        let projectedBalance = currentBalance;
+
+        for (let day = 0; day <= 30; day++) {
+            const date = new Date(now);
+            date.setDate(date.getDate() + day);
+            
+            projectedBalances.push({
+                day,
+                date: date.toISOString().split('T')[0],
+                balance: Math.round(projectedBalance * 100) / 100,
+                isNegative: projectedBalance < 0
+            });
+
+            // Subtract daily burn for next iteration
+            if (day < 30) {
+                projectedBalance -= netDailyBurn;
+            }
+        }
+
+        // 8. Find zero-crossing day
+        const zeroCrossingDay = projectedBalances.find(p => p.balance <= 0);
+
+        return {
+            currentBalance: Math.round(currentBalance * 100) / 100,
+            burnRate: {
+                daily: Math.round(netDailyBurn * 100) / 100,
+                weekly: Math.round(netDailyBurn * 7 * 100) / 100,
+                monthly: Math.round(netDailyBurn * 30 * 100) / 100
+            },
+            breakdown: {
+                monthlyRecurringExpenses: Math.round(monthlyRecurringBurn * 100) / 100,
+                monthlyRecurringIncome: Math.round(monthlyRecurringIncome * 100) / 100,
+                avgDailyVariableSpending: Math.round(avgDailyVariable * 100) / 100,
+                recurringExpenseCount: recurringExpenses.length,
+                recurringIncomeCount: recurringIncome.length
+            },
+            runway: {
+                days: runwayDays === Infinity ? null : runwayDays,
+                status: runwayStatus,
+                message: runwayMessage,
+                isPositiveCashFlow: netDailyBurn <= 0
+            },
+            projection: projectedBalances,
+            zeroCrossingDate: zeroCrossingDay ? zeroCrossingDay.date : null,
+            calculatedAt: now
+        };
+    }
+
+    /**
+     * Get runway summary for dashboard display
+     */
+    async getRunwaySummary(userId) {
+        const runway = await this.calculateRunway(userId);
+        
+        // Calculate progress percentage (max 100 at 60 days)
+        let progressPercent = 0;
+        if (runway.runway.isPositiveCashFlow) {
+            progressPercent = 100;
+        } else if (runway.runway.days !== null) {
+            progressPercent = Math.min(100, Math.round((runway.runway.days / 60) * 100));
+        }
+
+        return {
+            days: runway.runway.days,
+            status: runway.runway.status,
+            message: runway.runway.message,
+            progressPercent,
+            burnRate: runway.burnRate.daily,
+            currentBalance: runway.currentBalance,
+            isPositiveCashFlow: runway.runway.isPositiveCashFlow
+        };
+    }
+
     /**
      * Get detailed cash flow forecast for the next 30 days
      */

@@ -85,6 +85,12 @@ class CronJobs {
         await alertService.notifyAdmin('Cron Failure: Weekly Reports', err.stack || err.message);
       }
     });
+    
+    // Daily intelligence analysis and insights - Every day at 8 AM
+    cron.schedule('0 8 * * *', async () => {
+      console.log('[CronJobs] Running daily intelligence analysis...');
+      await this.runIntelligenceAnalysis();
+    });
 
     // Monthly report - 1st day of month at 10 AM
 
@@ -191,6 +197,78 @@ class CronJobs {
         console.error('[CronJobs] Error in tax document reminders:', err);
         await alertService.notifyAdmin('Cron Failure: Tax Document Reminders', err.stack || err.message);
       }
+    });
+
+    // Process bill reminders - Daily at 9 AM
+    cron.schedule('0 9 * * *', async () => {
+      console.log('[CronJobs] Processing bill reminders...');
+      await this.processBillReminders();
+    });
+
+    // Check overdue bills - Daily at midnight
+    cron.schedule('0 0 * * *', async () => {
+      console.log('[CronJobs] Checking overdue bills...');
+      await this.checkOverdueBills();
+    });
+
+    // Process auto-pay bills - Daily at 6 AM
+    cron.schedule('0 6 * * *', async () => {
+      console.log('[CronJobs] Processing auto-pay bills...');
+      await this.processAutoPayBills();
+    });
+
+    // Sync calendar events - Daily at 6 AM
+    cron.schedule('0 6 * * *', async () => {
+      console.log('[CronJobs] Syncing calendar events...');
+      await this.syncCalendarEvents();
+    });
+
+    // Process pending reminders - Every hour
+    cron.schedule('0 * * * *', async () => {
+      console.log('[CronJobs] Processing pending reminders...');
+      await this.processPendingReminders();
+    });
+
+    // Send subscription renewal reminders - Daily at 8 AM
+    cron.schedule('0 8 * * *', async () => {
+      console.log('[CronJobs] Sending subscription renewal reminders...');
+      await this.sendSubscriptionReminders();
+    });
+
+    // Send trial ending reminders - Daily at 9 AM
+    cron.schedule('0 9 * * *', async () => {
+      console.log('[CronJobs] Sending trial ending reminders...');
+      await this.sendTrialReminders();
+    });
+
+    // Financial wellness deep scan - Weekly on Sunday at 2 AM (Issue #481)
+    cron.schedule('0 2 * * 0', async () => {
+      console.log('[CronJobs] Running weekly financial wellness scan...');
+      await this.runWeeklyWellnessScan();
+    });
+
+    // Daily smart insights generation - Every day at 7 AM (Issue #481)
+    cron.schedule('0 7 * * *', async () => {
+      console.log('[CronJobs] Generating daily smart insights...');
+      await this.generateDailyInsights();
+    });
+
+    // Daily forecast generation - Daily at 6 AM
+    cron.schedule('0 6 * * *', async () => {
+      console.log('[CronJobs] Generating daily forecasts...');
+      await this.generateDailyForecasts();
+    });
+
+    // Daily anomaly detection - Daily at 7 AM
+    cron.schedule('0 7 * * *', async () => {
+      console.log('[CronJobs] Running daily anomaly detection...');
+      await this.runDailyAnomalyDetection();
+    });
+
+    // Forecast accuracy update - Daily at 11 PM
+    cron.schedule('0 23 * * *', async () => {
+      console.log('[CronJobs] Updating forecast accuracy...');
+      await this.updateForecastAccuracy();
     });
 
     console.log('Cron jobs initialized successfully');
@@ -606,6 +684,323 @@ class CronJobs {
       }
     } catch (error) {
       console.error('Budget alert error:', error);
+    }
+  }
+
+  static async sendQuarterlyTaxReminders() {
+    try {
+      const profiles = await TaxProfile.getProfilesNeedingQuarterlyEstimates();
+      
+      for (const profile of profiles) {
+        const upcomingPayments = profile.estimated_tax_payments.filter(
+          p => !p.paid && p.due_date >= new Date() && p.due_date <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        );
+        
+        if (upcomingPayments.length > 0) {
+          for (const payment of upcomingPayments) {
+            await emailService.sendEmail({
+              to: profile.user.email,
+              subject: `Q${payment.quarter} Estimated Tax Payment Due`,
+              html: `
+                <h2>Quarterly Estimated Tax Payment Reminder</h2>
+                <p>Hi ${profile.user.name},</p>
+                <p>Your Q${payment.quarter} estimated tax payment of <strong>₹${payment.amount.toFixed(2)}</strong> is due on ${payment.due_date.toDateString()}.</p>
+                <p>Please make sure to submit your payment before the deadline to avoid penalties.</p>
+                <p><a href="${process.env.FRONTEND_URL}/tax/estimated">View Payment Details</a></p>
+              `
+            });
+          }
+        }
+      }
+      
+      console.log(`Sent quarterly tax reminders to ${profiles.length} users`);
+    } catch (error) {
+      console.error('Quarterly tax reminder error:', error);
+    }
+  }
+
+  static async sendYearEndTaxPlanningReminders() {
+    try {
+      const users = await User.find({});
+      const currentYear = new Date().getFullYear();
+      
+      for (const user of users) {
+        try {
+          const profile = await TaxProfile.getUserProfile(user._id);
+          
+          if (profile) {
+            // Generate year-end checklist
+            const harvest = await taxOptimizationService.identifyTaxLossHarvestingOpportunities(user._id, currentYear);
+            const contributionRoom = taxOptimizationService.calculateContributionRoom(profile);
+            
+            await emailService.sendEmail({
+              to: user.email,
+              subject: 'Year-End Tax Planning Checklist',
+              html: `
+                <h2>Year-End Tax Planning Reminders</h2>
+                <p>Hi ${user.name},</p>
+                <p>As we approach the end of the year, here are some tax optimization opportunities:</p>
+                <ul>
+                  ${harvest.length > 0 ? `<li><strong>Tax Loss Harvesting:</strong> ${harvest.length} opportunities identified with potential savings of ₹${harvest[0].potential_savings?.toFixed(2) || 0}</li>` : ''}
+                  ${contributionRoom.total > 0 ? `<li><strong>Retirement Contributions:</strong> ₹${contributionRoom.total.toFixed(2)} remaining contribution room</li>` : ''}
+                  <li><strong>Charitable Donations:</strong> Make contributions before December 31st</li>
+                  <li><strong>Business Expenses:</strong> Review and document all deductible expenses</li>
+                </ul>
+                <p>Deadline: December 31, ${currentYear}</p>
+                <p><a href="${process.env.FRONTEND_URL}/tax/year-end">View Full Checklist</a></p>
+              `
+            });
+          }
+        } catch (userError) {
+          console.error(`Error processing user ${user._id}:`, userError);
+        }
+      }
+      
+      console.log(`Sent year-end tax planning reminders to ${users.length} users`);
+    } catch (error) {
+      console.error('Year-end tax planning reminder error:', error);
+    }
+  }
+
+  static async sendTaxDocumentReminders() {
+    try {
+      const users = await User.find({});
+      const lastYear = new Date().getFullYear() - 1;
+      
+      for (const user of users) {
+        const profile = await TaxProfile.getUserProfile(user._id);
+        
+        if (profile) {
+          await emailService.sendEmail({
+            to: user.email,
+            subject: `${lastYear} Tax Document Preparation`,
+            html: `
+              <h2>Tax Season is Here!</h2>
+              <p>Hi ${user.name},</p>
+              <p>It's time to prepare your ${lastYear} tax documents. ExpenseFlow can help you generate:</p>
+              <ul>
+                <li>Tax Summary Report</li>
+                <li>Capital Gains Schedule (Schedule D)</li>
+                <li>Business Income & Expenses (Schedule C)</li>
+                <li>Year-End Tax Optimization Report</li>
+              </ul>
+              <p>Filing Deadline: April 15, ${new Date().getFullYear()}</p>
+              <p><a href="${process.env.FRONTEND_URL}/tax/documents">Generate Tax Documents</a></p>
+            `
+          });
+        }
+      }
+      
+      console.log(`Sent tax document reminders to ${users.length} users`);
+    } catch (error) {
+      console.error('Tax document reminder error:', error);
+    }
+  }
+
+  static async processBillReminders() {
+    try {
+      const BillService = require('./billService');
+      const result = await BillService.sendBillReminders();
+      console.log(`[CronJobs] Bill reminders processed: ${result.success.length} sent, ${result.failed.length} failed`);
+    } catch (error) {
+      console.error('[CronJobs] Bill reminders error:', error);
+    }
+  }
+
+  static async checkOverdueBills() {
+    try {
+      const Bill = require('../models/Bill');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Update bills that are now overdue
+      const result = await Bill.updateMany(
+        {
+          status: 'active',
+          next_due_date: { $lt: today }
+        },
+        {
+          status: 'overdue'
+        }
+      );
+      
+      console.log(`[CronJobs] Updated ${result.modifiedCount} bills to overdue status`);
+      
+      // Create overdue reminders
+      const overdueBills = await Bill.find({ status: 'overdue' }).populate('user', 'email name');
+      const ReminderSchedule = require('../models/ReminderSchedule');
+      
+      for (const bill of overdueBills) {
+        await ReminderSchedule.createOverdueReminder(bill);
+      }
+      
+      console.log(`[CronJobs] Created overdue reminders for ${overdueBills.length} bills`);
+    } catch (error) {
+      console.error('[CronJobs] Check overdue bills error:', error);
+    }
+  }
+
+  static async processAutoPayBills() {
+    try {
+      const BillService = require('./billService');
+      const result = await BillService.processAutoPay();
+      console.log(`[CronJobs] Auto-pay processed: ${result.success.length} successful, ${result.failed.length} failed`);
+    } catch (error) {
+      console.error('[CronJobs] Auto-pay processing error:', error);
+    }
+  }
+
+  static async syncCalendarEvents() {
+    try {
+      const User = require('../models/User');
+      const CalendarEvent = require('../models/CalendarEvent');
+      
+      const users = await User.find({});
+      
+      for (const user of users) {
+        try {
+          await CalendarEvent.syncBillEvents(user._id);
+        } catch (userError) {
+          console.error(`[CronJobs] Calendar sync error for user ${user._id}:`, userError);
+        }
+      }
+      
+      console.log(`[CronJobs] Calendar synced for ${users.length} users`);
+    } catch (error) {
+      console.error('[CronJobs] Calendar sync error:', error);
+    }
+  }
+
+  static async processPendingReminders() {
+    try {
+      const ReminderService = require('./billReminderService');
+      const result = await ReminderService.processPendingReminders();
+      console.log(`[CronJobs] Reminders processed: ${result.success.length} sent, ${result.failed.length} failed`);
+    } catch (error) {
+      console.error('[CronJobs] Pending reminders error:', error);
+    }
+  }
+  
+  static async runIntelligenceAnalysis() {
+    try {
+      const users = await User.find({ 
+        intelligencePreferences: { $exists: true },
+        'intelligencePreferences.enablePredictiveAnalysis': true 
+      });
+      
+      let analyzed = 0;
+      let alertsSent = 0;
+      
+      for (const user of users) {
+        try {
+          // Generate insights
+          const insights = await intelligenceService.generateInsights(user._id);
+          
+          // Send email for critical alerts
+          const criticalInsights = insights.insights.filter(i => i.priority === 'critical' || i.priority === 'high');
+          
+          if (criticalInsights.length > 0 && user.intelligencePreferences.emailAlerts) {
+            await emailService.sendEmail({
+              to: user.email,
+              subject: `⚠️ ExpenseFlow: ${criticalInsights.length} Important Financial Alert${criticalInsights.length > 1 ? 's' : ''}`,
+              template: 'intelligence-alert',
+              data: {
+                userName: user.name,
+                insights: criticalInsights,
+                insightCount: criticalInsights.length
+              }
+            });
+            alertsSent++;
+          }
+          
+          analyzed++;
+        } catch (userError) {
+          console.error(`[CronJobs] Intelligence analysis error for user ${user._id}:`, userError);
+        }
+      }
+      
+      console.log(`[CronJobs] Intelligence analysis complete: ${analyzed} users analyzed, ${alertsSent} alerts sent`);
+    } catch (error) {
+      console.error('[CronJobs] Intelligence analysis error:', error);
+    }
+  }
+
+  static async sendSubscriptionReminders() {
+    try {
+      const count = await subscriptionService.sendRenewalReminders();
+      console.log(`[CronJobs] Sent ${count} subscription renewal reminders`);
+    } catch (error) {
+      console.error('[CronJobs] Error sending subscription reminders:', error);
+    }
+  }
+
+  static async sendTrialReminders() {
+    try {
+      const count = await subscriptionService.sendTrialReminders();
+      console.log(`[CronJobs] Sent ${count} trial ending reminders`);
+    } catch (error) {
+      console.error('[CronJobs] Error sending trial reminders:', error);
+    }
+  }
+
+  static async runWeeklyWellnessScan() {
+    try {
+      console.log('[CronJobs] Starting weekly wellness scan...');
+      const User = require('../models/User');
+      const users = await User.find({});
+      
+      let scanned = 0;
+      let scoresGenerated = 0;
+      
+      for (const user of users) {
+        try {
+          // Calculate health score
+          const healthScore = await wellnessService.calculateHealthScore(user._id, { timeWindow: 30 });
+          
+          // Run comprehensive analysis
+          await analysisEngine.runComprehensiveAnalysis(user._id);
+          
+          scoresGenerated++;
+          scanned++;
+        } catch (userError) {
+          console.error(`[CronJobs] Wellness scan error for user ${user._id}:`, userError);
+        }
+      }
+      
+      console.log(`[CronJobs] Weekly wellness scan complete: ${scanned} users scanned, ${scoresGenerated} scores generated`);
+    } catch (error) {
+      console.error('[CronJobs] Weekly wellness scan error:', error);
+    }
+  }
+
+  static async generateDailyInsights() {
+    try {
+      console.log('[CronJobs] Generating daily insights...');
+      const User = require('../models/User');
+      const users = await User.find({});
+      
+      let processed = 0;
+      let insightsGenerated = 0;
+      
+      for (const user of users) {
+        try {
+          // Analyze spending velocity
+          const velocityResult = await analysisEngine.analyzeSpendingVelocity(user._id, { timeWindow: 7 });
+          insightsGenerated += velocityResult.insights?.length || 0;
+          
+          // Analyze budget predictions
+          const budgetResult = await analysisEngine.analyzeBudgetPredictions(user._id);
+          insightsGenerated += budgetResult.insights?.length || 0;
+          
+          processed++;
+        } catch (userError) {
+          console.error(`[CronJobs] Insight generation error for user ${user._id}:`, userError);
+        }
+      }
+      
+      console.log(`[CronJobs] Daily insights complete: ${processed} users processed, ${insightsGenerated} insights generated`);
+    } catch (error) {
+      console.error('[CronJobs] Daily insights error:', error);
     }
   }
 }

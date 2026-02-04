@@ -1,5 +1,5 @@
-const Expense = require('../models/Expense');
-const Budget = require('../models/Budget');
+const expenseRepository = require('../repositories/expenseRepository');
+const budgetRepository = require('../repositories/budgetRepository');
 const AnalyticsCache = require('../models/AnalyticsCache');
 const mongoose = require('mongoose');
 
@@ -70,7 +70,7 @@ class AnalyticsService {
         } = options;
 
         const cacheParams = { months, threshold };
-        
+
         if (useCache) {
             const cached = await AnalyticsCache.getCache('zscore_anomalies', userId, cacheParams);
             if (cached) return cached;
@@ -80,23 +80,23 @@ class AnalyticsService {
         startDate.setMonth(startDate.getMonth() - months);
 
         // Get all expenses grouped by category and date
-        const expenses = await Expense.find({
+        const expenses = await expenseRepository.findAll({
             user: userId,
             type: 'expense',
             date: { $gte: startDate }
-        }).sort({ date: 1 });
+        }, { sort: { date: 1 } });
 
         // Group by category
         const categoryData = {};
         expenses.forEach(expense => {
-            if (!categoryData[expense.category]) {
-                categoryData[expense.category] = [];
+            if (!categoryData[Transaction.category]) {
+                categoryData[Transaction.category] = [];
             }
-            categoryData[expense.category].push({
-                id: expense._id,
-                amount: expense.amount,
-                date: expense.date,
-                description: expense.description
+            categoryData[Transaction.category].push({
+                id: Transaction._id,
+                amount: Transaction.amount,
+                date: Transaction.date,
+                description: Transaction.description
             });
         });
 
@@ -106,7 +106,7 @@ class AnalyticsService {
         // Calculate statistics and detect anomalies per category
         for (const [category, transactions] of Object.entries(categoryData)) {
             const amounts = transactions.map(t => t.amount);
-            
+
             if (amounts.length < this.MINIMUM_DATA_POINTS) {
                 categoryStats[category] = {
                     mean: amounts.length > 0 ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0,
@@ -133,7 +133,7 @@ class AnalyticsService {
             // Detect anomalies
             transactions.forEach(transaction => {
                 const zScore = this.calculateZScore(transaction.amount, mean, stdDev);
-                
+
                 if (Math.abs(zScore) >= threshold) {
                     anomalies.push({
                         transactionId: transaction.id,
@@ -166,8 +166,8 @@ class AnalyticsService {
             summary: {
                 totalTransactions: expenses.length,
                 totalAnomalies: anomalies.length,
-                anomalyRate: expenses.length > 0 
-                    ? Math.round((anomalies.length / expenses.length) * 1000) / 10 
+                anomalyRate: expenses.length > 0
+                    ? Math.round((anomalies.length / expenses.length) * 1000) / 10
                     : 0,
                 criticalCount: anomalies.filter(a => a.severity === 'critical').length,
                 highCount: anomalies.filter(a => a.severity === 'high').length,
@@ -206,7 +206,7 @@ class AnalyticsService {
         startDate.setMonth(startDate.getMonth() - months);
 
         // Get monthly spending by category
-        const monthlyData = await Expense.aggregate([
+        const monthlyData = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -357,7 +357,7 @@ class AnalyticsService {
                 groupFormat = { $dateToString: { format: '%Y-%m', date: '$date' } };
         }
 
-        const trends = await Expense.aggregate([
+        const trends = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -496,7 +496,7 @@ class AnalyticsService {
             matchQuery.date.$lte = new Date(endDate);
         }
 
-        const breakdown = await Expense.aggregate([
+        const breakdown = await expenseRepository.aggregate([
             { $match: matchQuery },
             {
                 $group: {
@@ -548,9 +548,9 @@ class AnalyticsService {
 
         const now = new Date();
         const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
-        
+
         // Optimize: Use a single aggregation to get all monthly stats instead of multiple queries in a loop
-        const allStats = await Expense.aggregate([
+        const allStats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -612,7 +612,7 @@ class AnalyticsService {
      * Get stats for a specific month
      */
     async getMonthStats(userId, startDate, endDate) {
-        const stats = await Expense.aggregate([
+        const stats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -660,7 +660,7 @@ class AnalyticsService {
         // Get last 3 months of data using aggregation for better performance
         const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
 
-        const [aggregateData] = await Expense.aggregate([
+        const [aggregateData] = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -785,14 +785,15 @@ class AnalyticsService {
 
         // Insight 4: Unusual expenses - fetch separately with limit to avoid fetching everything
         const avgExpense = totalExpense / expenseCount;
-        const unusualExpenses = await Expense.find({
+        const unusualExpenses = await expenseRepository.findAll({
             user: userId,
             type: 'expense',
             date: { $gte: threeMonthsAgo },
             amount: { $gt: avgExpense * 3 }
-        })
-        .sort({ amount: -1 })
-        .limit(3);
+        }, {
+            sort: { amount: -1 },
+            limit: 3
+        });
 
         if (unusualExpenses.length > 0) {
             insights.push({
@@ -840,7 +841,7 @@ class AnalyticsService {
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-        const monthlyData = await Expense.aggregate([
+        const monthlyData = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -906,7 +907,7 @@ class AnalyticsService {
      * Predict spending by category
      */
     async predictCategorySpending(userId, startDate) {
-        const categoryData = await Expense.aggregate([
+        const categoryData = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -950,7 +951,7 @@ class AnalyticsService {
 
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const currentMonthExpenses = await Expense.aggregate([
+        const currentMonthExpenses = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),

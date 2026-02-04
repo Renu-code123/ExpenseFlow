@@ -1,3 +1,7 @@
+if (!localStorage.getItem('token')) {
+  window.location.replace('/login.html');
+}
+
 /**
  * Tax Calculator & Reports Client-Side Manager
  * Handles tax calculations, report generation, and PDF exports
@@ -66,10 +70,10 @@ class TaxReportsManager {
    */
   async request(url, options = {}) {
     const token = this.getToken();
-    if (!token) {
-      window.location.href = '/login.html';
-      return;
-    }
+  if (!token) {
+  window.location.replace('/login.html');
+  throw new Error('Not authenticated');
+}
 
     const config = {
       ...options,

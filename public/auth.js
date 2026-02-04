@@ -1,3 +1,7 @@
+
+
+
+
 function getPasswordErrors(password) {
     const errors = [];
 
@@ -59,7 +63,7 @@ if (loginForm) {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
             // redirect to index
-            window.location.href = "/index.html";
+            window.location.href = "/";
         } catch (err) {
             console.error("Error during login:", err);
             alert("server error during login");
@@ -151,7 +155,7 @@ if (registerForm) {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            window.location.href = "/index.html";
+            window.location.href = "/";
         } catch (err) {
             console.error(err);
             alert("Server error during registration");
@@ -162,6 +166,7 @@ if (registerForm) {
 // logout function
 function logout() {
     // Clear auth data
+    localStorage.clear();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 

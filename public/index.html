@@ -1,5 +1,7 @@
+  <script src="auth-check.js"></script>
+  <script src="auth.js"></script>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" favicon="favicon.ico">
 
 <head>
   <meta charset="UTF-8">
@@ -11,372 +13,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!-- PWA Meta Tags -->
+  <link rel="stylesheet" href="expensetracker.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
   <meta name="msapplication-TileColor" content="#0f0f23">
   <meta name="msapplication-navbutton-color" content="#64ffda">
+  <link rel="stylesheet" href="index.css">
 
   <!-- Manifest -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon"
-    href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDIiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhclswXSkiLz4KPHBhdGggZD0iTTQ4IDY0SDQ4LjA0OEgxNDRWMTI4SDk2VjE0NEgxNDRDMTUyLjgzNyAxNDQgMTYwIDEzNi44MzcgMTYwIDEyOFY2NEM1OCA1Ni4xNjMgNTIuMDQzIDQ4IDQ4IEg0OEM0MC4wNzEgNDggMzIgNTYuMDcxIDMyIDY0VjEyOEMzMiAxMzUuOTI5IDQwLjA3MSAxNDQgNDggMTQ0SDgwVjEyOEg0OFY2NFoiIGZpbGw9IiM2NGZmZGEiLz4KPHBhdGggZD0iTTY0IDgwSDgwVjk2SDY0VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOTYgODBIMTI4Vjk2SDk2VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDBfbGluZWFyWzBdIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K">
-
-  <title>ExpenseFlow - Smart Money Management</title>
-  <link rel="stylesheet" href="expensetracker.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* =========================
-   MOBILE RESPONSIVE STYLES
-   ========================= */
-    @media (max-width: 768px) {
-
-      /* General */
-      body {
-        overflow-x: hidden;
-      }
-
-      .container {
-        padding: 1rem;
-      }
-
-      /* Navbar */
-      .nav-menu {
-        position: absolute;
-        top: 70px;
-        left: 0;
-        width: 100%;
-        background: #0f0f23;
-        flex-direction: column;
-        align-items: center;
-        display: none;
-      }
-
-      .nav-menu.active {
-        display: flex;
-      }
-
-      .nav-link {
-        padding: 1rem;
-        width: 100%;
-        text-align: center;
-      }
-
-      .nav-toggle {
-        display: block;
-        cursor: pointer;
-      }
-
-      .user-profile {
-        display: none;
-      }
-
-      /* Hero */
-      .hero-title {
-        font-size: 1.8rem;
-        text-align: center;
-      }
-
-      .hero-subtitle {
-        text-align: center;
-        font-size: 1rem;
-      }
-
-      /* Balance & Cards */
-      .inc-exp-container {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .balance-card {
-        text-align: center;
-      }
-
-      /* Filters */
-      .filter-controls {
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .advanced-filters {
-        flex-direction: column;
-      }
-
-      .date-filters,
-      .amount-filters {
-        flex-direction: column;
-        width: 100%;
-      }
-
-      /* Transaction Form */
-      .form-row {
-        flex-direction: column;
-      }
-
-      .form-control {
-        width: 100%;
-      }
-
-      /* Footer */
-      .footer-container {
-        flex-direction: column;
-        gap: 2rem;
-        text-align: center;
-      }
-
-      .footer-stats {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-    }
-
-    #redirect {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: 12px;
-      border: 1px solid #64ffda;
-      background-color: #0f0f23;
-      padding: 6px 12px;
-      border-radius: 8px;
-      transition: background-color 0.3s ease;
-    }
-
-    #redirect a {
-      color: #64ffda;
-      text-decoration: none;
-      font-weight: 500;
-      margin-right: 8px;
-    }
-
-    .i18n-multiline {
-      white-space: pre-line;
-    }
-
-    .footer-links {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(100px, 1fr));
-    }
-      .footer-links {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(100px, 1fr));
-        }
-  </style>
 </head>
-
 <body>
-
-        <!-- Smooth Cursor Trail -->
-<style>
-  .cursor-trail-container {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 999999;
-  }
-
-  .trail-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 15px rgba(100, 255, 218, 0.8),
-      0 0 30px rgba(100, 255, 218, 0.4);
-    transform: translate(-50%, -50%);
-    will-change: transform, opacity;
-    mix-blend-mode: screen;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-
-  .trail-dot:first-child {
-    width: 12px;
-    height: 12px;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 20px rgba(100, 255, 218, 0.9),
-      0 0 40px rgba(100, 255, 218, 0.6);
-    z-index: 2;
-  }
-
-  .cursor-clicking {
-    transform: translate(-50%, -50%) scale(1.5);
-    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
-    box-shadow: 
-      0 0 25px rgba(255, 107, 157, 0.9),
-      0 0 50px rgba(255, 107, 157, 0.6) !important;
-  }
-
-  .cursor-hovering {
-    transform: translate(-50%, -50%) scale(1.3);
-    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
-  }
-</style>
-
-<div class="cursor-trail-container" id="cursor-trail"></div>
-
-<script>
-(function() {
-  // Hide default cursor
-  document.body.style.cursor = 'none';
-
-  const container = document.getElementById('cursor-trail');
-  const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  const trailCircles = [];
-  const COUNT = 12; // Fewer circles for smoother trail
-
-  // Create trail circles
-  for (let i = 0; i < COUNT; i++) {
-    const circle = document.createElement('div');
-    circle.className = 'trail-dot';
-
-    // Opacity decreases along the trail
-    const opacity = 0.9 - (i / COUNT) * 0.8;
-    circle.style.opacity = opacity.toString();
-
-    // Size decreases along the trail
-    const scale = 1 - (i / COUNT) * 0.5;
-    circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-    container.appendChild(circle);
-    trailCircles.push({ 
-      element: circle, 
-      x: coords.x, 
-      y: coords.y,
-      targetX: coords.x,
-      targetY: coords.y
-    });
-  }
-
-  // Track mouse position
-  let isMoving = false;
-  let lastMouseX = coords.x;
-  let lastMouseY = coords.y;
-  let velocity = { x: 0, y: 0 };
-
-  window.addEventListener('mousemove', e => {
-    coords.x = e.clientX;
-    coords.y = e.clientY;
-
-    // Calculate velocity for smooth movement
-    velocity.x = e.clientX - lastMouseX;
-    velocity.y = e.clientY - lastMouseY;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-
-    isMoving = true;
-
-    // Reset movement timeout
-    clearTimeout(window.movementTimeout);
-    window.movementTimeout = setTimeout(() => {
-      isMoving = false;
-    }, 50);
-  });
-
-  // Click effect
-  window.addEventListener('mousedown', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.add('cursor-clicking');
-    });
-  });
-
-  window.addEventListener('mouseup', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.remove('cursor-clicking');
-    });
-  });
-
-  // Hover effect for interactive elements
-  window.addEventListener('mouseover', e => {
-    const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
-    trailCircles.forEach(circle => {
-      circle.element.classList.toggle('cursor-hovering', !!interactive);
-    });
-  });
-
-  // Smooth animation function
-  function animateTrail() {
-    let targetX = coords.x;
-    let targetY = coords.y;
-
-    // Add velocity offset to first circle for more natural feel
-    const velocityOffset = 0.5;
-    const offsetX = velocity.x * velocityOffset;
-    const offsetY = velocity.y * velocityOffset;
-
-    trailCircles.forEach((circle, index) => {
-      // First circle follows cursor exactly
-      if (index === 0) {
-        circle.x = targetX + offsetX;
-        circle.y = targetY + offsetY;
-      } 
-      // Other circles follow with smooth delay
-      else {
-        const prevCircle = trailCircles[index - 1];
-
-        // Smooth interpolation factor (changes based on movement speed)
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const lerpFactor = isMoving ? 
-          Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
-          0.1; // Slow movement = more spread
-
-        circle.x += (prevCircle.x - circle.x) * lerpFactor;
-        circle.y += (prevCircle.y - circle.y) * lerpFactor;
-      }
-
-      // Apply position with easing
-      circle.element.style.left = circle.x + 'px';
-      circle.element.style.top = circle.y + 'px';
-
-      // Dynamic opacity based on speed and position
-      if (index > 0) {
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const baseOpacity = 0.9 - (index / COUNT) * 0.8;
-        const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
-        circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
-      }
-
-      // Update target for next circle
-      targetX = circle.x;
-      targetY = circle.y;
-    });
-
-    requestAnimationFrame(animateTrail);
-  }
-
-  // Handle window resize
-  window.addEventListener('resize', () => {
-    // Adjust if cursor goes out of bounds
-    if (coords.x > window.innerWidth) coords.x = window.innerWidth;
-    if (coords.y > window.innerHeight) coords.y = window.innerHeight;
-  });
-
-  // Handle mouse leave/enter
-  window.addEventListener('mouseleave', () => {
-    trailCircles.forEach(circle => {
-      circle.element.style.opacity = '0';
-    });
-  });
-
-  window.addEventListener('mouseenter', () => {
-    trailCircles.forEach((circle, index) => {
-      const opacity = 0.9 - (index / COUNT) * 0.8;
-      circle.element.style.opacity = opacity.toString();
-    });
-  });
-
-  // Start animation
-  animateTrail();
-})();
-</script>
-
   <!-- Header -->
   <header class="header">
     <nav class="navbar">
@@ -386,10 +37,11 @@
           <span>ExpenseFlow</span>
         </div>
         <div class="nav-menu" id="nav-menu">
-          <a href="#dashboard" class="nav-link active">Dashboard</a>
-          <a href="#analytics" class="nav-link">Analytics</a>
-          <a href="#goals" class="nav-link">Goals</a>
-          <a href="#settings" class="nav-link">Settings</a>
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="accounts.html" class="nav-link">Accounts</a>
+          <a href="analytics.html" class="nav-link">Analytics</a>
+          <a href="goals.html" class="nav-link">Goals</a>
+          <a href="settings.html" class="nav-link">Settings</a>
           <a href="Monthlysummary.html" class="nav-link">Monthly/Yearly Summary</a>
           <a href="./contributor.html" class="nav-link">Contributors</a>
         </div>
@@ -419,6 +71,8 @@
       </div>
     </nav>
   </header>
+  
+
 
   <!-- Main Content -->
   <main class="main-content">
@@ -478,7 +132,8 @@
       <div class="container">
         <div class="section-header-center">
           <h2 class="section-title" data-i18n="feature.heading">Powerful Features for Smart Finance</h2>
-          <p class="section-subtitle" data-i18n="feature.subheading">Everything you need to manage your money effectively</p>
+          <p class="section-subtitle" data-i18n="feature.subheading">Everything you need to manage your money
+            effectively</p>
         </div>
         <div class="features-grid">
           <div class="feature-card">
@@ -522,84 +177,6 @@
             </div>
             <h3>Secure & Private</h3>
             <p>Bank-level encryption keeps your financial data safe and private</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section class="how-it-works">
-      <div class="container">
-        <div class="section-header-center">
-          <h2 class="section-title">How It Works</h2>
-          <p class="section-subtitle">Get started in three simple steps</p>
-        </div>
-        <div class="steps-grid">
-          <div class="step-card">
-            <div class="step-number">1</div>
-            <div class="step-icon">
-              <i class="fas fa-plus-circle"></i>
-            </div>
-            <h3>Add Expenses</h3>
-            <p>Quickly log your daily expenses with our simple form. AI suggests categories automatically.</p>
-          </div>
-          <div class="step-card">
-            <div class="step-number">2</div>
-            <div class="step-icon">
-              <i class="fas fa-chart-line"></i>
-            </div>
-            <h3>Track & Analyze</h3>
-            <p>Watch your spending patterns emerge through beautiful visualizations and insights.</p>
-          </div>
-          <div class="step-card">
-            <div class="step-number">3</div>
-            <div class="step-icon">
-              <i class="fas fa-piggy-bank"></i>
-            </div>
-            <h3>Save More</h3>
-            <p>Make informed decisions based on data and achieve your financial goals faster.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="dashboard" class="container">
-      <!-- Quick Stats Overview -->
-      <div class="quick-stats">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <i class="fas fa-wallet"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.balance">Total Balance</p>
-            <h3 class="stat-value" id="quick-balance">₹0.00</h3>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <i class="fas fa-arrow-up"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.income">This Month Income</p>
-            <h3 class="stat-value income" id="quick-income">₹0.00</h3>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-            <i class="fas fa-arrow-down"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.expense">This Month Expenses</p>
-            <h3 class="stat-value expense" id="quick-expense">₹0.00</h3>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <i class="fas fa-piggy-bank"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.savings">Savings Rate</p>
-            <h3 class="stat-value" id="quick-savings">0%</h3>
           </div>
         </div>
       </div>
@@ -735,6 +312,9 @@
           </div>
         </div>
       </div>
+      </div>
+      </nav>
+      </header>
 
       <!-- Export Modal -->
       <div class="export-modal" id="export-modal">
@@ -816,7 +396,8 @@
           </div>
 
           <div class="export-modal-footer">
-            <button type="button" class="btn-cancel" id="export-cancel-btn" data-i18n="export.actions.cancel">Cancel</button>
+            <button type="button" class="btn-cancel" id="export-cancel-btn"
+              data-i18n="export.actions.cancel">Cancel</button>
             <button type="button" class="btn-submit" id="export-submit-btn">
               <i class="fas fa-download"></i> <span data-i18n="export.actions.export">Export</span>
             </button>
@@ -906,7 +487,8 @@
       <!-- Recurring Expenses Section -->
       <div class="recurring-section" id="recurring-section">
         <div class="section-header">
-          <h3><i class="fas fa-sync-alt"></i> <span data-i18n="recurring.title">Recurring Expenses & Subscriptions</span></h3>
+          <h3><i class="fas fa-sync-alt"></i> <span data-i18n="recurring.title">Recurring Expenses &
+              Subscriptions</span></h3>
           <button class="add-recurring-btn" id="add-recurring-btn">
             <i class="fas fa-plus"></i> <span data-i18n="recurring.add">Add Recurring</span>
           </button>
@@ -1028,90 +610,154 @@
             </div>
           </form>
         </div>
-      </section>
+    </section>
 
-      <!-- Goals Section -->
-      <section id="goals" class="goals-section" style="display: none;">
-        <div class="section-header">
-          <h3><i class="fas fa-bullseye"></i> Financial Goals</h3>
+    <!-- Subscription Manager Section -->
+    <section id="subscriptions" class="subscriptions-section" style="display: none;">
+      <div class="section-header">
+        <h3><i class="fas fa-calendar-check"></i> Subscription Manager</h3>
+        <div class="subscription-actions">
+          <button id="add-subscription-btn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Subscription
+          </button>
+          <button id="detect-subscriptions-btn" class="btn btn-secondary">
+            <i class="fas fa-magic"></i> Detect Subscriptions
+          </button>
+          <button id="export-subscriptions-btn" class="btn btn-secondary">
+            <i class="fas fa-download"></i> Export
+          </button>
         </div>
-        <div id="goals-content" class="goals-content">
-          <!-- Goals content will be loaded here -->
-          <div class="goals-placeholder">
-            <i class="fas fa-bullseye" style="font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem;"></i>
-            <h4>Set Your Financial Goals</h4>
-            <p>Create and track your savings goals, budget targets, and financial milestones.</p>
-            <button class="btn btn-primary" onclick="initializeGoals()">Get Started</button>
+      </div>
+
+      <!-- Subscription Statistics -->
+      <div id="subscription-statistics" class="subscription-statistics">
+        <!-- Statistics will be rendered here by subscription-manager.js -->
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="subscription-filters">
+        <button class="subscription-filter active" data-filter="all">
+          <i class="fas fa-list"></i> All
+        </button>
+        <button class="subscription-filter" data-filter="active">
+          <i class="fas fa-check-circle"></i> Active
+        </button>
+        <button class="subscription-filter" data-filter="unused">
+          <i class="fas fa-ghost"></i> Ghost
+        </button>
+        <button class="subscription-filter" data-filter="upcoming">
+          <i class="fas fa-clock"></i> Upcoming
+        </button>
+      </div>
+
+      <!-- Subscriptions List -->
+      <div id="subscription-list" class="subscription-list">
+        <!-- Subscriptions will be rendered here by subscription-manager.js -->
+        <div class="loading-placeholder">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Loading subscriptions...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Goals Section -->
+    <section id="goals" class="goals-section" style="display: none;">
+      <div class="section-header">
+        <h3><i class="fas fa-bullseye"></i> Financial Goals</h3>
+      </div>
+      <div id="goals-content" class="goals-content">
+        <!-- Goals content will be loaded here -->
+        <div class="goals-placeholder">
+          <i class="fas fa-bullseye" style="font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem;"></i>
+          <h4>Set Your Financial Goals</h4>
+          <p>Create and track your savings goals, budget targets, and financial milestones.</p>
+          <button class="btn btn-primary" onclick="initializeGoals()">Get Started</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics Dashboard Section -->
+    <section id="analytics" class="analytics-section" style="display: none;">
+      <div class="section-header">
+        <h3><i class="fas fa-chart-bar"></i> Financial Analytics & Forecasting</h3>
+        <div class="analytics-actions">
+          <select id="trends-period" class="period-select">
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="daily">Daily</option>
+          </select>
+          <button id="refresh-analytics" class="refresh-btn">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <div id="analytics-dashboard" class="analytics-grid">
+        <!-- Health Score Widget - Issue #481 -->
+        <div class="analytics-row wellness-row">
+          <div id="health-gauge-container" class="analytics-card health-gauge-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Calculating health score...</span>
+            </div>
+          </div>
+          <div id="smart-insights-container" class="analytics-card insights-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Loading insights...</span>
+            </div>
           </div>
         </div>
-      </section>
 
-      <!-- Analytics Dashboard Section -->
-      <section id="analytics" class="analytics-section" style="display: none;">
-        <div class="section-header">
-          <h3><i class="fas fa-chart-bar"></i> Financial Analytics & Forecasting</h3>
-          <div class="analytics-actions">
-            <select id="trends-period" class="period-select">
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-            <button id="refresh-analytics" class="refresh-btn">
-              <i class="fas fa-sync-alt"></i> Refresh
-            </button>
+        <!-- Top Row: Velocity and Forecast -->
+        <div class="analytics-row top-row">
+          <div id="velocity-widget" class="analytics-card velocity-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Calculating velocity...</span>
+            </div>
+          </div>
+          <div id="forecast-widget" class="analytics-card forecast-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Generating forecast...</span>
+            </div>
           </div>
         </div>
 
-        <div id="analytics-dashboard" class="analytics-grid">
-          <!-- Top Row: Velocity and Forecast -->
-          <div class="analytics-row top-row">
-            <div id="velocity-widget" class="analytics-card velocity-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Calculating velocity...</span>
-              </div>
-            </div>
-            <div id="forecast-widget" class="analytics-card forecast-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Generating forecast...</span>
-              </div>
+        <!-- Middle Row: Trends and Category Breakdown -->
+        <div class="analytics-row main-charts">
+          <div id="trends-chart" class="analytics-card trends-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Loading trends...</span>
             </div>
           </div>
-
-          <!-- Middle Row: Trends and Category Breakdown -->
-          <div class="analytics-row main-charts">
-            <div id="trends-chart" class="analytics-card trends-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading trends...</span>
-              </div>
-            </div>
-            <div id="category-chart" class="analytics-card category-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading distribution...</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Row: Insights and Predictions -->
-          <div class="analytics-row details-row">
-            <div id="insights-container" class="analytics-card insights-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Gathering insights...</span>
-              </div>
-            </div>
-            <div id="predictions-widget" class="analytics-card predictions-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Predicting spending...</span>
-              </div>
+          <div id="category-chart" class="analytics-card category-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Loading distribution...</span>
             </div>
           </div>
         </div>
-      </section>
+
+        <!-- Bottom Row: Insights and Predictions -->
+        <div class="analytics-row details-row">
+          <div id="insights-container" class="analytics-card insights-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Gathering insights...</span>
+            </div>
+          </div>
+          <div id="predictions-widget" class="analytics-card predictions-card">
+            <div class="widget-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Predicting spending...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     </div>
 
     <!-- Settings Section -->
@@ -1345,615 +991,86 @@
       </div>
     </div>
   </div>
+<!-- < !--FOOTER -->
+<footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
 
-  <footer class="footer">
-    <div class="footer-container">
+                <p class="footer-description">
+                    Smart money management made simple. Track, analyze, and optimize
+                    your financial habits.
+                </p>
 
-      <div class="footer-section">
-        <div class="footer-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
-        </div>
+                <div class="social-links">
+                    <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="X (Twitter)">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
 
-  <p class="footer-description">
-    Smart money management made simple. Track, analyze, and optimize your financial habits.
-  </p>
+                    <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="Github">
+                        <i class="fab fa-github"></i>
+                    </a>
 
-  <div class="social-links">
-    <a
-      href="https://x.com/9504_renu"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="X (Twitter)"
-    >
-      <i class="fab fa-x-twitter"></i>
-    </a>
+                    <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="Email">
+                        <i class="far fa-envelope"></i>
+                    </a>
 
-    <a
-      href="https://github.com/Renu-code123/ExpenseFlow"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Github"
-    >
-      <i class="fab fa-github"></i>
-    </a>
-
-    <a
-      href="mailto:renu89857@gmail.com"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Email"
-    >
-      <i class="far fa-envelope"></i>
-    </a>
-
-    <a
-      href="https://www.linkedin.com/in/renu-kumari-prajapati"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="LinkedIn"
-    >
-      <i class="fab fa-linkedin-in"></i>
-    </a>
-  </div>
-</div>
-
-
-      <div class="footer-section">
-        <h4>Company</h4>
-        <ul class="footer-links">
-          <li><a href="AboutUs.html">About Us</a></li>
-          <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
-          <li><a href="terms_service.html">Terms of Service</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-section">
-        <h4>Features</h4>
-        <ul class="footer-links">
-          <li><a href="#">Expense Tracking</a></li>
-          <li><a href="#">Budget Planning</a></li>
-          <li><a href="#">Analytics Dashboard</a></li>
-          <li><a href="#">Goal Setting</a></li>
-        </ul>
-      </div>
-
-    </div>
-
-    <div class="footer-bottom">
-      <div class="footer-container">
-        <p>&copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for better financial management.</p>
-        <div class="footer-stats">
-          <span>🏆 Trusted by 10,000+ users</span>
-          <span>💰 ₹50M+ tracked</span>
-          <span>📊 99.9% uptime</span>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="trackerscript.js"></script>
-  <script src="api-integration.js"></script>
-  <script src="realtime-sync.js"></script>
-  <script src="analytics-dashboard.js"></script>
-  <script>
-    // Recurring Modal Control
-    function openRecurringModal() {
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.add('active');
-        document.getElementById('recurring-modal-title').textContent = 'Add Recurring Expense';
-        document.getElementById('recurring-form').reset();
-      }
-    }
-
-    function closeRecurringModal() {
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('active');
-      }
-    }
-
-    // Initialize recurring button
-    document.addEventListener('DOMContentLoaded', function() {
-      const addBtn = document.getElementById('add-recurring-btn');
-      if (addBtn) {
-        addBtn.addEventListener('click', openRecurringModal);
-      }
-
-      const closeBtn = document.getElementById('recurring-modal-close');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', closeRecurringModal);
-      }
-
-      const cancelBtn = document.getElementById('recurring-cancel-btn');
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', closeRecurringModal);
-      }
-
-      // Close modal when clicking outside
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            closeRecurringModal();
-          }
-        });
-      }
-    });
-  </script>
-  <script>
-    // Currency Management Functions
-    let supportedCurrencies = [];
-    let currentUserCurrency = 'INR';
-
-    // Load supported currencies on page load
-    async function loadSupportedCurrencies() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const response = await fetch('/api/currency/supported', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          supportedCurrencies = data.data.currencies;
-          populateCurrencySelects();
-        }
-      } catch (error) {
-        console.error('Error loading currencies:', error);
-      }
-    }
-
-    // Populate currency dropdowns
-    function populateCurrencySelects() {
-      const currencySelect = document.getElementById('currency');
-      const preferredCurrencySelect = document.getElementById('preferred-currency');
-
-  <style>
-    @keyframes spin {
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    .progress-fill.high {
-      background: #4caf50 !important;
-    }
-
-    .progress-fill.medium {
-      background: #ffc107 !important;
-    }
-
-    .progress-fill.low {
-      background: #f44336 !important;
-    }
-  </style>
-
-  <!-- Workspace Modal -->
-  <div id="workspace-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-users"></i> Create Shared Workspace</h3>
-        <span class="close-modal" onclick="closeWorkspaceModal()">&times;</span>
-      </div>
-      <form id="create-workspace-form">
-        <div class="modal-body">
-          <div class="form-control">
-            <label for="workspace-name-input">Workspace Name *</label>
-            <input type="text" id="workspace-name-input" placeholder="e.g., Family, Hackathon Team" required>
-          </div>
-          <div class="form-control">
-            <label for="workspace-desc-input">Description (Optional)</label>
-            <textarea id="workspace-desc-input" rows="3" placeholder="What is this workspace for?"></textarea>
-          </div>
-          <p class="info-text">
-            <i class="fas fa-info-circle"></i> After creating, you can invite members from the workspace settings.
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closeWorkspaceModal()">Cancel</button>
-          <button type="submit" class="btn-submit">Create Workspace</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Invite Member Modal -->
-  <div id="invite-modal" class="modal invite-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-user-plus"></i> Invite Member</h3>
-        <span class="close-modal" onclick="closeInviteModal()">&times;</span>
-      </div>
-      <form id="invite-form" class="invite-form">
-        <div class="modal-body">
-          <div class="form-control">
-            <label for="invite-email">Email Address *</label>
-            <input type="email" id="invite-email" placeholder="member@example.com" required>
-            <small>Enter the email address of the person you want to invite</small>
-          </div>
-          <div class="form-control">
-            <label for="invite-role">Role *</label>
-            <select id="invite-role" class="role-select" required>
-              <option value="">Select Role</option>
-              <option value="viewer">Viewer - Can view expenses and reports</option>
-              <option value="member">Member - Can add expenses and view all data</option>
-              <option value="manager">Manager - Can manage budgets and approve expenses</option>
-              <option value="admin">Admin - Can manage members and all workspace data</option>
-            </select>
-            <small>Choose the appropriate role for this member</small>
-          </div>
-          <div class="role-permissions">
-            <h5>Role Permissions:</h5>
-            <div id="role-permissions-display">
-              <p>Select a role to see permissions</p>
+                    <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
             </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closeInviteModal()">Cancel</button>
-          <button type="submit" class="btn-submit">Send Invitation</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  <!-- API and Feature Scripts -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="auth-integration.js"></script>
-  <script src="api-integration.js"></script>
-  <script src="workspace-feature.js"></script>
-  <script src="budget-goals.js"></script>
-  <script src="receipt-upload.js"></script>
-  <script src="receipt-ocr.js"></script>
-  <script src="analytics-dashboard.js"></script>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="AboutUs.html">About Us</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-container">
+                  <p id="copyright" style="text-align:center;"></p>
+                  <script>
+                    document.getElementById("copyright").innerHTML =
+                      `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+                  </script>
+                <div class="footer-stats">
+                    <span>🏆 Trusted by 10,000+ users</span>
+                    <span>💰 ₹50M+ tracked</span>
+                    <span>📊 99.9% uptime</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="db-manager.js"></script>
   <script src="realtime-sync.js"></script>
-  <script src="report-generator.js"></script>
-
-  <!-- PWA Installation Prompt -->
-  <div id="install-prompt" class="install-prompt" style="display: none;">
-    <div class="install-prompt-content">
-      <div class="install-prompt-header">
-        <i class="fas fa-download"></i>
-        <h3 data-i18n="install.title">Install ExpenseFlow</h3>
-      </div>
-      <p data-i18n="install.text">Install ExpenseFlow for quick access and offline functionality!</p>
-      <div class="install-prompt-actions">
-        <button id="install-button" class="install-btn">
-          <i class="fas fa-plus"></i> <span data-i18n="install.install">Install</span>
-        </button>
-        <button id="install-dismiss" class="dismiss-btn">
-          <i class="fas fa-times"></i> <span data-i18n="install.dismiss">Not now</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  
-  </footer>
-
-  <!-- Update Available Notification -->
-  <div id="update-notification" class="update-notification" style="display: none;">
-    <div class="update-content">
-      <i class="fas fa-sync-alt"></i>
-      <span>A new version is available!</span>
-      <button id="update-button" class="update-btn">Update Now</button>
-    </div>
-  </div>
-<script src="auth-check.js"></script>
-<script src="auth.js"></script>
-<script src="trackerscript.js"></script>
-<script src="analytics-dashboard.js"></script>
-<script src="settings.js"></script>
-<script src="report-generator.js"></script>
-
-
-</body>
-
-</html>
-<script>
-  // Recurring Modal Control
-  function openRecurringModal() {
-    const modal = document.getElementById('recurring-modal');
-    if (modal) {
-      modal.style.display = 'flex';
-      modal.classList.add('active');
-      document.getElementById('recurring-modal-title').textContent = 'Add Recurring Expense';
-      document.getElementById('recurring-form').reset();
-    }
-  }
-
-  function closeRecurringModal() {
-    const modal = document.getElementById('recurring-modal');
-    if (modal) {
-      modal.style.display = 'none';
-      modal.classList.remove('active');
-    }
-  }
-
-      // Close modal when clicking outside
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            closeRecurringModal();
-          }
-        });
-      }
-    });
-  </script>
-  <script>
-    // Currency Management Functions
-    let supportedCurrencies = [];
-    let currentUserCurrency = (window.i18n?.getCurrency?.() && window.i18n.getCurrency()) || 'INR';
-    window.currentUserCurrency = currentUserCurrency;
-
-    // Load supported currencies on page load
-    async function loadSupportedCurrencies() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const response = await fetch('/api/currency/supported', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-    const closeBtn = document.getElementById('recurring-modal-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closeRecurringModal);
-    }
-
-    const cancelBtn = document.getElementById('recurring-cancel-btn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', closeRecurringModal);
-    }
-
-    // Close modal when clicking outside
-    const modal = document.getElementById('recurring-modal');
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          closeRecurringModal();
-        }
-      });
-    }
-  });
-</script>
-<script>
-  // Currency Management Functions
-  let supportedCurrencies = [];
-  let currentUserCurrency = 'INR';
-
-  // Load supported currencies on page load
-  async function loadSupportedCurrencies() {
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
-      const response = await fetch('/api/currency/supported', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        supportedCurrencies = data.data.currencies;
-        populateCurrencySelects();
-      }
-    } catch (error) {
-      console.error('Error loading currencies:', error);
-    }
-  }
-
-  // Populate currency dropdowns
-  function populateCurrencySelects() {
-    const currencySelect = document.getElementById('currency');
-    const preferredCurrencySelect = document.getElementById('preferred-currency');
-
-    if (currencySelect && supportedCurrencies.length > 0) {
-      currencySelect.innerHTML = supportedCurrencies.map(curr =>
-        `<option value="${curr.code}">${curr.symbol} ${curr.code} - ${curr.name}</option>`
-      ).join('');
-      currencySelect.value = currentUserCurrency;
-    }
-
-    if (preferredCurrencySelect && supportedCurrencies.length > 0) {
-      preferredCurrencySelect.innerHTML = supportedCurrencies.map(curr =>
-        `<option value="${curr.code}">${curr.symbol} ${curr.code} - ${curr.name}</option>`
-      ).join('');
-      preferredCurrencySelect.value = currentUserCurrency;
-    }
-  }
-
-  // Load user's currency preference
-  async function loadUserCurrencyPreference() {
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
-        const data = await response.json();
-        if (data.success) {
-          currentUserCurrency = data.data.preferredCurrency;
-          window.currentUserCurrency = currentUserCurrency;
-          if (window.i18n?.setCurrency) {
-            window.i18n.setCurrency(currentUserCurrency);
-          }
-          document.getElementById('current-currency').textContent = currentUserCurrency;
-          populateCurrencySelects();
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        currentUserCurrency = data.data.preferredCurrency;
-        const currentCurrencyEl = document.getElementById('current-currency');
-        if (currentCurrencyEl) currentCurrencyEl.textContent = currentUserCurrency;
-        populateCurrencySelects();
-      }
-    } catch (error) {
-      console.error('Error loading currency preference:', error);
-    }
-  }
-
-  // Open currency settings modal
-  function openCurrencyModal() {
-    const modal = document.getElementById('currency-modal');
-    if (modal) {
-      modal.style.display = 'flex';
-      loadExchangeRateInfo();
-    }
-  }
-
-  // Close currency settings modal
-  function closeCurrencyModal() {
-    const modal = document.getElementById('currency-modal');
-    if (modal) {
-      modal.style.display = 'none';
-    }
-  }
-
-  // Load exchange rate information
-  async function loadExchangeRateInfo() {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/currency/rates?base=${currentUserCurrency}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        const rateInfo = document.getElementById('exchange-rate-info');
-        if (!rateInfo) return;
-
-        const rates = data.data.rates;
-        const popularCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD'];
-
-        let html = '<div class="rate-list">';
-        popularCurrencies.forEach(curr => {
-          if (rates[curr]) {
-            html += `<div class="rate-item">
-                <span class="rate-currency">${curr}</span>
-                <span class="rate-value">${rates[curr].toFixed(4)}</span>
-              </div>`;
-          }
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          currentUserCurrency = newCurrency;
-          window.currentUserCurrency = newCurrency;
-          if (window.i18n?.setCurrency) {
-            window.i18n.setCurrency(newCurrency);
-          }
-          document.getElementById('current-currency').textContent = newCurrency;
-          closeCurrencyModal();
-          // Reload transactions to show in new currency
-          location.reload();
-        } else {
-          alert('Failed to update currency preference');
-        }
-      } catch (error) {
-        console.error('Error saving currency preference:', error);
-        alert('Error saving currency preference');
-      }
-    } catch (error) {
-      console.error('Error loading exchange rates:', error);
-    }
-  }
-
-  // Save currency preference
-  async function saveCurrencyPreference() {
-    try {
-      const token = localStorage.getItem('authToken');
-      const prefSelect = document.getElementById('preferred-currency');
-      if (!prefSelect) return;
-
-      const newCurrency = prefSelect.value;
-
-      const response = await fetch('/api/currency/preference', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ currency: newCurrency })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        currentUserCurrency = newCurrency;
-        const currentCurrencyEl = document.getElementById('current-currency');
-        if (currentCurrencyEl) currentCurrencyEl.textContent = newCurrency;
-        closeCurrencyModal();
-        // Reload transactions to show in new currency
-        location.reload();
-      } else {
-        alert('Failed to update currency preference');
-      }
-    });
-
-
-  </script>
-
-  <!-- PWA Installation Prompt -->
-  <div id="install-prompt" class="install-prompt" style="display: none;">
-    <div class="install-prompt-content">
-      <div class="install-prompt-header">
-        <i class="fas fa-download"></i>
-        <h3>Install ExpenseFlow</h3>
-      </div>
-      <p>Install ExpenseFlow for quick access and offline functionality!</p>
-      <div class="install-prompt-actions">
-        <button id="install-button" class="install-btn">
-          <i class="fas fa-plus"></i> Install
-        </button>
-        <button id="install-dismiss" class="dismiss-btn">
-          <i class="fas fa-times"></i> Not now
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Offline Indicator -->
-  <div id="offline-indicator" class="offline-indicator" style="display: none;">
-    <i class="fas fa-wifi-slash"></i>
-    <span data-i18n="offline.text">You're offline. Changes will be saved locally.</span>
-  </div>
-
-  <!-- Update Available Notification -->
-  <div id="update-notification" class="update-notification" style="display: none;">
-    <div class="update-content">
-      <i class="fas fa-sync-alt"></i>
-      <span data-i18n="update.text">A new version is available!</span>
-      <button id="update-button" class="update-btn" data-i18n="update.action">Update Now</button>
-    </div>
-  </div>
-  <script src="auth-check.js"></script>
-  <script src="auth.js"></script>
-  <script src="trackerscript.js"></script>
   <script src="analytics-dashboard.js"></script>
+  <script src="protect.js"></script>
+  <script src="trackerscript.js"></script>
+  <script src="auth.js"></script>
+  <script src="settings.js"></script>
   <script src="workspace-feature.js"></script>
+  <script src="smart-triggers.js"></script>
+  <script src="subscription-manager.js"></script>
+  <script src="index.js"> </script>
 
+  </body >
 
-</body>
-
-</html>
+</html >

@@ -9,13 +9,16 @@ const securityMonitor = require('../services/securityMonitor');
 const SecurityService = require('../services/securityService');
 const auth = require('../middleware/auth');
 const { AuthSchemas, validateRequest } = require('../middleware/inputValidator');
-const { 
-  loginLimiter, 
-  registerLimiter, 
-  passwordResetLimiter, 
+const {
+  loginLimiter,
+  registerLimiter,
+  passwordResetLimiter,
   emailVerifyLimiter,
-  totpVerifyLimiter 
+  totpVerifyLimiter
 } = require('../middleware/rateLimiter');
+const ResponseFactory = require('../utils/ResponseFactory');
+const { asyncHandler } = require('../middleware/errorMiddleware');
+const { ConflictError, UnauthorizedError, BadRequestError } = require('../utils/AppError');
 const router = express.Router();
 
 /**
@@ -26,50 +29,49 @@ const router = express.Router();
  */
 
 // Register
-router.post('/register', registerLimiter, validateRequest(AuthSchemas.register), async (req, res) => {
-  try {
-    const existingUser = await User.findOne({ email: req.body.email });
-    if (existingUser) return res.status(400).json({ error: 'User already exists' });
+router.post('/register', registerLimiter, validateRequest(AuthSchemas.register), asyncHandler(async (req, res) => {
+  const existingUser = await User.findOne({ email: req.body.email });
+  if (existingUser) throw new ConflictError('User already exists');
 
-    const user = new User(req.body);
-    await user.save();
+  const user = new User(req.body);
+  await user.save();
 
-    // Generate JWT with unique ID for session tracking
-    const jwtId = crypto.randomBytes(16).toString('hex');
-    const token = jwt.sign(
-      { id: user._id, jti: jwtId },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '24h' }
-    );
+  // Generate JWT with unique ID for session tracking
+  const jwtId = crypto.randomBytes(16).toString('hex');
+  const token = jwt.sign(
+    { id: user._id, jti: jwtId },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE || '24h' }
+  );
 
-    // Create session
-    await Session.createSession(user._id, jwtId, req, {
-      loginMethod: 'password',
-      rememberMe: false
-    });
+  // Create session
+  await Session.createSession(user._id, jwtId, req, {
+    loginMethod: 'password',
+    rememberMe: false
+  });
 
-    // Log registration
-    await AuditLog.logAuthEvent(user._id, 'user_register', req, {
-      severity: 'low',
-      status: 'success'
-    });
+  // Log registration
+  await AuditLog.logAuthEvent(user._id, 'user_register', req, {
+    severity: 'low',
+    status: 'success'
+  });
 
-    // Send welcome email
-    try {
-      await emailService.sendWelcomeEmail(user);
-    } catch (emailError) {
-      console.error('Welcome email failed:', emailError);
+  // Send welcome email (non-blocking)
+  emailService.sendWelcomeEmail(user).catch(err =>
+    console.error('Welcome email failed:', err)
+  );
+
+  return ResponseFactory.created(res, {
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      locale: user.locale,
+      preferredCurrency: user.preferredCurrency
     }
-
-    res.status(201).json({
-      token,
-      user: { id: user._id, name: user.name, email: user.email, locale: user.locale, preferredCurrency: user.preferredCurrency }
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+  }, 'Registration successful');
+}));
 
 // Login
 router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (req, res) => {
@@ -90,7 +92,7 @@ router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (r
         status: 'blocked'
       });
       const lockoutMinutes = Math.ceil((user.security.lockoutUntil - Date.now()) / 60000);
-      return res.status(423).json({ 
+      return res.status(423).json({
         error: `Account is locked. Please try again in ${lockoutMinutes} minutes.`,
         lockedUntil: user.security.lockoutUntil
       });
@@ -158,11 +160,11 @@ router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (r
     res.json({
       token,
       sessionId: session._id,
-      user: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        locale: user.locale, 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        locale: user.locale,
         preferredCurrency: user.preferredCurrency,
         twoFactorEnabled: user.twoFactorAuth?.enabled || false
       }
@@ -222,11 +224,11 @@ router.post('/verify-2fa', async (req, res) => {
     res.json({
       token,
       sessionId: session._id,
-      user: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        locale: user.locale, 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        locale: user.locale,
         preferredCurrency: user.preferredCurrency,
         twoFactorEnabled: true
       },
@@ -281,7 +283,7 @@ router.post('/2fa/setup', auth, async (req, res) => {
 router.post('/2fa/verify-setup', auth, async (req, res) => {
   try {
     const { token } = req.body;
-    
+
     if (!token || token.length !== 6) {
       return res.status(400).json({ error: 'Valid 6-digit token required' });
     }
@@ -298,7 +300,7 @@ router.post('/2fa/verify-setup', auth, async (req, res) => {
 router.post('/2fa/disable', auth, async (req, res) => {
   try {
     const { password } = req.body;
-    
+
     if (!password) {
       return res.status(400).json({ error: 'Password required to disable 2FA' });
     }
@@ -326,7 +328,7 @@ router.get('/2fa/status', auth, async (req, res) => {
 router.post('/2fa/backup-codes/regenerate', auth, async (req, res) => {
   try {
     const { token } = req.body;
-    
+
     if (!token || token.length !== 6) {
       return res.status(400).json({ error: 'Valid 6-digit token required' });
     }
@@ -347,7 +349,7 @@ router.post('/2fa/backup-codes/regenerate', auth, async (req, res) => {
 router.get('/sessions', auth, async (req, res) => {
   try {
     const sessions = await SecurityService.getActiveSessions(req.user._id);
-    
+
     // Mark current session
     const currentJwtId = req.jwtId;
     const sessionsWithCurrent = sessions.map(session => ({
@@ -468,7 +470,7 @@ router.post('/security/change-password', auth, async (req, res) => {
     }
 
     const user = await User.findById(req.user._id);
-    
+
     // Verify current password
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
@@ -489,9 +491,9 @@ router.post('/security/change-password', auth, async (req, res) => {
       status: 'success'
     });
 
-    res.json({ 
-      success: true, 
-      message: 'Password changed successfully. Other sessions have been logged out.' 
+    res.json({
+      success: true,
+      message: 'Password changed successfully. Other sessions have been logged out.'
     });
   } catch (error) {
     console.error('Change password error:', error);

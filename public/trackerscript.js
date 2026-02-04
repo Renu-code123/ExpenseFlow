@@ -1,3 +1,7 @@
+if (!localStorage.getItem('token')) {
+  window.location.replace('/login.html');
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =====================
@@ -55,22 +59,22 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('Connected to real-time sync');
     });
 
-    socket.on('expense_created', (expense) => {
+    socket.on('transaction_created', (transaction) => {
       // Use display amount if available, otherwise convert
-      const displayAmount = expense.displayAmount || expense.amount;
-      const transaction = {
-        id: expense._id,
-        text: expense.description,
-        amount: expense.type === 'expense' ? -displayAmount : displayAmount,
-        category: expense.category,
-        type: expense.type,
-        date: expense.date,
-        displayCurrency: expense.displayCurrency || 'INR'
+      const displayAmount = transaction.displayAmount || transaction.amount;
+      const newTransaction = {
+        id: transaction._id,
+        text: transaction.description,
+        amount: transaction.type === 'expense' ? -displayAmount : displayAmount,
+        category: transaction.category,
+        type: transaction.type,
+        date: transaction.date,
+        displayCurrency: transaction.displayCurrency || 'INR'
       };
-      transactions.push(transaction);
+      transactions.push(newTransaction);
       displayTransactions();
       updateValues();
-      showNotification('New expense synced from another device', 'info');
+      showNotification('New transaction synced from another device', 'info');
     });
 
     socket.on('expense_updated', (expense) => {
@@ -107,33 +111,45 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =====================
      API FUNCTIONS
   ====================== */
-  async function fetchExpenses() {
+  async function fetchTransactions() {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses`, {
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
         headers: getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to fetch expenses');
+
+      if (response.status === 401) {
+        localStorage.clear();
+        window.location.replace('/login.html');
+        return [];
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch expenses');
+      }
+
       const data = await response.json();
       return data.data.map(expense => ({
         id: expense._id,
         text: expense.description,
-        amount: expense.type === 'expense' ? -(expense.displayAmount || expense.amount) : (expense.displayAmount || expense.amount),
+        amount: expense.type === 'expense'
+          ? -(expense.displayAmount || expense.amount)
+          : (expense.displayAmount || expense.amount),
         category: expense.category,
         type: expense.type,
         date: expense.date,
         displayCurrency: expense.displayCurrency || 'INR',
-        approvalStatus: expense.approvalStatus || 'approved' // Default to approved for backward compatibility
+        approvalStatus: expense.approvalStatus || 'approved'
       }));
     } catch (error) {
-      console.error('Error fetching expenses:', error);
-      // Fallback to localStorage
+      console.error('Network error, loading offline data:', error);
       return JSON.parse(localStorage.getItem('transactions') || '[]');
     }
   }
 
-  async function saveExpense(expense) {
+
+  async function saveTransaction(transaction) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses`, {
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,9 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function updateExpense(id, expense) {
+  async function updateTransaction(id, transaction) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -167,9 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function deleteExpense(id) {
+  async function deleteTransaction(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -273,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
       item.className = `suggestion-item ${index === 0 ? 'primary' : ''}`;
 
       const confidenceLevel = suggestion.confidence > 0.75 ? 'high' :
-                              suggestion.confidence > 0.5 ? 'medium' : 'low';
+        suggestion.confidence > 0.5 ? 'medium' : 'low';
 
       item.innerHTML = `
         <div class="suggestion-content">
@@ -419,28 +435,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       showNotification(`${type.value.charAt(0).toUpperCase() + type.value.slice(1)} added successfully!`, 'success');
     } catch (error) {
-      // Handle offline mode - save to localStorage
-      const transaction = {
-        id: generateID(),
-        text: text.value.trim(),
-        amount: transactionAmount,
-        category: category.value,
-        type: type.value,
-        date: new Date().toISOString(),
-        offline: true
-      };
-
-      transactions.push(transaction);
-      displayTransactions();
-      updateValues();
-      updateLocalStorage();
-
-      text.value = '';
-      amount.value = '';
-      category.value = '';
-      type.value = '';
-
-      showNotification('Saved offline. Will sync when online.', 'warning');
+      console.error('Failed to add transaction:', error);
+      showNotification('Failed to add transaction. Please check your connection.', 'error');
     }
   }
 
@@ -450,26 +446,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!transactionToRemove) return;
 
     try {
-      if (!transactionToRemove.offline) {
-        await deleteExpense(id);
-      }
-
+      await deleteExpense(id);
       transactions = transactions.filter(transaction => transaction.id !== id);
-      updateLocalStorage();
       displayTransactions();
       updateValues();
-
       showNotification('Transaction deleted successfully', 'success');
     } catch (error) {
-      // Mark for deletion when online
-      const transaction = transactions.find(t => t.id === id);
-      if (transaction) {
-        transaction.pendingDelete = true;
-        updateLocalStorage();
-        displayTransactions();
-        updateValues();
-        showNotification('Marked for deletion. Will sync when online.', 'warning');
-      }
+      console.error('Failed to delete transaction:', error);
+      showNotification('Failed to delete transaction. Please check your connection.', 'error');
     }
   }
 
@@ -478,50 +462,18 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const expenses = await fetchExpenses();
       transactions = expenses;
-      updateLocalStorage();
       displayTransactions();
       updateValues();
     } catch (error) {
-      // Load from localStorage if API fails
-      const localTransactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-      transactions = localTransactions;
+      console.error('Failed to load transactions:', error);
+      showNotification('Failed to load transactions. Please check your connection.', 'error');
+      transactions = [];
       displayTransactions();
       updateValues();
-      showNotification('Loaded offline data', 'warning');
     }
   }
 
-  // Sync offline transactions when online
-  async function syncOfflineTransactions() {
-    const offlineTransactions = transactions.filter(t => t.offline || t.pendingDelete);
 
-    for (const transaction of offlineTransactions) {
-      try {
-        if (transaction.pendingDelete) {
-          await deleteExpense(transaction.id);
-          transactions = transactions.filter(t => t.id !== transaction.id);
-        } else if (transaction.offline) {
-          const expense = {
-            description: transaction.text,
-            amount: Math.abs(transaction.amount),
-            category: transaction.category,
-            type: transaction.type
-          };
-
-          const savedExpense = await saveExpense(expense);
-
-          // Update local transaction with server ID
-          transaction.id = savedExpense._id;
-          transaction.offline = false;
-        }
-      } catch (error) {
-        console.error('Sync error:', error);
-      }
-    }
-
-    updateLocalStorage();
-    showNotification('Data synced successfully', 'success');
-  }
 
   /* =====================
      UI FUNCTIONS
@@ -560,9 +512,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const date = new Date(transaction.date);
     const formattedDate = date.toLocaleDateString('en-IN');
     const categoryInfo = categories[transaction.category] || categories.other;
-    const currencySymbol = transaction.displayCurrency === 'INR' ? '₹' : 
-                          transaction.displayCurrency === 'USD' ? '$' : 
-                          transaction.displayCurrency === 'EUR' ? '€' : transaction.displayCurrency;
+    const currencySymbol = transaction.displayCurrency === 'INR' ? '₹' :
+      transaction.displayCurrency === 'USD' ? '$' :
+        transaction.displayCurrency === 'EUR' ? '€' : transaction.displayCurrency;
 
     // Determine approval status
     let statusBadge = '';
@@ -604,19 +556,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const expense = amounts.filter(item => item < 0).reduce((acc, item) => acc + item, 0) * -1;
 
     // Use the currency from the first transaction or default to INR
-    const currencySymbol = transactions.length > 0 ? 
-      (transactions[0].displayCurrency === 'INR' ? '₹' : 
-       transactions[0].displayCurrency === 'USD' ? '$' : 
-       transactions[0].displayCurrency === 'EUR' ? '€' : transactions[0].displayCurrency) : '₹';
+    const currencySymbol = transactions.length > 0 ?
+      (transactions[0].displayCurrency === 'INR' ? '₹' :
+        transactions[0].displayCurrency === 'USD' ? '$' :
+          transactions[0].displayCurrency === 'EUR' ? '€' : transactions[0].displayCurrency) : '₹';
 
     balance.innerHTML = `${currencySymbol}${total.toFixed(2)}`;
     moneyPlus.innerHTML = `+${currencySymbol}${income.toFixed(2)}`;
     moneyMinus.innerHTML = `-${currencySymbol}${expense.toFixed(2)}`;
   }
 
-  function updateLocalStorage() {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-  }
+
 
   function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
@@ -688,11 +638,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function Init() {
     await loadTransactions();
     initializeSocket();
-
-    // Sync offline data when online
-    if (navigator.onLine) {
-      await syncOfflineTransactions();
-    }
   }
 
   // Event listeners

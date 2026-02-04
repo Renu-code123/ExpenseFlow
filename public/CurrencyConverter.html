@@ -9,685 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="currencyConverter.css">
 
-<style>
-/* =========================
-   THEME VARIABLES
-========================= */
-:root {
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --secondary-gradient: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-  --bg-primary: #0f0f23;
-  --bg-secondary: #1a1a2e;
-  --card-bg: rgba(255, 255, 255, 0.06);
-  --card-glass: rgba(255, 255, 255, 0.08);
-  --text-primary: #ffffff;
-  --text-secondary: #b4b4b4;
-  --text-tertiary: #8a8a8a;
-  --accent-primary: #64ffda;
-  --accent-secondary: #ff6b9d;
-  --border-glass: rgba(255, 255, 255, 0.12);
-  --shadow-glass: 0 12px 40px rgba(31, 38, 135, 0.45);
-  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
-  --border-radius: 16px;
-  --border-radius-sm: 10px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-body.light {
-  --bg-primary: #f5f7fb;
-  --bg-secondary: #ffffff;
-  --card-bg: #ffffff;
-  --card-glass: rgba(255, 255, 255, 0.9);
-  --text-primary: #1a1a1a;
-  --text-secondary: #555555;
-  --text-tertiary: #777777;
-  --border-glass: #e2e2e2;
-  --shadow-glass: 0 8px 22px rgba(0, 0, 0, 0.1);
-  --accent-primary: #007a63;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  min-height: 100vh;
-  animation: pageFade 0.7s ease;
-  overflow-x: hidden;
-}
-
-/* =========================
-   NAVBAR
-========================= */
-.header {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
-  background: rgba(15, 15, 35, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--border-glass);
-  transition: var(--transition);
-}
-
-body.light .header {
-  background: rgba(245, 247, 251, 0.85);
-}
-
-.nav-container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 1.1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.nav-logo {
-  display: flex;
-  gap: .6rem;
-  align-items: center;
-  font-weight: 700;
-  font-size: 1.4rem;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.nav-menu {
-  display: flex;
-  gap: 1.6rem;
-  align-items: center;
-}
-
-.nav-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  position: relative;
-  transition: var(--transition);
-  padding: 0.5rem 0;
-}
-
-.nav-link::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--accent-primary);
-  transition: var(--transition);
-}
-
-.nav-link:hover::after,
-.nav-link.active::after {
-  width: 100%;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  color: var(--accent-primary);
-}
-
-.theme-toggle {
-  cursor: pointer;
-  font-size: 1.25rem;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--card-glass);
-  border: 1px solid var(--border-glass);
-  transition: var(--transition);
-}
-
-.theme-toggle:hover {
-  transform: rotate(30deg);
-  background: var(--accent-primary);
-  color: var(--bg-primary);
-}
-
-/* =========================
-   MAIN CONTENT
-========================= */
-.main-content {
-  padding-top: 95px;
-  padding-bottom: 3rem;
-}
-
-.hero-section {
-  text-align: center;
-  padding: 3.5rem 2rem 2rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, rgba(100, 255, 218, 0.05) 0%, transparent 70%);
-  z-index: -1;
-}
-
-.hero-title {
-  font-size: 3.2rem;
-  font-weight: 700;
-  margin-bottom: 0.8rem;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  position: relative;
-  display: inline-block;
-}
-
-.hero-title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 4px;
-  background: var(--accent-primary);
-  border-radius: 2px;
-}
-
-.hero-subtitle {
-  color: var(--text-secondary);
-  font-size: 1.2rem;
-  max-width: 600px;
-  margin: 1.5rem auto 0;
-  line-height: 1.6;
-}
-
-.container {
-  max-width: 900px;
-  margin: auto;
-  padding: 0 2rem;
-}
-
-/* =========================
-   CONVERTER CARD
-========================= */
-.converter-card {
-  background: var(--card-glass);
-  border-radius: 24px;
-  border: 1px solid var(--border-glass);
-  padding: 2.5rem;
-  box-shadow: var(--shadow-glass);
-  animation: cardIn 0.6s ease;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-}
-
-.converter-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(100, 255, 218, 0.03) 0%, transparent 70%);
-  z-index: -1;
-}
-
-.converter-card h3 {
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 1.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-}
-
-.converter-card h3 i {
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.converter-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.input-group {
-  position: relative;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.converter-grid input {
-  width: 100%;
-  padding: 1.2rem 1rem;
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--border-glass);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  font-size: 1.1rem;
-  font-weight: 500;
-  transition: var(--transition);
-}
-
-.converter-grid input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.25);
-  transform: translateY(-2px);
-}
-
-.converter-grid input[disabled] {
-  opacity: 0.7;
-  cursor: not-allowed;
-  background: rgba(0, 0, 0, 0.1);
-}
-
-body.light .converter-grid input[disabled] {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-/* =========================
-   ENHANCED DROPDOWN
-========================= */
-.select-wrapper {
-  position: relative;
-}
-
-.select-wrapper::after {
-  content: '\f078';
-  font-family: 'Font Awesome 6 Free';
-  font-weight: 900;
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-  pointer-events: none;
-  font-size: 0.9rem;
-}
-
-.converter-grid select {
-  width: 100%;
-  padding: 1.2rem 1rem;
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--border-glass);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  font-size: 1.1rem;
-  font-weight: 500;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  transition: var(--transition);
-}
-
-.converter-grid select:hover {
-  border-color: var(--accent-primary);
-}
-
-.converter-grid select:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.25);
-}
-
-.converter-grid select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  padding: 1rem;
-}
-
-/* =========================
-   SWAP BUTTON
-========================= */
-.swap-container {
-  display: flex;
-  justify-content: center;
-  margin: 1rem 0;
-}
-
-.swap-btn {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: var(--secondary-gradient);
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  box-shadow: 0 4px 15px rgba(100, 255, 218, 0.3);
-}
-
-.swap-btn:hover {
-  transform: rotate(180deg) scale(1.1);
-  box-shadow: 0 6px 20px rgba(100, 255, 218, 0.5);
-}
-
-/* =========================
-   CONVERT BUTTON
-========================= */
-.convert-btn {
-  margin-top: 2rem;
-  width: 100%;
-  padding: 1.2rem;
-  border: none;
-  border-radius: var(--border-radius-sm);
-  background: var(--primary-gradient);
-  color: #fff;
-  font-weight: 600;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-}
-
-.convert-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: 0.5s;
-}
-
-.convert-btn:hover::before {
-  left: 100%;
-}
-
-.convert-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.45);
-}
-
-.convert-btn:active {
-  transform: translateY(-1px);
-}
-
-/* =========================
-   RESULT BOX
-========================= */
-.result-box {
-  margin-top: 2.5rem;
-  padding: 2rem;
-  text-align: center;
-  background: var(--card-bg);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-glass);
-  animation: glowPulse 4s infinite alternate;
-  position: relative;
-  overflow: hidden;
-}
-
-.result-box::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: var(--secondary-gradient);
-}
-
-.result-label {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.result-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.result-details {
-  font-size: 1rem;
-  color: var(--text-tertiary);
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-glass);
-}
-
-/* =========================
-   CURRENCY FLAGS
-========================= */
-.currency-flag {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 0.5rem;
-  vertical-align: middle;
-}
-
-/* =========================
-   FOOTER
-========================= */
-.footer {
-  margin-top: 4rem;
-  padding: 3rem 0 2rem;
-  border-top: 1px solid var(--border-glass);
-  background: var(--bg-secondary);
-  border-radius: 24px 24px 0 0;
-}
-
-.footer-container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 0 2rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 3rem;
-}
-
-.footer-logo {
-  display: flex;
-  gap: .5rem;
-  align-items: center;
-  font-weight: 700;
-  font-size: 1.4rem;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 1rem;
-}
-
-.footer-description {
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-top: 1rem;
-}
-
-.footer h4 {
-  font-size: 1.2rem;
-  margin-bottom: 1.2rem;
-  color: var(--text-primary);
-  position: relative;
-  display: inline-block;
-}
-
-.footer h4::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  width: 40px;
-  height: 3px;
-  background: var(--accent-primary);
-  border-radius: 2px;
-}
-
-.footer-links {
-  list-style: none;
-}
-
-.footer-links li {
-  margin-bottom: 0.8rem;
-}
-
-.footer-links a {
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.footer-links a:hover {
-  color: var(--accent-primary);
-  transform: translateX(5px);
-}
-
-.social-links {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.social-link {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--card-glass);
-  border: 1px solid var(--border-glass);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: var(--transition);
-}
-
-.social-link:hover {
-  background: var(--accent-primary);
-  color: var(--bg-primary);
-  transform: translateY(-5px);
-}
-
-.footer-bottom {
-  text-align: center;
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border-glass);
-  color: var(--text-tertiary);
-  font-size: .9rem;
-  letter-spacing: 0.5px;
-}
-
-/* =========================
-   ANIMATIONS
-========================= */
-@keyframes pageFade {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes cardIn {
-  from { opacity: 0; transform: scale(0.96) translateY(20px); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes glowPulse {
-  0% { box-shadow: 0 0 20px rgba(100, 255, 218, 0.1); }
-  100% { box-shadow: 0 0 30px rgba(100, 255, 218, 0.2); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-@media (max-width: 768px) {
-  .converter-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-  
-  .converter-card {
-    padding: 1.5rem;
-  }
-  
-  .nav-container {
-    padding: 1rem;
-  }
-  
-  .nav-menu {
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 2rem;
-  }
-  
-  .result-value {
-    font-size: 2rem;
-  }
-  
-  .footer-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-}
-</style>
 </head>
 
 <body>
@@ -819,125 +143,84 @@ body.light .converter-grid input[disabled] {
     </div>
   </div>
   <div class="footer-bottom">
-    &copy; 2026 ExpenseFlow. All rights reserved. | Rates are updated daily
+      <p id="copyright" style="text-align:center;"></p>
+      <script>
+        document.getElementById("copyright").innerHTML =
+          `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+      </script>
+
   </div>
 </footer>
-
+<!-- Blue Cursor Trail -->
+<div class="circle-container" id="cursorTrail"></div>
 <script>
-/* THEME TOGGLE */
-function toggleTheme() {
-  document.body.classList.toggle("light");
-  const icon = document.querySelector('.theme-toggle');
-  icon.textContent = document.body.classList.contains("light") ? "☀️" : "🌙";
-  localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
-}
+/* ============================= */
+/* 🔵 Blue Cursor Trail Script  */
+/* ============================= */
 
-// Load saved theme
-if (localStorage.getItem("theme") === "light") {
-  document.body.classList.add("light");
-  document.querySelector('.theme-toggle').textContent = "☀️";
-}
+const container = document.getElementById('cursorTrail');
+const circleCount = 12;
+const circles = [];
 
-/* CURRENCY CONVERSION DATA */
-const rates = {
-  USD: {INR: 83.12, EUR: 0.92, GBP: 0.79, JPY: 145.5, AUD: 1.56, CAD: 1.34, CHF: 0.88, CNY: 7.3, SGD: 1.36},
-  INR: {USD: 0.012, EUR: 0.011, GBP: 0.0095, JPY: 1.75, AUD: 0.018, CAD: 0.016, CHF: 0.011, CNY: 0.088, SGD: 0.016},
-  EUR: {USD: 1.08, INR: 90.5, GBP: 0.86, JPY: 158.2, AUD: 1.70, CAD: 1.45, CHF: 0.95, CNY: 7.95, SGD: 1.48},
-  GBP: {USD: 1.26, INR: 105.3, EUR: 1.16, JPY: 184.1, AUD: 1.98, CAD: 1.68, CHF: 1.11, CNY: 9.2, SGD: 1.71},
-  JPY: {USD: 0.0069, INR: 0.57, EUR: 0.0063, GBP: 0.0054, AUD: 0.011, CAD: 0.0091, CHF: 0.006, CNY: 0.050, SGD: 0.0093},
-  AUD: {USD: 0.64, INR: 53.2, EUR: 0.59, GBP: 0.50, JPY: 90.5, CAD: 0.85, CHF: 0.56, CNY: 4.63, SGD: 0.86},
-  CAD: {USD: 0.75, INR: 62.1, EUR: 0.69, GBP: 0.60, JPY: 105.2, AUD: 1.17, CHF: 0.66, CNY: 5.42, SGD: 1.01},
-  CHF: {USD: 1.14, INR: 94.2, EUR: 1.05, GBP: 0.90, JPY: 158.5, AUD: 1.79, CAD: 1.52, CNY: 8.19, SGD: 1.53},
-  CNY: {USD: 0.14, INR: 11.4, EUR: 0.13, GBP: 0.11, JPY: 19.3, AUD: 0.22, CAD: 0.18, CHF: 0.12, SGD: 0.19},
-  SGD: {USD: 0.73, INR: 60.5, EUR: 0.68, GBP: 0.58, JPY: 106.2, AUD: 1.17, CAD: 0.99, CHF: 0.65, CNY: 5.25}
-};
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
 
-// Format currency with commas
-function formatCurrency(amount, currencyCode) {
-  const formatter = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+if (container) {
+  for (let i = 0; i < circleCount; i++) {
+    const circle = document.createElement('div');
+    circle.classList.add('cursor-circle');
+    container.appendChild(circle);
+    circles.push({ el: circle, x: mouseX, y: mouseY });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
   });
-  
-  // Add currency symbol based on currency code
-  const symbols = {
-    'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥',
-    'INR': '₹', 'AUD': 'A$', 'CAD': 'C$', 'CHF': 'CHF',
-    'CNY': '¥', 'SGD': 'S$'
-  };
-  
-  const symbol = symbols[currencyCode] || currencyCode;
-  return `${symbol} ${formatter.format(amount)}`;
-}
 
-// Swap currencies function
-function swapCurrencies() {
-  const fromSelect = document.getElementById('from');
-  const toSelect = document.getElementById('to');
-  const temp = fromSelect.value;
-  fromSelect.value = toSelect.value;
-  toSelect.value = temp;
-  
-  // Trigger conversion after swap
-  if (document.getElementById('amount').value) {
-    convert();
+  document.addEventListener('mousedown', () => {
+    circles.forEach(c => c.el.classList.add('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseup', () => {
+    circles.forEach(c => c.el.classList.remove('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.add('cursor-hovering'));
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.remove('cursor-hovering'));
+    }
+  });
+
+  function animateCursor() {
+    let x = mouseX;
+    let y = mouseY;
+
+    circles.forEach(circle => {
+      circle.x += (x - circle.x) * 0.25;
+      circle.y += (y - circle.y) * 0.25;
+
+      circle.el.style.left = circle.x + 'px';
+      circle.el.style.top = circle.y + 'px';
+
+      x = circle.x;
+      y = circle.y;
+    });
+
+    requestAnimationFrame(animateCursor);
   }
+
+  animateCursor();
 }
-
-// Main conversion function
-function convert() {
-  const amount = parseFloat(document.getElementById('amount').value);
-  const fromCurrency = document.getElementById('from').value;
-  const toCurrency = document.getElementById('to').value;
-  const resultValue = document.getElementById('resultValue');
-  const resultDetails = document.getElementById('resultDetails');
-  const convertedInput = document.getElementById('converted');
-  
-  if (!amount || amount <= 0) {
-    resultValue.textContent = "—";
-    resultDetails.textContent = "Please enter a valid amount";
-    convertedInput.value = "";
-    return;
-  }
-  
-  // Get exchange rate
-  const rate = rates[fromCurrency][toCurrency];
-  if (!rate) {
-    resultValue.textContent = "—";
-    resultDetails.textContent = "Exchange rate not available";
-    convertedInput.value = "";
-    return;
-  }
-  
-  // Calculate result
-  const result = amount * rate;
-  
-  // Update UI
-  resultValue.textContent = formatCurrency(result, toCurrency);
-  convertedInput.value = formatCurrency(result, toCurrency);
-  
-  // Update details
-  resultDetails.innerHTML = `
-    <strong>1 ${fromCurrency}</strong> = <strong>${rate.toFixed(4)} ${toCurrency}</strong><br>
-    <span style="font-size: 0.9em;">${formatCurrency(amount, fromCurrency)} = ${formatCurrency(result, toCurrency)}</span>
-  `;
-  
-  // Add animation effect
-  resultValue.style.transform = 'scale(1.1)';
-  setTimeout(() => {
-    resultValue.style.transform = 'scale(1)';
-  }, 300);
-}
-
-// Auto-convert on input change
-document.getElementById('amount').addEventListener('input', convert);
-document.getElementById('from').addEventListener('change', convert);
-document.getElementById('to').addEventListener('change', convert);
-
-// Initialize with a conversion
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(convert, 500);
-});
 </script>
+
+
+<script src="currencyConverter.js"></script>
 </body>
 </html>
