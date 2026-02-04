@@ -330,8 +330,166 @@ function openCreateWorkspaceModal() {
 }
 
 function openInviteModal() {
-  // TODO: Implement invite modal
-  showNotification('Invite member feature not yet implemented', 'info');
+  const modal = document.getElementById('invite-modal');
+  if (!modal) {
+    console.error('Invite modal not found');
+    return;
+  }
+
+  if (!currentWorkspace) {
+    showNotification('Please select a workspace first', 'error');
+    return;
+  }
+
+  // Reset form
+  const form = document.getElementById('invite-form');
+  if (form) form.reset();
+  
+  // Clear role permissions display
+  const permissionsDisplay = document.getElementById('role-permissions-display');
+  if (permissionsDisplay) {
+    permissionsDisplay.innerHTML = '<p>Select a role to see permissions</p>';
+  }
+
+  // Show modal
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+
+  // Set up role change listener
+  const roleSelect = document.getElementById('invite-role');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', updateRolePermissions);
+  }
+
+  // Set up form submit handler
+  if (form) {
+    form.onsubmit = handleInviteSubmit;
+  }
+}
+
+function closeInviteModal() {
+  const modal = document.getElementById('invite-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+
+function updateRolePermissions(event) {
+  const role = event.target.value;
+  const permissionsDisplay = document.getElementById('role-permissions-display');
+  
+  if (!permissionsDisplay) return;
+
+  const rolePermissions = {
+    viewer: [
+      '✓ View expenses and income',
+      '✓ View reports and analytics',
+      '✓ View budget information',
+      '✗ Cannot add or edit expenses',
+      '✗ Cannot manage members'
+    ],
+    member: [
+      '✓ View all expenses and income',
+      '✓ Add new expenses and income',
+      '✓ Edit own expenses',
+      '✓ View reports and analytics',
+      '✗ Cannot approve expenses',
+      '✗ Cannot manage members'
+    ],
+    manager: [
+      '✓ All member permissions',
+      '✓ Approve/reject expenses',
+      '✓ Manage budgets and goals',
+      '✓ View audit logs',
+      '✗ Cannot manage workspace settings',
+      '✗ Cannot remove admin/owner'
+    ],
+    admin: [
+      '✓ All manager permissions',
+      '✓ Invite and remove members',
+      '✓ Manage workspace settings',
+      '✓ Change member roles',
+      '✓ Access all features',
+      '✗ Cannot delete workspace'
+    ]
+  };
+
+  if (role && rolePermissions[role]) {
+    permissionsDisplay.innerHTML = `
+      <ul class="permissions-list">
+        ${rolePermissions[role].map(perm => `<li>${perm}</li>`).join('')}
+      </ul>
+    `;
+  } else {
+    permissionsDisplay.innerHTML = '<p>Select a role to see permissions</p>';
+  }
+}
+
+async function handleInviteSubmit(event) {
+  event.preventDefault();
+
+  const email = document.getElementById('invite-email').value.trim();
+  const role = document.getElementById('invite-role').value;
+
+  if (!email || !role) {
+    showNotification('Please fill in all required fields', 'error');
+    return;
+  }
+
+  if (!currentWorkspace) {
+    showNotification('No workspace selected', 'error');
+    return;
+  }
+
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      showNotification('Please login first', 'error');
+      return;
+    }
+
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace._id}/invite`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ email, role })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      showNotification(`Invitation sent to ${email}`, 'success');
+      closeInviteModal();
+      
+      // Reload workspace data to show pending invites
+      if (typeof loadWorkspaceData === 'function') {
+        loadWorkspaceData();
+      }
+    } else {
+      showNotification(data.error || 'Failed to send invitation', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  } catch (error) {
+    console.error('Error sending invite:', error);
+    showNotification('Failed to send invitation. Please try again.', 'error');
+    
+    // Reset button state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Invitation';
+    }
+  }
 }
 
 // Approval Settings Functions
