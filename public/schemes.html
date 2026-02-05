@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Government Schemes | ExpenseFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- SAME CSS FILE -->
+  <link rel="stylesheet" href="expensetracker.css">
+  <style>
+    /* =========================
+   HELP CENTER – SAFE UI ENHANCEMENTS
+   (NO PARENT LAYOUT CHANGES)
+========================= */
+
+/* Improve card alignment only */
+.balance-card {
+  border-radius: 16px;
+  padding: 1.6rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover effect */
+.balance-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.14);
+}
+
+/* Top accent line (subtle) */
+.balance-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+  opacity: 0.85;
+}
+
+/* Header alignment */
+.balance-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+/* Icon styling */
+.balance-header i {
+  font-size: 1.4rem;
+  color: #6366f1;
+  transition: transform 0.3s ease;
+}
+
+/* Icon animation on hover */
+.balance-card:hover .balance-header i {
+  transform: scale(1.15) rotate(-4deg);
+}
+
+/* Title */
+.balance-header h4 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Text polish */
+.balance-card p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* Contact support section – keep layout, just polish */
+.data-management-section {
+  border-radius: 18px;
+  padding: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.data-management-section:hover {
+  transform: translateY(-4px);
+}
+
+/* List spacing */
+.data-management-section ul li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Navbar active link clarity */
+.nav-link.active {
+  font-weight: 600;
+  position: relative;
+}
+
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #6366f1;
+}
+/* =========================
+   HELP CENTER – CENTER + ANIMATION LAYER
+   (WORKS WITH EXISTING STYLES)
+========================= */
+
+/* ---------- CENTER MAIN HEADING ---------- */
+.hero-section {
+  text-align: center;
+}
+
+.hero-title {
+  display: inline-block;
+  position: relative;
+  animation: titleReveal 1.2s ease forwards;
+}
+
+@keyframes titleReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* underline animation */
+.hero-title::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  width: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+  border-radius: 10px;
+  transform: translateX(-50%);
+  animation: underlineGrow 1s ease forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes underlineGrow {
+  to {
+    width: 60%;
+  }
+}
+
+/* ---------- CENTER CARD HEADINGS ---------- */
+.balance-header {
+  justify-content: center;
+  text-align: center;
+}
+
+/* stack icon + text visually centered */
+.balance-header i {
+  margin-right: 0;
+}
+
+/* ---------- EXTRA CARD ANIMATIONS ---------- */
+
+/* initial fade-in */
+.balance-card {
+  animation: cardFadeIn 0.8s ease forwards;
+}
+
+.balance-card:nth-child(1) { animation-delay: 0.1s; }
+.balance-card:nth-child(2) { animation-delay: 0.2s; }
+.balance-card:nth-child(3) { animation-delay: 0.3s; }
+.balance-card:nth-child(4) { animation-delay: 0.4s; }
+.balance-card:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(25px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- RIPPLE GLOW ON HOVER ---------- */
+.balance-card::after {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.18),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.balance-card:hover::after {
+  opacity: 1;
+}
+
+/* ---------- DEEPER HOVER MOTION ---------- */
+.balance-card:hover {
+  transform: translateY(-10px) scale(1.03);
+}
+
+/* ---------- ICON PULSE ---------- */
+.balance-header i {
+  animation: iconFloat 4s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* ---------- TEXT SMOOTH LIFT ---------- */
+.balance-card p {
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.balance-card:hover p {
+  transform: translateY(-3px);
+  opacity: 1;
+}
+
+/* ---------- SUPPORT SECTION CENTER ---------- */
+.data-management-section {
+  text-align: center;
+  animation: supportFade 1s ease forwards;
+}
+
+@keyframes supportFade {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* =========================
+   HELP CENTER – EXTRA INTERACTION LAYER
+   (ONLY ENHANCEMENTS)
+========================= */
+
+/* Smooth everything */
+.balance-card,
+.balance-header,
+.balance-header h4,
+.balance-header i,
+.balance-card p {
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Card border glow ---- */
+.balance-card {
+  border: 1px solid transparent;
+}
+
+.balance-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+/* ---- Soft inner glow ---- */
+.balance-card::before {
+  transition: opacity 0.4s ease;
+}
+
+.balance-card:hover::before {
+  opacity: 1;
+}
+
+/* ---- Card tilt effect (very subtle) ---- */
+.balance-card:hover {
+  transform: translateY(-10px) scale(1.03) rotateX(2deg);
+}
+
+/* ---- Heading hover effect ---- */
+.balance-header h4 {
+  position: relative;
+}
+
+.balance-header h4::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+  transform: translateX(-50%);
+  transition: width 0.4s ease;
+}
+
+.balance-card:hover h4::after {
+  width: 60%;
+}
+
+/* ---- Icon glow pulse on hover ---- */
+.balance-card:hover .balance-header i {
+  text-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+}
+
+/* ---- Text color enhancement ---- */
+.balance-card:hover p {
+  color: #111827;
+}
+
+/* ---- Ripple expansion effect ---- */
+.balance-card::after {
+  transform: scale(0.9);
+  transition: opacity 0.5s ease, transform 0.6s ease;
+}
+
+.balance-card:hover::after {
+  transform: scale(1.05);
+}
+
+/* ---- Support section breathing animation ---- */
+.data-management-section {
+  animation: softBreath 6s ease-in-out infinite;
+}
+
+@keyframes softBreath {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Support list hover ---- */
+.data-management-section ul li {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.data-management-section ul li:hover {
+  transform: translateX(6px);
+  opacity: 1;
+}
+
+/* ---- Navbar active underline animation ---- */
+.nav-link.active::after {
+  animation: underlinePulse 2s ease-in-out infinite;
+}
+
+@keyframes underlinePulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+/* =========================
+   HELP CENTER – YELLOW CARD ONLY
+   (TEXT COLORS PRESERVED)
+========================= */
+
+/* Card background turns yellow on hover */
+.balance-card:hover {
+  background: linear-gradient(
+    135deg,
+    #facc15,
+    #fde047
+  );
+}
+
+/* Keep text color same as normal */
+.balance-card:hover h4,
+.balance-card:hover p,
+.balance-card:hover i {
+  color: inherit;
+}
+
+/* Prevent glow from affecting text */
+.balance-card:hover .balance-header i {
+  text-shadow: none;
+  filter: none;
+}
+
+/* Keep top accent subtle */
+.balance-card:hover::before {
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+}
+
+/* Soften ripple to avoid text tint */
+.balance-card:hover::after {
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.25),
+    transparent 60%
+  );
+}
+/* =========================
+   HELP CENTER – TEXT SIZE BOOST
+   (NORMAL + HOVER)
+========================= */
+
+/* ----- NORMAL TEXT SIZE INCREASE ----- */
+.balance-header h4 {
+  font-size: 1.3rem;   /* was ~1.15rem */
+}
+
+.balance-card p {
+  font-size: 1.05rem;  /* was ~0.95rem */
+  line-height: 1.75;
+}
+
+/* ----- SMOOTH TEXT SCALE ON HOVER ----- */
+.balance-card h4,
+.balance-card p {
+  transition: font-size 0.35s ease, transform 0.35s ease;
+}
+
+/* Slight zoom on hover (premium feel) */
+.balance-card:hover h4 {
+  transform: scale(1.05);
+}
+
+.balance-card:hover p {
+  transform: scale(1.04);
+}
+
+/* ----- KEEP TEXT COLORS SAME ----- */
+.balance-card:hover h4,
+.balance-card:hover p {
+  color: inherit;
+}
+/* =========================
+   TEXT COLOR BLACK ON HOVER
+========================= */
+
+.balance-card:hover h4,
+.balance-card:hover p {
+  color: #000; /* pure black */
+}
+/* ---- Scheme meta info ---- */
+.scheme-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.scheme-meta .status {
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.status.open {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.closing {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.status.closed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ---- Actions ---- */
+.scheme-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+
+.scheme-actions .btn {
+  flex: 1;
+  padding: 0.55rem;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.apply-btn {
+  background: #6366f1;
+  color: #fff;
+}
+
+.track-btn {
+  background: #e5e7eb;
+}
+
+.scheme-actions .btn:hover {
+  transform: scale(1.05);
+}
+/* =========================
+   GOVERNMENT SCHEMES – SINGLE COLUMN
+========================= */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Full width cards */
+.balance-card {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+  </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <i class="fas fa-wallet"></i>
+        <span><a href="index.html" class="nav-link">ExpenseFlow</a></span>
+      </div>
+
+      <div class="nav-menu">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="#l" class="nav-link">Analytics</a>
+        <a href="finance-tips.html" class="nav-link">Finance Tips</a>
+        <a href="government-schemes.html" class="nav-link active">Govt Schemes</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+
+<!-- MAIN -->
+<main class="main-content">
+
+  <section class="hero-section">
+    <h1 class="hero-title">Government Schemes</h1>
+    <p class="hero-subtitle">
+      Apply for official Indian government schemes, track deadlines,
+      and manage benefits easily.
+    </p>
+  </section>
+
+  <div class="container">
+
+    <!-- 1: Jan Dhan -->
+    <div class="balance-card" data-id="jan-dhan" data-deadline="2026-03-31">
+      <div class="balance-header">
+        <i class="fas fa-piggy-bank"></i>
+        <h4>Pradhan Mantri Jan Dhan Yojana</h4>
+      </div>
+      <p>Zero-balance bank accounts with insurance and debit card benefits.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 31 Mar 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://pmjdy.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 2: Ayushman -->
+    <div class="balance-card" data-id="ayushman" data-deadline="2026-01-20">
+      <div class="balance-header">
+        <i class="fas fa-hand-holding-medical"></i>
+        <h4>Ayushman Bharat Yojana</h4>
+      </div>
+      <p>Health insurance cover up to ₹5 lakh per family.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 20 Jan 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://beneficiary.nha.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 3: Fasal Bima -->
+    <div class="balance-card" data-id="fasal" data-deadline="2025-12-10">
+      <div class="balance-header">
+        <i class="fas fa-seedling"></i>
+        <h4>Pradhan Mantri Fasal Bima Yojana</h4>
+      </div>
+      <p>Crop insurance for farmers against natural calamities.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 10 Dec 2025</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://pmfby.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 4: PMAY -->
+    <div class="balance-card" data-id="awas" data-deadline="2026-06-30">
+      <div class="balance-header">
+        <i class="fas fa-home"></i>
+        <h4>Pradhan Mantri Awas Yojana</h4>
+      </div>
+      <p>Affordable housing with home loan interest subsidy.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 30 Jun 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://pmaymis.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 5: Scholarship -->
+    <div class="balance-card" data-id="scholarship" data-deadline="2025-11-30">
+      <div class="balance-header">
+        <i class="fas fa-user-graduate"></i>
+        <h4>National Scholarship Portal</h4>
+      </div>
+      <p>Scholarships for students from economically weaker sections.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 30 Nov 2025</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://scholarships.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 6: Atal Pension -->
+    <div class="balance-card" data-id="atal-pension" data-deadline="2026-12-31">
+      <div class="balance-header">
+        <i class="fas fa-user-shield"></i>
+        <h4>Atal Pension Yojana</h4>
+      </div>
+      <p>Pension scheme ensuring fixed monthly income after retirement.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 31 Dec 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://www.npscra.nsdl.co.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 7: Mudra -->
+    <div class="balance-card" data-id="mudra" data-deadline="2026-09-30">
+      <div class="balance-header">
+        <i class="fas fa-briefcase"></i>
+        <h4>Pradhan Mantri Mudra Yojana</h4>
+      </div>
+      <p>Collateral-free loans for micro and small businesses.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 30 Sep 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://www.mudra.org.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 8: Sukanya Samriddhi -->
+    <div class="balance-card" data-id="sukanya" data-deadline="2026-05-31">
+      <div class="balance-header">
+        <i class="fas fa-child"></i>
+        <h4>Sukanya Samriddhi Yojana</h4>
+      </div>
+      <p>Small deposit savings scheme for girl child education and marriage.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 31 May 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://www.sukanyasamriddhi.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 9: PM Kisan -->
+    <div class="balance-card" data-id="pm-kisan" data-deadline="2026-04-30">
+      <div class="balance-header">
+        <i class="fas fa-leaf"></i>
+        <h4>Pradhan Mantri Kisan Samman Nidhi</h4>
+      </div>
+      <p>Income support of ₹6,000/year to small and marginal farmers.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 30 Apr 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://pmkisan.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 10: Stand Up India -->
+    <div class="balance-card" data-id="stand-up" data-deadline="2026-08-31">
+      <div class="balance-header">
+        <i class="fas fa-building"></i>
+        <h4>Stand Up India Scheme</h4>
+      </div>
+      <p>Loans for SC/ST & women entrepreneurs for greenfield enterprises.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 31 Aug 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://www.standupmitra.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+    <!-- 11: Pradhan Mantri Shram Yogi Maan-dhan -->
+    <div class="balance-card" data-id="shram-yogi" data-deadline="2026-11-30">
+      <div class="balance-header">
+        <i class="fas fa-users"></i>
+        <h4>PM Shram Yogi Maan-dhan</h4>
+      </div>
+      <p>Pension scheme for unorganized workers after 60 years.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 30 Nov 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://www.shramyogi.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+    <div class="balance-card" data-id="ujjwala" data-deadline="2026-09-30">
+      <div class="balance-header">
+        <i class="fas fa-fire"></i>
+        <h4>Pradhan Mantri Ujjwala Yojana</h4>
+      </div>
+      <p>Free LPG connections for women from below poverty line households.</p>
+      <div class="scheme-meta">
+        <span><i class="fas fa-calendar"></i> 30 Sep 2026</span>
+        <span class="status"></span>
+      </div>
+      <div class="scheme-actions">
+        <a href="https://pmuy.gov.in/" target="_blank" class="btn apply-btn">Apply</a>
+        <button class="btn track-btn">Track</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <div class="footer-logo">
+        <i class="fas fa-wallet"></i>
+        <span>ExpenseFlow</span>
+      </div>
+      <p>Smart money management made simple.</p>
+    </div>
+
+    <div class="footer-section">
+      <h4>Resources</h4>
+      <ul class="footer-links">
+        <li><a href="finance-tips.html">Finance Tips</a></li>
+        <li><a href="government-schemes.html">Government Schemes</a></li>
+        <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-container">
+      <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+<script>
+  const schemes = document.querySelectorAll(".balance-card");
+
+  schemes.forEach(card => {
+    const schemeId = card.dataset.scheme;
+    const deadline = new Date(card.dataset.deadline);
+    const statusEl = card.querySelector(".status");
+    const trackBtn = card.querySelector(".track-btn");
+    const applyBtn = card.querySelector(".apply-btn");
+
+    const today = new Date();
+    const diffDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+
+    // Deadline status
+    if (diffDays < 0) {
+      statusEl.textContent = "Closed";
+      statusEl.className = "status closed";
+      applyBtn.disabled = true;
+      applyBtn.style.opacity = "0.6";
+    } else if (diffDays <= 10) {
+      statusEl.textContent = "Closing Soon";
+      statusEl.className = "status closing";
+    } else {
+      statusEl.textContent = "Open";
+      statusEl.className = "status open";
+    }
+
+    // Tracking logic
+    const tracked = localStorage.getItem(schemeId);
+
+    if (tracked === "true") {
+      trackBtn.innerHTML = '<i class="fas fa-check"></i> Tracked';
+      trackBtn.disabled = true;
+    }
+
+    trackBtn.addEventListener("click", () => {
+      localStorage.setItem(schemeId, "true");
+      trackBtn.innerHTML = '<i class="fas fa-check"></i> Tracked';
+      trackBtn.disabled = true;
+    });
+
+    // Apply (placeholder)
+    applyBtn.addEventListener("click", () => {
+      alert("Redirecting to official application portal.");
+      // window.open("https://official.gov.in", "_blank");
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 const Workspace = require('../models/Workspace');
 const Expense = require('../models/Expense');
+const Policy = require('../models/Policy');
 const mongoose = require('mongoose');
 
 class WorkspaceService {
@@ -136,6 +137,173 @@ class WorkspaceService {
             summary: stats,
             categoryBreakdown
         };
+    }
+
+    /**
+     * Create governance policy
+     */
+    async createPolicy(workspaceId, userId, policyData) {
+        const policy = new Policy({
+            workspaceId,
+            createdBy: userId,
+            ...policyData
+        });
+        await policy.save();
+        return policy;
+    }
+
+    /**
+     * Get workspace policies
+     */
+    async getPolicies(workspaceId, filters = {}) {
+        const query = { workspaceId, deletedAt: null };
+        if (filters.active === true) query.isActive = true;
+        if (filters.resourceType) query['conditions.resourceType'] = filters.resourceType;
+        
+        return await Policy.find(query).sort({ priority: -1 });
+    }
+
+    /**
+     * Update policy
+     */
+    async updatePolicy(workspaceId, policyId, userId, updateData) {
+        const policy = await Policy.findOne({ _id: policyId, workspaceId });
+        if (!policy) throw new Error('Policy not found');
+        
+        Object.assign(policy, updateData);
+        policy.updatedBy = userId;
+        policy.updatedAt = Date.now();
+        await policy.save();
+        return policy;
+    }
+
+    /**
+     * Delete policy (soft delete)
+     */
+    async deletePolicy(workspaceId, policyId, userId) {
+        const policy = await Policy.findOne({ _id: policyId, workspaceId });
+        if (!policy) throw new Error('Policy not found');
+        
+        policy.deletedAt = Date.now();
+        policy.deletedBy = userId;
+        await policy.save();
+        return policy;
+    }
+
+    /**
+     * Calculate workspace available balance (considering held funds)
+     */
+    async calculateAvailableBalance(workspaceId) {
+        const workspace = await Workspace.findById(workspaceId);
+        if (!workspace) throw new Error('Workspace not found');
+
+        // Get total expenses approved and available
+        const expenses = await Expense.aggregate([
+            { 
+                $match: { 
+                    workspace: new mongoose.Types.ObjectId(workspaceId),
+                    type: 'expense'
+                } 
+            },
+            {
+                $group: {
+                    _id: '$approvalStatus',
+                    total: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        const balanceBreakdown = {
+            total: workspace.budget || 0,
+            spent: 0,
+            pending: 0,
+            held: 0
+        };
+
+        expenses.forEach(exp => {
+            if (exp._id === 'approved') balanceBreakdown.spent += exp.total;
+            if (exp._id === 'pending_approval') balanceBreakdown.pending += exp.total;
+            if (exp._id === 'draft') balanceBreakdown.held += exp.total;
+        });
+
+        return {
+            ...balanceBreakdown,
+            available: balanceBreakdown.total - balanceBreakdown.spent
+        };
+    }
+
+    /**
+     * Get pending approvals for workspace
+     */
+    async getPendingApprovals(workspaceId, userId) {
+        const expenses = await Expense.find({
+            workspace: workspaceId,
+            approvalStatus: 'pending_approval'
+        })
+        .populate('createdBy', 'name email')
+        .populate('policyFlags.policyId', 'name description')
+        .sort({ createdAt: -1 });
+
+        // Filter by user's approval responsibilities
+        return expenses.filter(exp => {
+            if (!exp.approvals) return false;
+            return exp.approvals.some(approval => 
+                approval.approverId.toString() === userId.toString() && 
+                approval.status === 'pending'
+            );
+        });
+    }
+
+    /**
+     * Approve expense
+     */
+    async approveExpense(workspaceId, expenseId, userId, notes = '') {
+        const expense = await Expense.findOne({ _id: expenseId, workspace: workspaceId });
+        if (!expense) throw new Error('Expense not found');
+        if (expense.approvalStatus === 'rejected') throw new Error('Cannot approve rejected expense');
+
+        // Find pending approval for this user
+        const approval = expense.approvals.find(a => a.approverId.toString() === userId.toString());
+        if (!approval) throw new Error('No approval required from this user');
+
+        approval.status = 'approved';
+        approval.approvedAt = Date.now();
+        approval.notes = notes;
+
+        // Check if all approvals complete
+        const allApproved = expense.approvals.every(a => a.status === 'approved');
+        if (allApproved) {
+            expense.approvalStatus = 'approved';
+            expense.approverId = userId;
+            expense.approvedAt = Date.now();
+            expense.fundHeld = false;
+        }
+
+        await expense.save();
+        return expense;
+    }
+
+    /**
+     * Reject expense
+     */
+    async rejectExpense(workspaceId, expenseId, userId, reason) {
+        const expense = await Expense.findOne({ _id: expenseId, workspace: workspaceId });
+        if (!expense) throw new Error('Expense not found');
+
+        // Find approval for this user
+        const approval = expense.approvals.find(a => a.approverId.toString() === userId.toString());
+        if (!approval) throw new Error('No approval required from this user');
+
+        approval.status = 'rejected';
+        approval.rejectionReason = reason;
+        approval.approvedAt = Date.now();
+
+        expense.approvalStatus = 'rejected';
+        expense.fundHeld = false;
+        expense.rejectionReason = reason;
+
+        await expense.save();
+        return expense;
     }
 }
 

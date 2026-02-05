@@ -104,6 +104,47 @@ const recurringExpenseSchema = new mongoose.Schema({
   totalAmountSpent: {
     type: Number,
     default: 0
+  },
+  // Issue #444: Subscription Detection Fields
+  detection: {
+    // How the subscription was added
+    source: {
+      type: String,
+      enum: ['manual', 'auto-detected', 'imported'],
+      default: 'manual'
+    },
+    // Confidence score for auto-detected (0-1)
+    confidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+      default: null
+    },
+    // Number of past occurrences found during detection
+    occurrencesFound: {
+      type: Number,
+      default: null
+    },
+    // Date when auto-detected
+    detectedAt: {
+      type: Date,
+      default: null
+    },
+    // Whether user has confirmed auto-detection
+    isConfirmed: {
+      type: Boolean,
+      default: true
+    },
+    // Original merchant key used for detection
+    merchantKey: {
+      type: String,
+      default: null
+    },
+    // Average interval in days between transactions
+    averageInterval: {
+      type: Number,
+      default: null
+    }
   }
 }, {
   timestamps: true
@@ -113,6 +154,7 @@ const recurringExpenseSchema = new mongoose.Schema({
 recurringExpenseSchema.index({ user: 1, isActive: 1 });
 recurringExpenseSchema.index({ nextDueDate: 1, isActive: 1, isPaused: 1 });
 recurringExpenseSchema.index({ user: 1, nextDueDate: 1 });
+recurringExpenseSchema.index({ user: 1, 'detection.source': 1 }); // Issue #444: Auto-detection index
 
 // Calculate next due date based on frequency
 recurringExpenseSchema.methods.calculateNextDueDate = function() {
@@ -227,6 +269,52 @@ recurringExpenseSchema.statics.getMonthlyTotal = async function(userId) {
   });
   
   return recurring.reduce((total, item) => total + item.getMonthlyEstimate(), 0);
+};
+
+// Issue #444: Get auto-detected subscriptions
+recurringExpenseSchema.statics.getAutoDetected = async function(userId) {
+  return await this.find({
+    user: userId,
+    'detection.source': 'auto-detected',
+    isActive: true
+  }).sort({ 'detection.detectedAt': -1 });
+};
+
+// Issue #444: Get subscriptions by detection source
+recurringExpenseSchema.statics.getBySource = async function(userId, source) {
+  return await this.find({
+    user: userId,
+    'detection.source': source,
+    isActive: true
+  });
+};
+
+// Issue #444: Calculate total monthly burn rate
+recurringExpenseSchema.statics.calculateBurnRate = async function(userId) {
+  const recurring = await this.find({
+    user: userId,
+    isActive: true,
+    isPaused: false
+  });
+  
+  let monthlyExpenses = 0;
+  let monthlyIncome = 0;
+
+  recurring.forEach(item => {
+    const monthly = item.getMonthlyEstimate();
+    if (item.type === 'expense') {
+      monthlyExpenses += monthly;
+    } else {
+      monthlyIncome += monthly;
+    }
+  });
+
+  return {
+    monthlyExpenses: Math.round(monthlyExpenses * 100) / 100,
+    monthlyIncome: Math.round(monthlyIncome * 100) / 100,
+    netMonthlyBurn: Math.round((monthlyExpenses - monthlyIncome) * 100) / 100,
+    dailyBurn: Math.round(((monthlyExpenses - monthlyIncome) / 30) * 100) / 100
+  };
 };
 
 module.exports = mongoose.model('RecurringExpense', recurringExpenseSchema);

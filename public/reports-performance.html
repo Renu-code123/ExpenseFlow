@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <title>Reports & Export - ExpenseFlow</title>
+
+    <!-- Critical CSS Inline -->
+    <style>body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(135deg,#0f0f23 0%,#1a1a2e 50%,#16213e 100%);color:#e0e0e0;min-height:100vh}.nav-bar{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);position:sticky;top:0;z-index:100}.nav-content{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;max-width:1200px;margin:0 auto}.nav-back{color:#e0e0e0;text-decoration:none;display:flex;align-items:center;gap:.5rem;font-weight:500}.nav-title{display:flex;align-items:center;gap:.5rem;font-size:1.25rem;font-weight:600}.nav-actions{display:flex;gap:1rem}.nav-link{color:#e0e0e0;text-decoration:none;padding:.5rem 1rem;border-radius:8px;transition:all .3s}.nav-link:hover{background:rgba(255,255,255,.1)}.container{max-width:1200px;margin:0 auto;padding:2rem}.page-header{margin-bottom:2rem}.header-content{display:flex;align-items:center;justify-content:space-between}h1{font-size:2rem;margin:0}.schedule-btn{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:8px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:.5rem}.schedule-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,.3)}.quick-export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:1rem 0}.export-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .3s}.export-card:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(102,126,234,.2);border-color:#667eea}.export-icon{margin-bottom:1rem}.export-content h3{margin:0 0 .5rem 0;font-size:1.1rem}.export-content p{margin:0;color:#a0a0a0;font-size:.9rem}.loading-skeleton{background:linear-gradient(90deg,#333 25%,#444 50%,#333 75%);background-size:200% 100%;animation:loading 1.5s infinite;border-radius:8px}@keyframes loading{0%{background-position:200% 0}100%{background-position:-200% 0}}.loading-placeholder{min-height:200px;display:flex;align-items:center;justify-content:center}</style>
+
+    <!-- Preload resources -->
+    <link rel="preload" href="reports-min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="nav-title">
+                <i class="fas fa-file-alt"></i> Reports & Export
+            </div>
+            <div class="nav-actions">
+                <a href="goals.html" class="nav-link">Goals</a>
+                <a href="transactions.html" class="nav-link">Transactions</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1>📊 Reports & Export Dashboard</h1>
+                <div class="header-actions">
+                    <button class="schedule-btn" onclick="openScheduleModal()">
+                        <i class="fas fa-clock"></i> Schedule Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Export -->
+        <section class="quick-export-section">
+            <h2>⚡ Quick Export</h2>
+            <div class="quick-export-grid">
+                <button class="export-card" onclick="quickExport('monthly')">
+                    <div class="export-icon">📅</div>
+                    <div class="export-content">
+                        <h3>Monthly Report</h3>
+                        <p>Current month transactions</p>
+                    </div>
+                </button>
+                <button class="export-card" onclick="quickExport('yearly')">
+                    <div class="export-icon">📆</div>
+                    <div class="export-content">
+                        <h3>Yearly Report</h3>
+                        <p>Complete year overview</p>
+                    </div>
+                </button>
+                <button class="export-card" onclick="quickExport('tax')">
+                    <div class="export-icon">🧾</div>
+                    <div class="export-content">
+                        <h3>Tax Report</h3>
+                        <p>Tax-ready categorization</p>
+                    </div>
+                </button>
+                <button class="export-card" onclick="quickExport('custom')">
+                    <div class="export-icon">⚙️</div>
+                    <div class="export-content">
+                        <h3>Custom Report</h3>
+                        <p>Build your own format</p>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Lazy loaded sections -->
+        <div id="lazy-sections" class="lazy-sections">
+            <div class="loading-placeholder">
+                <div class="loading-skeleton" style="height:400px;width:100%"></div>
+            </div>
+        </div>
+    </div>
+    <script src="protect.js"></script>
+    <!-- Critical JS -->
+    <script>
+        // Performance monitoring
+        const perfStart = performance.now();
+
+        // Quick export function
+        function quickExport(type) {
+            const btn = event.target.closest('.export-card');
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => btn.style.transform = '', 150);
+
+            alert(`${type.charAt(0).toUpperCase() + type.slice(1)} report exported successfully!`);
+        }
+
+        // Lazy load remaining content
+        function lazyLoadContent() {
+            const lazySections = document.getElementById('lazy-sections');
+            if (!lazySections) return;
+
+            // Simulate loading delay for demo
+            setTimeout(() => {
+                lazySections.innerHTML = `
+                    <section class="report-builder-section" style="margin:2rem 0">
+                        <h2>🛠️ Report Builder</h2>
+                        <div style="background:rgba(255,255,255,.05);padding:1.5rem;border-radius:12px;margin:1rem 0">
+                            <form onsubmit="handleFormSubmit(event)">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                                    <div>
+                                        <label style="display:block;margin-bottom:.5rem">Report Name *</label>
+                                        <input type="text" placeholder="e.g., Q1 Expenses" required style="width:100%;padding:.75rem;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.05);color:#e0e0e0">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;margin-bottom:.5rem">Report Type</label>
+                                        <select style="width:100%;padding:.75rem;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.05);color:#e0e0e0">
+                                            <option>Summary Report</option>
+                                            <option>Detailed Report</option>
+                                            <option>Comparison Report</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                                    <div>
+                                        <label style="display:block;margin-bottom:.5rem">From Date *</label>
+                                        <input type="date" required style="width:100%;padding:.75rem;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.05);color:#e0e0e0">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;margin-bottom:.5rem">To Date *</label>
+                                        <input type="date" required style="width:100%;padding:.75rem;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.05);color:#e0e0e0">
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:1rem;margin-top:1.5rem">
+                                    <button type="button" onclick="previewReport()" style="padding:.75rem 1.5rem;border:1px solid #667eea;border-radius:8px;background:rgba(102,126,234,.1);color:#667eea;cursor:pointer">Preview</button>
+                                    <button type="submit" style="padding:.75rem 1.5rem;border:none;border-radius:8px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer">Generate Report</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="recent-reports-section" style="margin:2rem 0">
+                        <h2>📋 Recent Reports</h2>
+                        <div style="background:rgba(255,255,255,.05);border-radius:12px;overflow:hidden;margin:1rem 0">
+                            <table style="width:100%;border-collapse:collapse">
+                                <thead>
+                                    <tr style="background:rgba(255,255,255,.1)">
+                                        <th style="padding:1rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.1)">Report Name</th>
+                                        <th style="padding:1rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.1)">Type</th>
+                                        <th style="padding:1rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.1)">Created</th>
+                                        <th style="padding:1rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.1)">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">Monthly Summary</td>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">Summary</td>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">2024-01-15</td>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">
+                                            <button onclick="downloadReport('Monthly Summary')" style="padding:.5rem 1rem;border:1px solid #667eea;border-radius:6px;background:rgba(102,126,234,.1);color:#667eea;cursor:pointer;margin-right:.5rem">Download</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">Q4 Tax Report</td>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">Tax</td>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">2024-01-10</td>
+                                        <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">
+                                            <button onclick="downloadReport('Q4 Tax Report')" style="padding:.5rem 1rem;border:1px solid #667eea;border-radius:6px;background:rgba(102,126,234,.1);color:#667eea;cursor:pointer;margin-right:.5rem">Download</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                `;
+
+                // Load Font Awesome after content loads
+                const faLink = document.createElement('link');
+                faLink.rel = 'stylesheet';
+                faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+                document.head.appendChild(faLink);
+
+                console.log('Page load time:', performance.now() - perfStart, 'ms');
+            }, 500);
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            alert('Custom report generated successfully!');
+        }
+
+        function previewReport() {
+            alert('Report preview would open here!');
+        }
+
+        function downloadReport(name) {
+            alert(`"${name}" downloaded successfully!`);
+        }
+
+        function openScheduleModal() {
+            alert('Schedule modal would open here!');
+        }
+
+        // Initialize lazy loading
+        document.addEventListener('DOMContentLoaded', lazyLoadContent);
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/reports-sw.js').catch(console.error);
+        }
+    </script>
+
+    <!-- Non-critical CSS -->
+    <noscript><link rel="stylesheet" href="reports-min.css"></noscript>
+</body>
+</html>

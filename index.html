@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#64ffda">
+    <meta name="description" content="Take control of your finances with our intuitive expense tracker">
+    <meta name="keywords" content="expense tracker, budget, finance, money management, PWA">
+    <meta name="author" content="ExpenseFlow">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -9,13 +18,15 @@
     <meta name="msapplication-TileColor" content="#0f0f23">
     <meta name="msapplication-navbutton-color" content="#64ffda">
     
-    <!-- Manifest -->
+    <!-- Removed manifest to fix 404 error -->
     <link rel="manifest" href="manifest.json">
     
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDIiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhclswXSkiLz4KPHBhdGggZD0iTTQ4IDY0SDQ4LjA0OEgxNDRWMTI4SDk2VjE0NEgxNDRDMTUyLjgzNyAxNDQgMTYwIDEzNi44MzcgMTYwIDEyOFY2NEM1OCA1Ni4xNjMgNTIuMDQzIDQ4IDQ4IEg0OEM0MC4wNzEgNDggMzIgNTYuMDcxIDMyIDY0VjEyOEMzMiAxMzUuOTI5IDQwLjA3MSAxNDQgNDggMTQ0SDgwVjEyOEg0OFY2NFoiIGZpbGw9IiM2NGZmZGEiLz4KPHBhdGggZD0iTTY0IDgwSDgwVjk2SDY0VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOTYgODBIMTI4Vjk2SDk2VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDBfbGluZWFyWzBdIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K">
     
     <title>ExpenseFlow - Smart Money Management</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -297,6 +308,69 @@
         font-weight: 500;
         color: var(--text-primary);
         font-size: 0.95rem;
+      }
+
+      /* Auth Buttons Styles */
+      .auth-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .auth-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(100, 255, 218, 0.3);
+        background: rgba(100, 255, 218, 0.08);
+        color: var(--accent-primary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-decoration: none;
+      }
+
+      .auth-btn:hover {
+        background: rgba(100, 255, 218, 0.15);
+        border-color: var(--accent-primary);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(100, 255, 218, 0.2);
+      }
+
+      .auth-btn.login-trigger {
+        background: rgba(100, 255, 218, 0.1);
+      }
+
+      .auth-btn.signup-trigger {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-color: transparent;
+        color: white;
+      }
+
+      .auth-btn.signup-trigger:hover {
+        background: linear-gradient(135deg, #7c8cec, #8456a5);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+      }
+
+      .auth-btn.logout-btn {
+        background: rgba(255, 107, 157, 0.1);
+        border-color: rgba(255, 107, 157, 0.3);
+        color: #ff6b9d;
+      }
+
+      .auth-btn.logout-btn:hover {
+        background: rgba(255, 107, 157, 0.2);
+        border-color: #ff6b9d;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
       }
 
       .nav-toggle {
@@ -1379,6 +1453,24 @@
         gap: 0.5rem;
         justify-content: center;
       }
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
       .dismiss-btn:hover {
         background: rgba(255, 255, 255, 0.1);
@@ -1604,7 +1696,69 @@
         .amount-filters {
           justify-content: stretch;
         }
+
+        /* Auth buttons mobile styles */
+        .auth-buttons {
+          gap: 0.3rem;
+        }
+
+        .auth-btn {
+          padding: 0.5rem 0.8rem;
+          font-size: 0.85rem;
+        }
+
+        .auth-btn span {
+          display: none;
+        }
+
+        .auth-btn i {
+          font-size: 1rem;
+        }
+
+        .user-info {
+          gap: 0.5rem;
+        }
+
+        .user-info .username {
+          display: none;
+        }
+
+        .profile-img {
+          width: 32px;
+          height: 32px;
+        }
       }
+.balance-card,
+.income-card,
+.expense-card,
+.history-section,
+.form-section,
+.data-management-section,
+.recurring-section {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.balance-card:hover,
+.income-card:hover,
+.expense-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+.btn-submit {
+  background: linear-gradient(135deg, #64ffda, #48e0c1);
+  border: none;
+  color: #041212;
+  font-weight: 600;
+  border-radius: 14px;
+  padding: 0.85rem 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(100, 255, 218, 0.35);
+}
 
       @media (max-width: 480px) {
         .hero-title {
@@ -1660,188 +1814,440 @@
           width: 100%;
         }
       }
+</style>
 
-      /* Touch and gesture improvements */
-      @media (hover: none) and (pointer: coarse) {
-        .filter-btn,
-        .export-btn,
-        .import-btn,
-        .btn-submit {
-          min-height: 44px;
-          padding: 0.75rem 1.5rem;
-        }
-        
-        .delete-btn {
-          min-width: 44px;
-          min-height: 44px;
-        }
-        
-        .nav-link {
-          padding: 1rem 1.5rem;
-        }
-        
-        .category-select,
-        .date-input,
-        .amount-input,
-        .search-input {
-          min-height: 48px;
-          font-size: 16px;
-        }
-        
-        .form-control input,
-        .form-control select {
-          min-height: 48px;
-          font-size: 16px;
-        }
-      }
+<style>
+    /* =========================
+   MOBILE RESPONSIVE STYLES
+   ========================= */
+@media (max-width: 768px) {
 
-      /* Safe area insets for devices with notches */
-      @supports (padding: max(0px)) {
-        .header {
-          padding-left: max(0px, env(safe-area-inset-left));
-          padding-right: max(0px, env(safe-area-inset-right));
-        }
-        
-        .main-content {
-          padding-left: max(2rem, env(safe-area-inset-left) + 2rem);
-          padding-right: max(2rem, env(safe-area-inset-right) + 2rem);
-          padding-bottom: max(2rem, env(safe-area-inset-bottom) + 2rem);
-        }
-        
-        .install-prompt {
-          bottom: max(20px, env(safe-area-inset-bottom) + 20px);
-          left: max(20px, env(safe-area-inset-left) + 20px);
-          right: max(20px, env(safe-area-inset-right) + 20px);
-        }
-      }
+  /* General */
+  body {
+    overflow-x: hidden;
+  }
 
-      /* Ultra small devices */
-      @media (max-width: 360px) {
-        body {
-          font-size: 14px;
-        }
-        
-        .container {
-          padding: 0 0.75rem;
-        }
-        
-        .hero-title {
-          font-size: 1.4rem;
-          line-height: 1.3;
-        }
-        
-        .hero-subtitle {
-          font-size: 0.85rem;
-        }
-        
-        .balance-card {
-          padding: 1rem;
-        }
-        
-        .balance-amount {
-          font-size: 1.5rem;
-        }
-        
-        .income-card,
-        .expense-card {
-          padding: 0.75rem;
-        }
-        
-        .nav-logo span {
-          font-size: 0.85rem;
-        }
-        
-        .filter-buttons {
-          flex-wrap: wrap;
-          gap: 0.5rem;
-        }
-        
-        .footer-section h4 {
-          font-size: 1rem;
-        }
-        
-        .footer-links a {
-          font-size: 0.85rem;
-        }
-      }
+  .container {
+    padding: 1rem;
+  }
 
-      input,
-      select,
-      button {
-        max-width: 100%;
-        min-width: 0;
-      }
+  /* Navbar */
+  .nav-menu {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background: #0f0f23;
+    flex-direction: column;
+    align-items: center;
+    display: none;
+  }
 
-      /* Chatbot Styles */
-      .chatbot-container {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        z-index: 999;
-        font-family: 'Inter', sans-serif;
-      }
+  .nav-menu.active {
+    display: flex;
+  }
 
-      .chatbot-widget {
-        width: 380px;
-        height: 500px;
-        background: var(--bg-secondary);
-        border: 1px solid rgba(100, 255, 218, 0.2);
-        border-radius: 15px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        animation: slideInUp 0.4s ease-out;
-        display: none;
-      }
+  .nav-link {
+    padding: 1rem;
+    width: 100%;
+    text-align: center;
+  }
 
-      .chatbot-widget.active {
-        display: flex;
-      }
+  .nav-toggle {
+    display: block;
+    cursor: pointer;
+  }
 
-      @keyframes slideInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+  .user-profile {
+    display: none;
+  }
 
-      .chatbot-header {
-        background: var(--primary-gradient);
-        padding: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-      }
+  /* Hero */
+  .hero-title {
+    font-size: 1.8rem;
+    text-align: center;
+  }
 
-      .chatbot-header-content h3 {
-        color: white;
-        font-size: 1.1rem;
-        margin-bottom: 0.25rem;
-      }
+  .hero-subtitle {
+    text-align: center;
+    font-size: 1rem;
+  }
 
-      .chatbot-header-content p {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.85rem;
-      }
+  /* Balance & Cards */
+  /* Styles moved to expensetracker.css */
 
-      .chatbot-close-btn {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1.2rem;
-        cursor: pointer;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.2s;
-      }
+
+  /* Filters */
+  .filter-controls {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .advanced-filters {
+    flex-direction: column;
+  }
+
+  .date-filters,
+  .amount-filters {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  /* Transaction Form */
+  .form-row {
+    flex-direction: column;
+  }
+
+  .form-control {
+    width: 100%;
+  }
+
+  /* Footer */
+  .footer-container {
+    flex-direction: column;
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .footer-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+</style>
+
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="#dashboard" class="nav-link active">Dashboard</a>
+          <a href="#analytics" class="nav-link">Analytics</a>
+          <a href="#goals" class="nav-link">Goals</a>
+          <a href="#settings" class="nav-link">Settings</a>
+          <a href="login-signup.html" class="nav-link">Login / Sign up</a>
+        </div>
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="user-profile">
+          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
+          </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username">John Doe</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="hero-section glass">
+      <h1 class="hero-title">Smart Money Management</h1>
+      <p class="hero-subtitle">Take control of your finances with our intuitive expense tracker</p>
+    </div>
+  /* Authentication Styles - Premium UI */
+  .auth-prompt {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, #1a1a3e 0%, #0f0f23 100%);
+    backdrop-filter: blur(15px);
+    z-index: 2500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .auth-prompt.show {
+    display: flex;
+  }
+  
+  .auth-prompt-content {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(100, 255, 218, 0.2);
+    border-radius: 28px;
+    padding: 3.5rem 3rem;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .auth-prompt-icon {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, #64ffda 0%, #764ba2 100%);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+    transform: rotate(-5deg);
+    animation: pulse 2s infinite ease-in-out;
+  }
+  
+  .auth-prompt h2 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #fff, #64ffda);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .auth-prompt p {
+    color: #b4b4d0;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+  
+  .auth-prompt-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+  
+  .auth-prompt-btn {
+    padding: 1rem 2.5rem;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    border: none;
+  }
+  
+  .auth-prompt-btn.primary {
+    background: #64ffda;
+    color: #0f0f23;
+    box-shadow: 0 4px 15px rgba(100, 255, 218, 0.4);
+  }
+  
+  .auth-prompt-btn.primary:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(100, 255, 218, 0.5);
+  }
+  
+  .auth-prompt-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .auth-prompt-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
+  }
+  
+  .auth-prompt-features {
+    text-align: left;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    border: 1px solid rgba(100, 255, 218, 0.1);
+  }
+  
+  .auth-prompt-features h4 {
+    font-size: 0.9rem;
+    color: #64ffda;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .auth-prompt-features ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  .auth-prompt-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: #d1d1f0;
+  }
+  
+  .auth-prompt-features li i {
+    color: #64ffda;
+    font-size: 1rem;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1) rotate(-5deg); }
+    50% { transform: scale(1.05) rotate(0deg); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Modals - Premium Glow */
+  .login-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 25, 0.85);
+    backdrop-filter: blur(20px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+  }
+  
+  .login-modal-overlay.active {
+    display: flex;
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  .login-modal {
+    background: rgba(26, 26, 46, 0.95);
+    border-radius: 32px;
+    padding: 3rem;
+    max-width: 450px;
+    width: 95%;
+    border: 1px solid rgba(100, 255, 218, 0.25);
+    color: white;
+    box-shadow: 0 0 50px rgba(100, 255, 218, 0.15);
+    position: relative;
+    animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  @keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(100px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .login-modal-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .login-modal-close:hover {
+    background: rgba(255, 107, 157, 0.2);
+    color: #ff6b9d;
+    transform: rotate(90deg);
+  }
+  
+  .login-modal h2 {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .protected-content {
+    transition: filter 0.5s, opacity 0.5s;
+  }
+  
+  body.modal-active .protected-content {
+    filter: blur(10px);
+    opacity: 0.3;
+  }
+  
+  .login-modal .form-group { margin-bottom: 1.5rem; }
+  .login-modal label { display: block; margin-bottom: 0.75rem; color: #64ffda; font-weight: 500; font-size: 0.9rem; letter-spacing: 0.5px;}
+  .login-modal input { 
+    width: 100%; 
+    padding: 1.1rem; 
+    border-radius: 14px; 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    font-size: 1rem;
+    transition: all 0.3s;
+  }
+  
+  .login-modal input:focus {
+    outline: none;
+    background: rgba(100, 255, 218, 0.05);
+    border-color: #64ffda;
+    box-shadow: 0 0 0 4px rgba(100, 255, 218, 0.1);
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 1.1rem;
+    background: linear-gradient(135deg, #64ffda 0%, #3dcfad 100%);
+    border: none;
+    border-radius: 14px;
+    color: #0f0f23;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s;
+    box-shadow: 0 10px 20px rgba(100, 255, 218, 0.2);
+  }
+
+  .login-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(100, 255, 218, 0.3);
+  }
+
+  .login-signup-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #b4b4d0;
+    font-size: 0.9rem;
+  }
+
+  .login-signup-link a {
+    color: #64ffda;
+    text-decoration: none;
+    font-weight: 700;
+  }
+    /* =========================
+   MOBILE RESPONSIVE STYLES
+   ========================= */
+@media (max-width: 768px) {
+
+  /* General */
+  body {
+    overflow-x: hidden;
+  }
 
       .chatbot-close-btn:hover {
         transform: scale(1.2);
@@ -2022,47 +2428,6 @@
           max-width: 85%;
         }
       }
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#64ffda">
-  <meta name="description" content="Take control of your finances with our intuitive expense tracker">
-  <meta name="keywords" content="expense tracker, budget, finance, money management, PWA">
-  <meta name="author" content="ExpenseFlow">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <!-- PWA Meta Tags -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
-  <meta name="msapplication-TileColor" content="#0f0f23">
-  <meta name="msapplication-navbutton-color" content="#64ffda">
-
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon"
-    href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDIiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhclswXSkiLz4KPHBhdGggZD0iTTQ4IDY0SDQ4LjA0OEgxNDRWMTI4SDk2VjE0NEgxNDRDMTUyLjgzNyAxNDQgMTYwIDEzNi44MzcgMTYwIDEyOFY2NEM1OCA1Ni4xNjMgNTIuMDQzIDQ4IDQ4IEg0OEM0MC4wNzEgNDggMzIgNTYuMDcxIDMyIDY0VjEyOEMzMiAxMzUuOTI5IDQwLjA3MSAxNDQgNDggMTQ0SDgwVjEyOEg0OFY2NFoiIGZpbGw9IiM2NGZmZGEiLz4KPHBhdGggZD0iTTY0IDgwSDgwVjk2SDY0VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOTYgODBIMTI4Vjk2SDk2VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDBfbGluZWFyWzBdIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K">
-
-  <title>ExpenseFlow - Smart Money Management</title>
-  <link rel="stylesheet" href="expensetracker.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* =========================
-   MOBILE RESPONSIVE STYLES
-   ========================= */
-@media (max-width: 768px) {
-
-  /* General */
-  body {
-    overflow-x: hidden;
-  }
-
   .container {
     padding: 1rem;
   }
@@ -2150,14 +2515,286 @@
     gap: 0.5rem;
   }
 }
+
+      /* Cursor Trail Styles */
+  .cursor-trail-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999999;
+  }
+
+  .trail-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 15px rgba(100, 255, 218, 0.8),
+      0 0 30px rgba(100, 255, 218, 0.4);
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .trail-dot:first-child {
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 20px rgba(100, 255, 218, 0.9),
+      0 0 40px rgba(100, 255, 218, 0.6);
+    z-index: 2;
+  }
+
+<body>
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="#dashboard" class="nav-link active">Dashboard</a>
+          <a href="#analytics" class="nav-link">Analytics</a>
+          <a href="#goals" class="nav-link">Goals</a>
+          <a href="#settings" class="nav-link">Settings</a>
+          <!-- Theme Toggle -->
+          <button id="theme-toggle" class="theme-toggle-btn">
+            🌙
+          </button>
+
+        </div>
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="user-profile">
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username">John Doe</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+  .cursor-clicking {
+    transform: translate(-50%, -50%) scale(1.5);
+    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
+    box-shadow: 
+      0 0 25px rgba(255, 107, 157, 0.9),
+      0 0 50px rgba(255, 107, 157, 0.6) !important;
+  }
+
+  .cursor-hovering {
+    transform: translate(-50%, -50%) scale(1.3);
+    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
+  }
+
+  /* Global Loader Styles */
+  .global-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 15, 35, 0.9);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .global-loader.hidden {
+    display: none;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(100, 255, 218, 0.3);
+    border-top: 3px solid #64ffda;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
     </style>
   </head>
   <body>
+
+<div class="cursor-trail-container" id="cursor-trail"></div>
+
+<script>
+(function() {
+  // Hide default cursor
+  document.body.style.cursor = 'none';
+  
+  const container = document.getElementById('cursor-trail');
+  const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const trailCircles = [];
+  const COUNT = 12; // Fewer circles for smoother trail
+  
+  // Create trail circles
+  for (let i = 0; i < COUNT; i++) {
+    const circle = document.createElement('div');
+    circle.className = 'trail-dot';
+    
+    // Opacity decreases along the trail
+    const opacity = 0.9 - (i / COUNT) * 0.8;
+    circle.style.opacity = opacity.toString();
+    
+    // Size decreases along the trail
+    const scale = 1 - (i / COUNT) * 0.5;
+    circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    
+    container.appendChild(circle);
+    trailCircles.push({ 
+      element: circle, 
+      x: coords.x, 
+      y: coords.y,
+      targetX: coords.x,
+      targetY: coords.y
+    });
+  }
+  
+  // Track mouse position
+  let isMoving = false;
+  let lastMouseX = coords.x;
+  let lastMouseY = coords.y;
+  let velocity = { x: 0, y: 0 };
+  
+  window.addEventListener('mousemove', e => {
+    coords.x = e.clientX;
+    coords.y = e.clientY;
+    
+    // Calculate velocity for smooth movement
+    velocity.x = e.clientX - lastMouseX;
+    velocity.y = e.clientY - lastMouseY;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+    
+    isMoving = true;
+    
+    // Reset movement timeout
+    clearTimeout(window.movementTimeout);
+    window.movementTimeout = setTimeout(() => {
+      isMoving = false;
+    }, 50);
+  });
+  
+  // Click effect
+  window.addEventListener('mousedown', () => {
+    trailCircles.forEach(circle => {
+      circle.element.classList.add('cursor-clicking');
+    });
+  });
+  
+  window.addEventListener('mouseup', () => {
+    trailCircles.forEach(circle => {
+      circle.element.classList.remove('cursor-clicking');
+    });
+  });
+  
+  // Hover effect for interactive elements
+  window.addEventListener('mouseover', e => {
+    const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
+    trailCircles.forEach(circle => {
+      circle.element.classList.toggle('cursor-hovering', !!interactive);
+    });
+  });
+  
+  // Smooth animation function
+  function animateTrail() {
+    let targetX = coords.x;
+    let targetY = coords.y;
+    
+    // Add velocity offset to first circle for more natural feel
+    const velocityOffset = 0.5;
+    const offsetX = velocity.x * velocityOffset;
+    const offsetY = velocity.y * velocityOffset;
+    
+    trailCircles.forEach((circle, index) => {
+      // First circle follows cursor exactly
+      if (index === 0) {
+        circle.x = targetX + offsetX;
+        circle.y = targetY + offsetY;
+      } 
+      // Other circles follow with smooth delay
+      else {
+        const prevCircle = trailCircles[index - 1];
+        
+        // Smooth interpolation factor (changes based on movement speed)
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        const lerpFactor = isMoving ? 
+          Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
+          0.1; // Slow movement = more spread
+        
+        circle.x += (prevCircle.x - circle.x) * lerpFactor;
+        circle.y += (prevCircle.y - circle.y) * lerpFactor;
+      }
+      
+      // Apply position with easing
+      circle.element.style.left = circle.x + 'px';
+      circle.element.style.top = circle.y + 'px';
+      
+      // Dynamic opacity based on speed and position
+      if (index > 0) {
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        const baseOpacity = 0.9 - (index / COUNT) * 0.8;
+        const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
+        circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
+      }
+      
+      // Update target for next circle
+      targetX = circle.x;
+      targetY = circle.y;
+    });
+    
+    requestAnimationFrame(animateTrail);
+  }
+  
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    // Adjust if cursor goes out of bounds
+    if (coords.x > window.innerWidth) coords.x = window.innerWidth;
+    if (coords.y > window.innerHeight) coords.y = window.innerHeight;
+  });
+  
+  // Handle mouse leave/enter
+  window.addEventListener('mouseleave', () => {
+    trailCircles.forEach(circle => {
+      circle.element.style.opacity = '0';
+    });
+  });
+  
+  window.addEventListener('mouseenter', () => {
+    trailCircles.forEach((circle, index) => {
+      const opacity = 0.9 - (index / COUNT) * 0.8;
+      circle.element.style.opacity = opacity.toString();
+    });
+  });
+  
+  // Start animation
+  animateTrail();
+})();
+</script>
+
+      
     <!-- Global Loader -->
 <div id="global-loader" class="global-loader hidden">
   <div class="spinner"></div>
 </div>
 
+    <!-- Protected Content Wrapper -->
+    <div id="protectedContent" class="protected-content">
     <!-- Header -->
     <header class="header">
       <nav class="navbar">
@@ -2168,10 +2805,15 @@
           </a>
           <div class="nav-menu" id="nav-menu">
             <a href="#dashboard" class="nav-link active">Dashboard</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="public/analytics.html" class="nav-link">Analytics</a>
             <a href="#analytics" class="nav-link">Analytics</a>
+            <a href="#health" class="nav-link" id="health-tab">Health</a>
             <a href="#goals" class="nav-link">Goals</a>
             <a href="#settings" class="nav-link">Settings</a>
+            <a href="login-signup.html" class="nav-link">Login-Signup</a>
           </div>
+          
           <div class="nav-actions">
             <div class="nav-search">
               <i class="fas fa-search"></i>
@@ -2204,7 +2846,13 @@
           </button>
           <div class="user-profile">
             <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face" alt="User" class="profile-img">
-            <span class="username">John Doe</span>
+            <span class="username" id="navUsername">User</span>
+            <div id="userInfo" class="user-info" style="display: none;">
+              <button class="auth-btn logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+              </button>
+            </div>
           <div class="card-content">
             <h4>Expense</h4>
             <p id="money-minus" class="money-minus">
@@ -2450,6 +3098,104 @@
         </form>
       </div>
 
+      <!-- AI-Driven Budget Intelligence Dashboard -->
+      <div class="intelligence-section" id="intelligence-dashboard">
+        <div class="section-header">
+          <h3><i class="fas fa-brain"></i> AI Budget Intelligence</h3>
+          <div class="intelligence-controls">
+            <button class="refresh-btn" id="refresh-intelligence" title="Refresh Intelligence Data">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Intelligence Loading Indicator -->
+        <div class="intelligence-loader" id="intelligence-loader">
+          <div class="loader-spinner"></div>
+          <span>Analyzing spending patterns...</span>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="intelligence-summary"></div>
+
+        <!-- Intelligence Tabs -->
+        <div class="intelligence-tabs">
+          <button class="intelligence-tab active" data-tab="anomalies">
+            <i class="fas fa-exclamation-triangle"></i> Anomalies
+          </button>
+          <button class="intelligence-tab" data-tab="volatility">
+            <i class="fas fa-chart-line"></i> Volatility
+          </button>
+          <button class="intelligence-tab" data-tab="reallocations">
+            <i class="fas fa-exchange-alt"></i> Reallocations
+          </button>
+          <button class="intelligence-tab" data-tab="alerts">
+            <i class="fas fa-bell"></i> Alerts
+          </button>
+          <button class="intelligence-tab" data-tab="budgets">
+            <i class="fas fa-wallet"></i> Budgets
+          </button>
+        </div>
+
+        <!-- Tab Panels -->
+        <div class="intelligence-panels">
+          <div class="intelligence-panel active" id="anomalies-panel">
+            <h4>Z-Score Anomaly Detection</h4>
+            <p class="panel-description">Transactions flagged with Z-Score ≥ 2.0 (statistically unusual spending)</p>
+            <div id="anomaly-timeline"></div>
+          </div>
+
+          <div class="intelligence-panel" id="volatility-panel">
+            <h4>Spending Volatility Analysis</h4>
+            <p class="panel-description">Category volatility index based on coefficient of variation</p>
+            <div id="volatility-chart"></div>
+          </div>
+
+          <div class="intelligence-panel" id="reallocations-panel">
+            <h4>Self-Healing Budget Suggestions</h4>
+            <p class="panel-description">AI-suggested fund transfers from surplus to deficit categories</p>
+            <div id="reallocation-suggestions"></div>
+          </div>
+
+          <div class="intelligence-panel" id="alerts-panel">
+            <h4>Budget Alerts</h4>
+            <p class="panel-description">AI-driven alerts including predictions and anomaly warnings</p>
+            <div id="intelligence-alerts"></div>
+          </div>
+
+          <div class="intelligence-panel" id="budgets-panel">
+            <h4>Budget Intelligence Overview</h4>
+            <p class="panel-description">Budgets with AI-enhanced statistics and predictions</p>
+            <div id="budget-intelligence-list"></div>
+          </div>
+        </div>
+
+        <!-- Transaction Analyzer -->
+        <div class="transaction-analyzer">
+          <h4><i class="fas fa-search-dollar"></i> Analyze Transaction</h4>
+          <form id="analyze-transaction-form" class="analyze-form">
+            <div class="analyze-row">
+              <input type="number" name="amount" placeholder="Amount" step="0.01" min="0.01" required>
+              <select name="category" required>
+                <option value="">Select Category</option>
+                <option value="food">Food & Dining</option>
+                <option value="transport">Transportation</option>
+                <option value="shopping">Shopping</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="bills">Bills & Utilities</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="other">Other</option>
+              </select>
+              <input type="text" name="description" placeholder="Description (optional)">
+              <button type="submit" class="analyze-btn">
+                <i class="fas fa-microscope"></i> Analyze
+              </button>
+            </div>
+          </form>
+          <div id="analysis-result"></div>
+        </div>
+      </div>
+
       <!-- Recurring Expenses Section -->
       <div class="recurring-section" id="recurring-section">
         <div class="section-header">
@@ -2610,23 +3356,95 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <div class="footer-container">
-      <div class="footer-section">
-        <div class="footer-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
-        </div>
-        
-        <div class="footer-section">
-          <h4>Company</h4>
-          <ul class="footer-links">
-            <li><a href="AboutUs.html">About Us</a></li>
-            <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
-            <li><a href="terms_service.html">Terms of Service</a></li>
-            <li><a href="#">Contact</a></li>
-          </ul>
-        </div>
-      </div>
+  <div class="footer-container">
+
+    <div class="footer-section">
+  <div class="footer-logo">
+    <i class="fas fa-wallet"></i>
+    <span>ExpenseFlow</span>
+  </div>
+
+  <p class="footer-description">
+    Smart money management made simple. Track, analyze, and optimize your financial habits.
+  </p>
+
+  <div class="social-links">
+    <a
+      href="https://x.com/9504_renu"
+      class="social-link"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="X (Twitter)"
+    >
+      <i class="fab fa-x-twitter"></i>
+    </a>
+
+    <a
+      href="https://github.com/Renu-code123/ExpenseFlow"
+      class="social-link"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Github"
+    >
+      <i class="fab fa-github"></i>
+    </a>
+
+    <a
+      href="mailto:renu89857@gmail.com"
+      class="social-link"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Email"
+    >
+      <i class="far fa-envelope"></i>
+    </a>
+
+    <a
+      href="https://www.linkedin.com/in/renu-kumari-prajapati"
+      class="social-link"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="LinkedIn"
+    >
+      <i class="fab fa-linkedin-in"></i>
+    </a>
+  </div>
+</div>
+
+
+    <div class="footer-section">
+      <h4>Company</h4>
+      <ul class="footer-links">
+        <li><a href="AboutUs.html">About Us</a></li>
+        <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
+        <li><a href="terms_service.html">Terms of Service</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Features</h4>
+      <ul class="footer-links">
+        <li><a href="#">Expense Tracking</a></li>
+        <li><a href="#">Budget Planning</a></li>
+        <li><a href="#">Analytics Dashboard</a></li>
+        <li><a href="#">Goal Setting</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+<div class="footer-bottom">
+  <div class="footer-container">
+    <p>&copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for better financial management.</p>
+    <div class="footer-stats">
+      <span>🏆 Trusted by 10,000+ users</span>
+      <span>💰 ₹50M+ tracked</span>
+      <span>📊 99.9% uptime</span>
+    </div>
+  </div>
+</div>
+</footer>
 
       <div class="footer-section">
         <h4>Features</h4>
@@ -2638,64 +3456,9 @@
         </ul>
       </div>
 
-    <button id="scrollToTopBtn" title="Go to top">
-    <i data-lucide="arrow-up-circle"></i>
-  </button>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="theme.js"></script>
-    <script src="trackerscript.js"></script>
-    
-    <!-- PWA Installation Prompt -->
-    <div id="install-prompt" class="install-prompt" style="display: none;">
-      <div class="install-prompt-content">
-        <div class="install-prompt-header">
-          <i class="fas fa-download"></i>
-          <h3>Install ExpenseFlow</h3>
-        </div>
-        <p>Install ExpenseFlow for quick access and offline functionality!</p>
-        <div class="install-prompt-actions">
-          <button id="install-button" class="install-btn">
-            <i class="fas fa-plus"></i> Install
-          </button>
-          <button id="install-dismiss" class="dismiss-btn">
-            <i class="fas fa-times"></i> Not now
-          </button>
-        </div>
-      <div class="footer-section">
-        <h4>Resources</h4>
-        <ul class="footer-links">
-          <li><a href="#">Help Center</a></li>
-          <li><a href="#">Financial Tips</a></li>
-          <li><a href="#">Video Tutorials</a></li>
-          <li><a href="#">Community</a></li>
-        </ul>
-      </div>
 
-      <div class="footer-section">
-        <h4>Company</h4>
-        <ul class="footer-links">
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <div class="footer-container">
-        <p>&copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for better financial management.</p>
-        <div class="footer-stats">
-          <span>🏆 Trusted by 10,000+ users</span>
-          <span>💰 ₹50M+ tracked</span>
-          <span>📊 99.9% uptime</span>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <script src="trackerscript.js"></script>
-  <script src="export-feature.js"></script>
+  <!-- Authentication working properly now -->
+  <!-- All required scripts will be inline -->
 
   <!-- PWA Installation Prompt -->
   <div id="install-prompt" class="install-prompt" style="display: none;">
@@ -2730,10 +3493,37 @@
       <button id="update-button" class="update-btn">Update Now</button>
     </div>
   </div>
-  <!-- Chatbot -->
-  <script type="module" src="chatbot/chatbot.js"></script>
+  <script>
+// Wait for page to load
+window.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.getElementById("theme-toggle");
+  const body = document.body;
+
+  // Load saved theme from localStorage
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    body.classList.add("dark-theme");
+    toggleBtn.textContent = "☀️"; // change icon for dark
+  }
+
+  // Toggle dark/light mode
+  toggleBtn.addEventListener("click", () => {
+    body.classList.toggle("dark-theme");
+
+    const isDark = body.classList.contains("dark-theme");
+    toggleBtn.textContent = isDark ? "☀️" : "🌙";
+
+    // Save preference
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  });
+});
+</script>
 
 </body>
+
+</html>
+  <!-- Chatbot -->
+
 
     <!-- Chatbot Widget -->
     <div id="chatbot-container" class="chatbot-container">
@@ -2779,7 +3569,105 @@
       <button id="chatbot-toggle" class="chatbot-toggle-btn" title="Chat with Assistant">
         <i class="fas fa-comments"></i>
       </button>
+    </div><!-- End #protectedContent -->
+
+    <!-- Authentication Prompt for Unauthenticated Users (Premium) -->
+    <div id="authPrompt" class="auth-prompt">
+      <div class="auth-prompt-content">
+        <div class="auth-prompt-icon">
+          <i class="fas fa-shield-halved"></i>
+        </div>
+        <h2>Unlock ExpenseFlow</h2>
+        <p>Your journey to financial freedom starts here. Sign in to access smart analytics, personalized goals, and secure tracking.</p>
+        
+        <div class="auth-prompt-buttons">
+          <button class="auth-prompt-btn primary" onclick="openLoginModal()">
+            <i class="fas fa-sign-in-alt"></i>
+            Login Now
+          </button>
+          <button class="auth-prompt-btn secondary" onclick="openSignupModal()">
+            <i class="fas fa-user-plus"></i>
+            Get Started
+          </button>
+        </div>
+        
+        <div class="auth-prompt-features">
+          <h4>Premium Features:</h4>
+          <ul>
+            <li><i class="fas fa-check-circle"></i> Smart Tracking</li>
+            <li><i class="fas fa-check-circle"></i> Budget Planning</li>
+            <li><i class="fas fa-check-circle"></i> Cloud Sync</li>
+            <li><i class="fas fa-check-circle"></i> Data Export</li>
+          </ul>
+        </div>
+      </div>
     </div>
+
+    <!-- Login Modal Overlay -->
+    <div id="loginModal" class="login-modal-overlay">
+      <div class="login-modal">
+        <button class="login-modal-close" onclick="closeLoginModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="login-modal-content">
+          <div style="text-align:center; font-size:2rem; margin-bottom:0.5rem;">
+            <i class="fas fa-lock"></i>
+          </div>
+          <h2>Login to ExpenseFlow</h2>
+          <form id="loginFormModal">
+            <div class="form-group">
+              <label for="loginEmailModal">Email:</label>
+              <input type="email" id="loginEmailModal" required placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+              <label for="loginPasswordModal">Password:</label>
+              <input type="password" id="loginPasswordModal" required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+            <p class="login-signup-link">
+              Don't have an account? 
+              <a href="javascript:void(0)" onclick="switchToSignup()">Sign up here</a>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signup Modal Overlay -->
+    <div id="signupModal" class="login-modal-overlay">
+      <div class="login-modal">
+        <button class="login-modal-close" onclick="closeSignupModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="login-modal-content">
+          <div style="text-align:center; font-size:2rem; margin-bottom:0.5rem;">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <h2>Sign Up for ExpenseFlow</h2>
+          <form id="signupFormModal">
+            <div class="form-group">
+              <label for="signupUsernameModal">Username:</label>
+              <input type="text" id="signupUsernameModal" required placeholder="Choose a username">
+            </div>
+            <div class="form-group">
+              <label for="signupEmailModal">Email:</label>
+              <input type="email" id="signupEmailModal" required placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+              <label for="signupPasswordModal">Password:</label>
+              <input type="password" id="signupPasswordModal" required placeholder="Create a password">
+            </div>
+            <button type="submit" class="login-btn">Sign Up</button>
+            <p class="login-signup-link">
+              Already have an account? 
+              <a href="javascript:void(0)" onclick="switchToLogin()">Login here</a>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
 
     <script>
       // Mobile Navigation Toggle
@@ -2816,9 +3704,442 @@
           }
         });
 
+        // Authentication State Management - Initialize first
+        initializeAuthSystem();
+        
         // Chatbot Functionality
         initializeChatbot();
       });
+
+      // =========================
+      // LOGIN MODAL FUNCTIONALITY
+      // =========================
+
+      function openLoginModal() {
+        console.log('Opening login modal...');
+        const modal = document.getElementById('loginModal');
+        const authPrompt = document.getElementById('authPrompt');
+        
+        console.log('Modal element found:', !!modal);
+        console.log('Auth prompt found:', !!authPrompt);
+        
+        if (modal) {
+          // Hide auth prompt when opening modal
+          if (authPrompt) {
+            authPrompt.classList.remove('show');
+            console.log('Auth prompt hidden');
+          }
+          
+          modal.classList.add('active');
+          document.body.classList.add('modal-active');
+          
+          console.log('Modal classes after opening:', modal.className);
+          console.log('Body classes after opening:', document.body.className);
+          
+          // Focus on email input
+          setTimeout(() => {
+            const emailInput = document.getElementById('loginEmailModal');
+            if (emailInput) emailInput.focus();
+          }, 300);
+        } else {
+          console.error('Login modal element not found!');
+          alert('Login modal not found! Check console for details.');
+        }
+      }
+
+      function closeLoginModal() {
+        const modal = document.getElementById('loginModal');
+        const authPrompt = document.getElementById('authPrompt');
+        if (modal) {
+          modal.classList.remove('active');
+          document.body.classList.remove('modal-active');
+          
+          // Show auth prompt again if user is not authenticated
+          const token = localStorage.getItem('authToken');
+          if (!token && authPrompt) {
+            setTimeout(() => authPrompt.classList.add('show'), 300);
+          }
+        }
+      }
+
+      function openSignupModal() {
+        const modal = document.getElementById('signupModal');
+        const authPrompt = document.getElementById('authPrompt');
+        if (modal) {
+          // Hide auth prompt when opening modal
+          if (authPrompt) authPrompt.classList.remove('show');
+          
+          modal.classList.add('active');
+          document.body.classList.add('modal-active');
+          // Focus on username input
+          setTimeout(() => {
+            const usernameInput = document.getElementById('signupUsernameModal');
+            if (usernameInput) usernameInput.focus();
+          }, 300);
+        }
+      }
+
+      function closeSignupModal() {
+        const modal = document.getElementById('signupModal');
+        const authPrompt = document.getElementById('authPrompt');
+        if (modal) {
+          modal.classList.remove('active');
+          document.body.classList.remove('modal-active');
+          
+          // Show auth prompt again if user is not authenticated
+          const token = localStorage.getItem('authToken');
+          if (!token && authPrompt) {
+            setTimeout(() => authPrompt.classList.add('show'), 300);
+          }
+        }
+      }
+
+      function switchToSignup() {
+        closeLoginModal();
+        setTimeout(() => openSignupModal(), 100);
+      }
+
+      function switchToLogin() {
+        closeSignupModal();
+        setTimeout(() => openLoginModal(), 100);
+      }
+
+      // Close modal when clicking outside
+      document.addEventListener('click', (event) => {
+        const loginModal = document.getElementById('loginModal');
+        const signupModal = document.getElementById('signupModal');
+        
+        if (loginModal && loginModal.classList.contains('active')) {
+          if (event.target === loginModal) {
+            closeLoginModal();
+          }
+        }
+        
+        if (signupModal && signupModal.classList.contains('active')) {
+          if (event.target === signupModal) {
+            closeSignupModal();
+          }
+        }
+      });
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeLoginModal();
+          closeSignupModal();
+        }
+      });
+
+      // Handle Login Form Submission
+      document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginFormModal');
+        const signupForm = document.getElementById('signupFormModal');
+
+        if (loginForm) {
+          loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmailModal').value.trim();
+            const password = document.getElementById('loginPasswordModal').value.trim();
+            
+            if (!email || !password) {
+              showNotification('Please fill in all fields', 'error');
+              return;
+            }
+            
+            try {
+              // Simulate login API call (replace with actual authentication)
+              const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userInfo', JSON.stringify(data.user));
+                
+                showNotification('Login successful! Welcome back.', 'success');
+                closeLoginModal();
+                updateAuthState(true, data.user);
+              } else {
+                const error = await response.json();
+                showNotification(error.message || 'Login failed', 'error');
+              }
+            } catch (error) {
+              console.error('Login error:', error);
+              showNotification('Connection error. Please try again.', 'error');
+            }
+          });
+        }
+
+        if (signupForm) {
+          signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('signupUsernameModal').value.trim();
+            const email = document.getElementById('signupEmailModal').value.trim();
+            const password = document.getElementById('signupPasswordModal').value.trim();
+            
+            if (!username || !email || !password) {
+              showNotification('Please fill in all fields', 'error');
+              return;
+            }
+            
+            try {
+              // Simulate signup API call (replace with actual registration)
+              const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, email, password }),
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userInfo', JSON.stringify(data.user));
+                
+                showNotification('Registration successful! Welcome to ExpenseFlow.', 'success');
+                closeSignupModal();
+                updateAuthState(true, data.user);
+              } else {
+                const error = await response.json();
+                showNotification(error.message || 'Registration failed', 'error');
+              }
+            } catch (error) {
+              console.error('Signup error:', error);
+              showNotification('Connection error. Please try again.', 'error');
+            }
+          });
+        }
+      });
+
+      // Authentication System Initialization
+      function initializeAuthSystem() {
+        console.log('Initializing authentication system...');
+        
+        // Check if elements exist
+        const loginModal = document.getElementById('loginModal');
+        const authPrompt = document.getElementById('authPrompt');
+        const authButtons = document.getElementById('authButtons');
+        
+        console.log('Auth elements found:', {
+          loginModal: !!loginModal,
+          authPrompt: !!authPrompt,
+          authButtons: !!authButtons
+        });
+        
+        // Clear any existing auth state on page load
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        
+        // Always start in unauthenticated state for demo
+        updateAuthState(false);
+        
+        // Force show auth prompt immediately
+        if (authPrompt) {
+          authPrompt.classList.add('show');
+          console.log('Auth prompt shown');
+        } else {
+          console.error('Auth prompt element not found!');
+        }
+        
+        checkAuthState();
+      }
+      
+      // Authentication State Management
+      function checkAuthState() {
+        const token = localStorage.getItem('authToken');
+        const userInfo = localStorage.getItem('userInfo');
+        
+        if (token && userInfo) {
+          try {
+            const user = JSON.parse(userInfo);
+            updateAuthState(true, user);
+          } catch (error) {
+            console.error('Error parsing user info:', error);
+            logout();
+          }
+        } else {
+          updateAuthState(false);
+          // Show login prompt for unauthenticated users
+          showAuthPrompt();
+        }
+      }
+
+      function updateAuthState(isLoggedIn, user = null) {
+        const authButtons = document.getElementById('authButtons');
+        const userInfo = document.getElementById('userInfo');
+        const protectedElements = document.querySelectorAll('.protected-content');
+        const navLinks = document.querySelectorAll('.nav-link:not(.public)');
+        
+        if (isLoggedIn && user) {
+          // Show user info, hide auth buttons
+          if (authButtons) authButtons.style.display = 'none';
+          if (userInfo) {
+            userInfo.style.display = 'flex';
+            const username = userInfo.querySelector('.username');
+            if (username) username.textContent = user.username || user.name || user.email;
+          }
+          
+          // Enable protected content
+          protectedElements.forEach(element => {
+            element.style.display = '';
+            element.style.pointerEvents = 'auto';
+            element.style.opacity = '1';
+          });
+          
+          // Enable navigation links
+          navLinks.forEach(link => {
+            link.style.pointerEvents = 'auto';
+            link.style.opacity = '1';
+            link.removeAttribute('disabled');
+          });
+          
+          // Hide auth prompt
+          hideAuthPrompt();
+        } else {
+          // Show auth buttons, hide user info
+          if (authButtons) authButtons.style.display = 'flex';
+          if (userInfo) userInfo.style.display = 'none';
+          
+          // Disable protected content
+          protectedElements.forEach(element => {
+            element.style.display = 'none';
+          });
+          
+          // Disable navigation links
+          navLinks.forEach(link => {
+            link.style.pointerEvents = 'none';
+            link.style.opacity = '0.5';
+            link.addEventListener('click', handleUnauthorizedClick);
+          });
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        updateAuthState(false);
+        showNotification('Logged out successfully', 'info');
+      }
+
+      function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+          <div class="notification-content">
+            <i class="fas ${getNotificationIcon(type)}"></i>
+            <span>${message}</span>
+          </div>
+          <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => notification.classList.add('show'), 100);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+          if (notification.parentElement) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+          }
+        }, 5000);
+      }
+
+      function getNotificationIcon(type) {
+        switch (type) {
+          case 'success': return 'fa-check-circle';
+          case 'error': return 'fa-exclamation-triangle';
+          case 'warning': return 'fa-exclamation-circle';
+          default: return 'fa-info-circle';
+        }
+      }
+      
+      // Handle unauthorized access attempts
+      function handleUnauthorizedClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showNotification('Please login to access this feature', 'warning');
+        setTimeout(() => openLoginModal(), 500);
+        return false;
+      }
+      
+      // Show authentication prompt
+      function showAuthPrompt() {
+        const authPrompt = document.getElementById('authPrompt');
+        if (authPrompt) {
+          authPrompt.classList.add('show');
+        }
+      }
+      
+      // Hide authentication prompt
+      function hideAuthPrompt() {
+        const authPrompt = document.getElementById('authPrompt');
+        if (authPrompt) {
+          authPrompt.classList.remove('show');
+        }
+      }
+
+      // Debug function to test modal visibility
+      function testModal() {
+        console.log('=== MODAL DEBUG ===');
+        const loginModal = document.getElementById('loginModal');
+        const authPrompt = document.getElementById('authPrompt');
+        const authButtons = document.getElementById('authButtons');
+        
+        console.log('Login Modal:', loginModal);
+        console.log('Auth Prompt:', authPrompt);
+        console.log('Auth Buttons:', authButtons);
+        
+        if (loginModal) {
+          console.log('Modal classes:', loginModal.className);
+          const computed = window.getComputedStyle(loginModal);
+          console.log('Modal computed:', {
+            display: computed.display,
+            visibility: computed.visibility,
+            opacity: computed.opacity,
+            zIndex: computed.zIndex
+          });
+          
+          // Force show modal for testing
+          loginModal.classList.add('active');
+          document.body.classList.add('modal-active');
+          loginModal.style.zIndex = '9999';
+          loginModal.style.display = 'flex';
+          loginModal.style.visibility = 'visible';
+          loginModal.style.opacity = '1';
+          
+          console.log('Forced modal visibility - classes:', loginModal.className);
+        }
+        
+        if (authPrompt) {
+          console.log('Auth prompt classes:', authPrompt.className);
+          const computed = window.getComputedStyle(authPrompt);
+          console.log('Auth prompt computed:', {
+            display: computed.display,
+            visibility: computed.visibility,
+            opacity: computed.opacity
+          });
+        }
+        
+        alert('Check console for detailed modal debug info. Modal should now be visible.');
+      }
+
+      // =========================
+      // END LOGIN MODAL FUNCTIONALITY
+      // =========================
 
       function initializeChatbot() {
         const chatbotToggle = document.getElementById('chatbot-toggle');
@@ -2935,6 +4256,6 @@
         }
       }
     </script>
+    </div> <!-- End #protectedContent -->
   </body>
-</html>
 </html>

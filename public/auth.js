@@ -1,8 +1,12 @@
+
+
+
+
 function getPasswordErrors(password) {
     const errors = [];
 
-    if (password.length < 8) {
-        errors.push("at least 8 characters");
+    if (password.length < 12) {
+        errors.push("at least 12 characters");
     }
     if (!/[A-Z]/.test(password)) {
         errors.push("one uppercase letter");
@@ -59,7 +63,7 @@ if (loginForm) {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
             // redirect to index
-            window.location.href = "/index.html";
+            window.location.href = "/";
         } catch (err) {
             console.error("Error during login:", err);
             alert("server error during login");
@@ -83,7 +87,7 @@ const updatePasswordUI = () => {
     const password = passwordInput.value;
 
     const checks = {
-        length: password.length >= 8,
+        length: password.length >= 12,
         upper: /[A-Z]/.test(password),
         lower: /[a-z]/.test(password),
         number: /[0-9]/.test(password),
@@ -151,7 +155,7 @@ if (registerForm) {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            window.location.href = "/index.html";
+            window.location.href = "/";
         } catch (err) {
             console.error(err);
             alert("Server error during registration");
@@ -162,6 +166,7 @@ if (registerForm) {
 // logout function
 function logout() {
     // Clear auth data
+    localStorage.clear();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 
@@ -172,3 +177,14 @@ function logout() {
     window.location.href = '/login.html';
 }
 
+const togglePassword = document.querySelector('#togglePassword');
+
+if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', function (e) {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+}

@@ -2,7 +2,7 @@
 class ReceiptManager {
   constructor() {
     this.apiUrl = '/api';
-    this.authToken = localStorage.getItem('authToken');
+    this.authToken = localStorage.getItem('token');
     this.initializeUploadArea();
   }
 

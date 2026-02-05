@@ -3,8 +3,34 @@ const fs = require('fs');
 const path = require('path');
 const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
+const User = require('../models/User');
+const reportService = require('./reportService');
+const FinancialReport = require('../models/FinancialReport');
 
 class PDFService {
+    /**
+     * Generate PDF for an existing report
+     */
+    static async generatePDFForReport(reportId, userId) {
+        const report = await FinancialReport.findOne({
+            _id: reportId,
+            user: userId,
+            status: 'ready'
+        });
+
+        if (!report) {
+            throw new Error('Report not found or not ready');
+        }
+
+        // Use the reportService's PDF generation
+        return reportService.generatePDF(userId, {
+            startDate: report.dateRange.startDate,
+            endDate: report.dateRange.endDate,
+            currency: report.currency,
+            includeCharts: true
+        });
+    }
+
     /**
      * Generate invoice PDF
      */

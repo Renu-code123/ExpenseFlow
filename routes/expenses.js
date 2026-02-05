@@ -1,333 +1,174 @@
 const express = require('express');
-const Joi = require('joi');
-const Expense = require('../models/Expense');
+const expenseRepository = require('../repositories/expenseRepository');
+const userRepository = require('../repositories/userRepository');
+const expenseService = require('../services/expenseService');
 const budgetService = require('../services/budgetService');
-const categorizationService = require('../services/categorizationService');
 const exportService = require('../services/exportService');
 const currencyService = require('../services/currencyService');
-const aiService = require('../services/aiService');
-const User = require('../models/User');
 const auth = require('../middleware/auth');
+const ResponseFactory = require('../utils/ResponseFactory');
+const { asyncHandler } = require('../middleware/errorMiddleware');
+const { ExpenseSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
+const { expenseLimiter, exportLimiter } = require('../middleware/rateLimiter');
+const { NotFoundError } = require('../utils/AppError');
+
 const router = express.Router();
 
-const expenseSchema = Joi.object({
-  description: Joi.string().trim().max(100).required(),
-  amount: Joi.number().min(0.01).required(),
-  currency: Joi.string().uppercase().optional(),
-  category: Joi.string().valid('food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'other').required(),
-  type: Joi.string().valid('income', 'expense').required(),
-  merchant: Joi.string().trim().max(50).optional(),
-  date: Joi.date().optional(),
-  workspaceId: Joi.string().hex().length(24).optional()
-});
+/**
+ * @route   GET /api/expenses
+ * @desc    Get all expenses with pagination and filtering
+ * @access  Private
+ */
+router.get('/', auth, validateQuery(ExpenseSchemas.filter), asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
 
-// GET all expenses for authenticated user with pagination support
-router.get('/', auth, async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const skip = (page - 1) * limit;
+  const user = await userRepository.findById(req.user._id);
+  const workspaceId = req.query.workspaceId;
+  const query = workspaceId
+    ? { workspace: workspaceId }
+    : { user: req.user._id, workspace: null };
 
-    const user = await User.findById(req.user._id);
+  const { documents: expenses, pagination } = await expenseRepository.findWithPagination(query, {
+    page,
+    limit,
+    sort: { date: -1 }
+  });
 
-    // Workspace filtering
-    const workspaceId = req.query.workspaceId;
-    const query = workspaceId
-      ? { workspace: workspaceId }
-      : { user: req.user._id, workspace: null };
+  // Convert expenses to user's preferred currency if needed for display
+  const convertedExpenses = await Promise.all(expenses.map(async (expense) => {
+    const expenseObj = expense.toObject ? expense.toObject() : expense;
 
-    // Get total count for pagination info
-    const total = await Expense.countDocuments(query);
-
-    const expenses = await Expense.find(query)
-      .sort({ date: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    // Convert expenses to user's preferred currency if needed
-    const convertedExpenses = await Promise.all(expenses.map(async (expense) => {
-      const expenseObj = expense.toObject();
-
-      // If expense currency differs from user preference, show converted amount
-      if (expenseObj.originalCurrency !== user.preferredCurrency) {
-        try {
-          const conversion = await currencyService.convertCurrency(
-            expenseObj.originalAmount,
-            expenseObj.originalCurrency,
-            user.preferredCurrency
-          );
-          expenseObj.displayAmount = conversion.convertedAmount;
-          expenseObj.displayCurrency = user.preferredCurrency;
-        } catch (error) {
-          // If conversion fails, use original amount
-          expenseObj.displayAmount = expenseObj.amount;
-          expenseObj.displayCurrency = expenseObj.originalCurrency;
-        }
-      } else {
+    if (expenseObj.originalCurrency !== user.preferredCurrency) {
+      try {
+        const conversion = await currencyService.convertCurrency(
+          expenseObj.originalAmount,
+          expenseObj.originalCurrency,
+          user.preferredCurrency
+        );
+        expenseObj.displayAmount = conversion.convertedAmount;
+        expenseObj.displayCurrency = user.preferredCurrency;
+      } catch (error) {
         expenseObj.displayAmount = expenseObj.amount;
         expenseObj.displayCurrency = expenseObj.originalCurrency;
       }
-
-      return expenseObj;
-    }));
-
-    res.json({
-      success: true,
-      data: convertedExpenses,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// POST new expense for authenticated user
-router.post('/', auth, async (req, res) => {
-  try {
-    const { error, value } = expenseSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    const user = await User.findById(req.user._id);
-    const expenseCurrency = value.currency || user.preferredCurrency;
-
-    // Validate currency
-    if (!currencyService.isValidCurrency(expenseCurrency)) {
-      return res.status(400).json({ error: 'Invalid currency code' });
-    }
-
-    // Store original amount and currency
-    const expenseData = {
-      ...value,
-      user: value.workspaceId ? req.user._id : req.user._id, // User still relevant for reporting
-      addedBy: req.user._id,
-      workspace: value.workspaceId || null,
-      originalAmount: value.amount,
-      originalCurrency: expenseCurrency,
-      amount: value.amount // Keep original as primary amount
-    };
-
-    // If expense currency differs from user preference, add conversion info
-    if (expenseCurrency !== user.preferredCurrency) {
-      try {
-        const conversion = await currencyService.convertCurrency(
-          value.amount,
-          expenseCurrency,
-          user.preferredCurrency
-        );
-        expenseData.convertedAmount = conversion.convertedAmount;
-        expenseData.convertedCurrency = user.preferredCurrency;
-        expenseData.exchangeRate = conversion.exchangeRate;
-      } catch (conversionError) {
-        console.error('Currency conversion failed:', conversionError.message);
-        // Continue without conversion data
-      }
-    }
-
-    const expense = new Expense(expenseData);
-    await expense.save();
-
-    // Check if expense requires approval
-    const approvalService = require('../services/approvalService');
-    let requiresApproval = false;
-    let workflow = null;
-
-    if (expenseData.workspace) {
-        requiresApproval = await approvalService.requiresApproval(expenseData, expenseData.workspace);
-    }
-
-    if (requiresApproval) {
-        try {
-            workflow = await approvalService.submitForApproval(expense._id, req.user._id);
-            expense.status = 'pending_approval';
-            expense.approvalWorkflow = workflow._id;
-            await expense.save();
-        } catch (approvalError) {
-            console.error('Failed to submit for approval:', approvalError.message);
-            // Continue with normal flow if approval submission fails
-        }
-    }
-
-    // Update budget and goal progress using converted amount if available
-    const amountForBudget = expenseData.convertedAmount || value.amount;
-    if (value.type === 'expense') {
-        await budgetService.checkBudgetAlerts(req.user._id);
-    }
-    await budgetService.updateGoalProgress(req.user._id, value.type === 'expense' ? -amountForBudget : amountForBudget, value.category);
-
-    // Emit real-time update to all user's connected devices
-    const io = req.app.get('io');
-    
-    // Prepare the expense object with display amounts for socket emission
-    const expenseForSocket = expense.toObject();
-    if (expenseCurrency !== user.preferredCurrency) {
-      expenseForSocket.displayAmount = expenseData.convertedAmount;
-      expenseForSocket.displayCurrency = user.preferredCurrency;
     } else {
-      expenseForSocket.displayAmount = expense.amount;
-      expenseForSocket.displayCurrency = expenseCurrency;
-    }
-    
-    io.to(`user_${req.user._id}`).emit('expense_created', expenseForSocket);
-
-    const response = {
-        ...expense.toObject(),
-        requiresApproval,
-        workflow: workflow ? { _id: workflow._id, status: workflow.status } : null
-    };
-
-    // Add display amounts to response
-    if (expenseCurrency !== user.preferredCurrency) {
-      response.displayAmount = expenseData.convertedAmount;
-      response.displayCurrency = user.preferredCurrency;
-    } else {
-      response.displayAmount = expense.amount;
-      response.displayCurrency = expenseCurrency;
+      expenseObj.displayAmount = expenseObj.amount;
+      expenseObj.displayCurrency = expenseObj.originalCurrency;
     }
 
-    res.status(201).json(response);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return expenseObj;
+  }));
+
+  return ResponseFactory.paginated(res, convertedExpenses, page, limit, pagination.total);
+}));
+
+/**
+ * @route   POST /api/expenses
+ * @desc    Create a new expense
+ * @access  Private
+ */
+router.post('/', auth, expenseLimiter, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
+  const io = req.app.get('io');
+  const expense = await expenseService.createExpense(req.body, req.user._id, io);
+
+  return ResponseFactory.created(res, expense, 'Expense created successfully');
+}));
+
+/**
+ * @route   GET /api/expenses/:id
+ * @desc    Get specific expense
+ * @access  Private
+ */
+router.get('/:id', auth, asyncHandler(async (req, res) => {
+  const expense = await expenseRepository.findById(req.params.id);
+
+  if (!expense || (expense.user.toString() !== req.user._id.toString() && !expense.workspace)) {
+    throw new NotFoundError('Expense not found');
   }
-});
 
-// PUT update expense for authenticated user
-router.put('/:id', auth, async (req, res) => {
-  try {
-    const { error, value } = expenseSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+  return ResponseFactory.success(res, expense);
+}));
 
-    const user = await User.findById(req.user._id);
-    const expenseCurrency = value.currency || user.preferredCurrency;
+/**
+ * @route   PUT /api/expenses/:id
+ * @desc    Update an expense
+ * @access  Private
+ */
+router.put('/:id', auth, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
+  const expense = await expenseRepository.updateOne(
+    { _id: req.params.id, user: req.user._id },
+    req.body
+  );
 
-    // Validate currency
-    if (!currencyService.isValidCurrency(expenseCurrency)) {
-      return res.status(400).json({ error: 'Invalid currency code' });
-    }
+  if (!expense) throw new NotFoundError('Expense not found');
 
-    // Prepare update data
-    const updateData = {
-      ...value,
-      originalAmount: value.amount,
-      originalCurrency: expenseCurrency,
-      amount: value.amount
-    };
+  return ResponseFactory.success(res, expense, 'Expense updated successfully');
+}));
 
-    // If expense currency differs from user preference, add conversion info
-    if (expenseCurrency !== user.preferredCurrency) {
-      try {
-        const conversion = await currencyService.convertCurrency(
-          value.amount,
-          expenseCurrency,
-          user.preferredCurrency
-        );
-        updateData.convertedAmount = conversion.convertedAmount;
-        updateData.convertedCurrency = user.preferredCurrency;
-        updateData.exchangeRate = conversion.exchangeRate;
-      } catch (conversionError) {
-        console.error('Currency conversion failed:', conversionError.message);
-      }
-    }
+/**
+ * @route   DELETE /api/expenses/:id
+ * @desc    Delete an expense
+ * @access  Private
+ */
+router.delete('/:id', auth, asyncHandler(async (req, res) => {
+  const expense = await expenseRepository.deleteOne({ _id: req.params.id, user: req.user._id });
 
-    const expense = await Expense.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      updateData,
-      { new: true }
-    );
-    if (!expense) return res.status(404).json({ error: 'Expense not found' });
+  if (!expense) throw new NotFoundError('Expense not found');
 
-    // Update budget calculations
-    await budgetService.checkBudgetAlerts(req.user._id);
+  return ResponseFactory.success(res, null, 'Expense deleted successfully');
+}));
 
-    // Emit real-time update
-    const io = req.app.get('io');
-    
-    // Prepare the expense object with display amounts for socket emission
-    const expenseForSocket = expense.toObject();
-    if (expenseCurrency !== user.preferredCurrency) {
-      expenseForSocket.displayAmount = updateData.convertedAmount || expense.amount;
-      expenseForSocket.displayCurrency = user.preferredCurrency;
-    } else {
-      expenseForSocket.displayAmount = expense.amount;
-      expenseForSocket.displayCurrency = expenseCurrency;
-    }
-    
-    io.to(`user_${req.user._id}`).emit('expense_updated', expenseForSocket);
+/**
+ * @route   GET /api/expenses/stats/summary
+ * @desc    Get expense summary statistics
+ * @access  Private
+ */
+router.get('/stats/summary', auth, asyncHandler(async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const start = startDate ? new Date(startDate) : new Date(new Date().setDate(1));
+  const end = endDate ? new Date(endDate) : new Date();
 
-    const response = expense.toObject();
-    
-    // Add display amounts to response
-    if (expenseCurrency !== user.preferredCurrency) {
-      response.displayAmount = updateData.convertedAmount || expense.amount;
-      response.displayCurrency = user.preferredCurrency;
-    } else {
-      response.displayAmount = expense.amount;
-      response.displayCurrency = expenseCurrency;
-    }
+  const stats = await expenseRepository.getStatistics(req.user._id, start, end);
+  return ResponseFactory.success(res, stats);
+}));
 
-    res.json(response);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+/**
+ * @route   GET /api/expenses/stats/trends
+ * @desc    Get expense trends
+ * @access  Private
+ */
+router.get('/stats/trends', auth, asyncHandler(async (req, res) => {
+  const { days = 30 } = req.query;
+  const trends = await expenseRepository.getTrends(req.user._id, parseInt(days));
+  return ResponseFactory.success(res, trends);
+}));
+
+/**
+ * @route   POST /api/expenses/export
+ * @desc    Export expenses to CSV/PDF
+ * @access  Private
+ */
+router.post('/export', auth, exportLimiter, asyncHandler(async (req, res) => {
+  const { format = 'csv', startDate, endDate, workspaceId } = req.body;
+
+  const query = {
+    user: req.user._id,
+    workspace: workspaceId || null
+  };
+
+  if (startDate && endDate) {
+    query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
   }
-});
 
-// DELETE expense for authenticated user
-router.delete('/:id', auth, async (req, res) => {
-  try {
-    const expense = await Expense.findOneAndDelete({ _id: req.params.id, user: req.user._id });
-    if (!expense) return res.status(404).json({ error: 'Expense not found' });
+  const expenses = await expenseRepository.findAll(query, { sort: { date: -1 } });
 
-    // Update budget calculations
-    await budgetService.checkBudgetAlerts(req.user._id);
+  const fileData = await exportService.generateExport(expenses, format);
 
-    // Emit real-time update
-    const io = req.app.get('io');
-    io.to(`user_${req.user._id}`).emit('expense_deleted', { id: req.params.id });
+  res.setHeader('Content-Type', format === 'csv' ? 'text/csv' : 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=expenses-${Date.now()}.${format}`);
 
-    res.json({ message: 'Expense deleted' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET export expenses to CSV
-router.get('/export', auth, async (req, res) => {
-  try {
-    const { format, startDate, endDate, category } = req.query;
-
-    // Validate format
-    if (format && format !== 'csv') {
-      return res.status(400).json({ error: 'Only CSV format is supported' });
-    }
-
-    // Get expenses using export service
-    const expenses = await exportService.getExpensesForExport(req.user._id, {
-      startDate,
-      endDate,
-      category,
-      type: 'all' // Include both income and expenses
-    });
-
-    if (expenses.length === 0) {
-      return res.status(404).json({ error: 'No expenses found for the selected filters' });
-    }
-
-    // Generate CSV using ExportService
-    const csv = exportService.generateCSV(expenses);
-
-    // Set CSV headers
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="expenses.csv"');
-
-    res.send(csv);
-  } catch (error) {
-    console.error('Export error:', error);
-    res.status(500).json({ error: 'Failed to export expenses' });
-  }
-});
+  return res.send(fileData);
+}));
 
 module.exports = router;

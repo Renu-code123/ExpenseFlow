@@ -1,5 +1,5 @@
-const Goal = require('../models/Goal');
-const Expense = require('../models/Expense');
+const goalRepository = require('../repositories/goalRepository');
+const expenseRepository = require('../repositories/expenseRepository');
 const mongoose = require('mongoose');
 
 class GoalService {
@@ -7,7 +7,7 @@ class GoalService {
      * Calculate progress for all active goals of a user
      */
     async updateGoalProgress(userId) {
-        const goals = await Goal.find({ user: userId, status: 'active' });
+        const goals = await goalRepository.findActiveByUser(userId);
         if (!goals.length) return [];
 
         // Get net savings for the month to see if we can auto-allocate
@@ -15,7 +15,7 @@ class GoalService {
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
 
-        const stats = await Expense.aggregate([
+        const stats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -39,17 +39,8 @@ class GoalService {
 
         const netSavings = Math.max(0, income - expense);
 
-        // If auto-allocation is enabled, distrubute savings
-        const autoGoals = goals.filter(g => g.autoAllocate);
-        if (autoGoals.length > 0 && netSavings > 0) {
-            // Very simple logic: split equally among auto-allocate goals
-            const allocation = netSavings / autoGoals.length;
-            for (const goal of autoGoals) {
-                // This is a "logical" allocation for display, actually persistent if we want
-                // For this feature, let's assume currentAmount is updated by user 
-                // but we can suggest the allocation.
-            }
-        }
+        // Logic for Suggesting auto-allocation remains same (display logic)
+        // ... handled in frontend or separate suggestion engine
 
         return goals;
     }
@@ -58,7 +49,7 @@ class GoalService {
      * Predict completion date based on historical savings rate
      */
     async predictCompletion(goalId, userId) {
-        const goal = await Goal.findById(goalId);
+        const goal = await goalRepository.findById(goalId);
         if (!goal) throw new Error('Goal not found');
 
         const remaining = goal.targetAmount - goal.currentAmount;
@@ -68,7 +59,7 @@ class GoalService {
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-        const stats = await Expense.aggregate([
+        const stats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -124,11 +115,12 @@ class GoalService {
      * Check milestones and return alerts
      */
     async checkMilestones(goalId) {
-        const goal = await Goal.findById(goalId);
+        const goal = await goalRepository.findById(goalId);
         if (!goal) return null;
 
         const progress = (goal.currentAmount / goal.targetAmount) * 100;
         const alerts = [];
+        let updated = false;
 
         goal.milestones.forEach(m => {
             if (progress >= m.percentage && !m.achieved) {
@@ -142,12 +134,13 @@ class GoalService {
                         message: `Congratulations! You've reached ${m.percentage}% of your goal "${goal.title}"!`
                     });
                     m.isNotified = true;
+                    updated = true;
                 }
             }
         });
 
-        if (alerts.length > 0) {
-            await goal.save();
+        if (updated) {
+            await goalRepository.updateById(goal._id, { milestones: goal.milestones });
         }
 
         return alerts;
@@ -157,7 +150,7 @@ class GoalService {
      * Analyze impact of a large expense on goals
      */
     async analyzeExpenseImpact(userId, amount) {
-        const goals = await Goal.find({ user: userId, status: 'active' });
+        const goals = await goalRepository.findActiveByUser(userId);
         if (!goals.length) return null;
 
         const impacts = await Promise.all(goals.map(async goal => {

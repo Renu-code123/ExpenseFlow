@@ -1,0 +1,591 @@
+
+    /* =========================
+   HELP CENTER – SAFE UI ENHANCEMENTS
+   (NO PARENT LAYOUT CHANGES)
+========================= */
+html{
+  scroll-behavior: smooth;
+}
+/* Improve card alignment only */
+.balance-card {
+  border-radius: 16px;
+  padding: 1.6rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover effect */
+.balance-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.14);
+}
+
+/* Top accent line (subtle) */
+.balance-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+  opacity: 0.85;
+}
+
+/* Header alignment */
+.balance-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+/* Icon styling */
+.balance-header i {
+  font-size: 1.4rem;
+  color: #6366f1;
+  transition: transform 0.3s ease;
+}
+
+/* Icon animation on hover */
+.balance-card:hover .balance-header i {
+  transform: scale(1.15) rotate(-4deg);
+}
+
+/* Title */
+.balance-header h4 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Text polish */
+.balance-card p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* Contact support section – keep layout, just polish */
+.data-management-section {
+  border-radius: 18px;
+  padding: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.data-management-section:hover {
+  transform: translateY(-4px);
+}
+
+/* List spacing */
+.data-management-section ul li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Navbar active link clarity */
+.nav-link.active {
+  font-weight: 600;
+  position: relative;
+}
+
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #6366f1;
+}
+/* =========================
+   HELP CENTER – CENTER + ANIMATION LAYER
+   (WORKS WITH EXISTING STYLES)
+========================= */
+
+/* ---------- CENTER MAIN HEADING ---------- */
+.hero-section {
+  text-align: center;
+}
+
+.hero-title {
+  display: inline-block;
+  position: relative;
+  animation: titleReveal 1.2s ease forwards;
+}
+
+@keyframes titleReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* underline animation */
+.hero-title::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  width: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+  border-radius: 10px;
+  transform: translateX(-50%);
+  animation: underlineGrow 1s ease forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes underlineGrow {
+  to {
+    width: 60%;
+  }
+}
+
+/* ---------- CENTER CARD HEADINGS ---------- */
+.balance-header {
+  justify-content: center;
+  text-align: center;
+}
+
+/* stack icon + text visually centered */
+.balance-header i {
+  margin-right: 0;
+}
+
+/* ---------- EXTRA CARD ANIMATIONS ---------- */
+
+/* initial fade-in */
+.balance-card {
+  animation: cardFadeIn 0.8s ease forwards;
+}
+
+.balance-card:nth-child(1) { animation-delay: 0.1s; }
+.balance-card:nth-child(2) { animation-delay: 0.2s; }
+.balance-card:nth-child(3) { animation-delay: 0.3s; }
+.balance-card:nth-child(4) { animation-delay: 0.4s; }
+.balance-card:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(25px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- RIPPLE GLOW ON HOVER ---------- */
+.balance-card::after {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.18),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.balance-card:hover::after {
+  opacity: 1;
+}
+
+/* ---------- DEEPER HOVER MOTION ---------- */
+.balance-card:hover {
+  transform: translateY(-10px) scale(1.03);
+}
+
+/* ---------- ICON PULSE ---------- */
+.balance-header i {
+  animation: iconFloat 4s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* ---------- TEXT SMOOTH LIFT ---------- */
+.balance-card p {
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.balance-card:hover p {
+  transform: translateY(-3px);
+  opacity: 1;
+}
+
+/* ---------- SUPPORT SECTION CENTER ---------- */
+.data-management-section {
+  text-align: center;
+  animation: supportFade 1s ease forwards;
+}
+
+@keyframes supportFade {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* =========================
+   HELP CENTER – EXTRA INTERACTION LAYER
+   (ONLY ENHANCEMENTS)
+========================= */
+
+/* Smooth everything */
+.balance-card,
+.balance-header,
+.balance-header h4,
+.balance-header i,
+.balance-card p {
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Card border glow ---- */
+.balance-card {
+  border: 1px solid transparent;
+}
+
+.balance-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+/* ---- Soft inner glow ---- */
+.balance-card::before {
+  transition: opacity 0.4s ease;
+}
+
+.balance-card:hover::before {
+  opacity: 1;
+}
+
+/* ---- Card tilt effect (very subtle) ---- */
+.balance-card:hover {
+  transform: translateY(-10px) scale(1.03) rotateX(2deg);
+}
+
+/* ---- Heading hover effect ---- */
+.balance-header h4 {
+  position: relative;
+}
+
+.balance-header h4::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+  transform: translateX(-50%);
+  transition: width 0.4s ease;
+}
+
+.balance-card:hover h4::after {
+  width: 60%;
+}
+
+/* ---- Icon glow pulse on hover ---- */
+.balance-card:hover .balance-header i {
+  text-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+}
+
+/* ---- Text color enhancement ---- */
+.balance-card:hover p {
+  color: #111827;
+}
+
+/* ---- Ripple expansion effect ---- */
+.balance-card::after {
+  transform: scale(0.9);
+  transition: opacity 0.5s ease, transform 0.6s ease;
+}
+
+.balance-card:hover::after {
+  transform: scale(1.05);
+}
+
+/* ---- Support section breathing animation ---- */
+.data-management-section {
+  animation: softBreath 6s ease-in-out infinite;
+}
+
+@keyframes softBreath {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Support list hover ---- */
+.data-management-section ul li {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.data-management-section ul li:hover {
+  transform: translateX(6px);
+  opacity: 1;
+}
+
+/* ---- Navbar active underline animation ---- */
+.nav-link.active::after {
+  animation: underlinePulse 2s ease-in-out infinite;
+}
+
+@keyframes underlinePulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+/* =========================
+   HELP CENTER – YELLOW CARD ONLY
+   (TEXT COLORS PRESERVED)
+========================= */
+
+/* Card background turns yellow on hover */
+.balance-card:hover {
+  background: linear-gradient(
+    135deg,
+    #facc15,
+    #fde047
+  );
+}
+
+/* Keep text color same as normal */
+.balance-card:hover h4,
+.balance-card:hover p,
+.balance-card:hover i {
+  color: inherit;
+}
+
+/* Prevent glow from affecting text */
+.balance-card:hover .balance-header i {
+  text-shadow: none;
+  filter: none;
+}
+
+/* Keep top accent subtle */
+.balance-card:hover::before {
+  background: linear-gradient(90deg, #6366f1, #64ffda);
+}
+
+/* Soften ripple to avoid text tint */
+.balance-card:hover::after {
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.25),
+    transparent 60%
+  );
+}
+/* =========================
+   HELP CENTER – TEXT SIZE BOOST
+   (NORMAL + HOVER)
+========================= */
+
+/* ----- NORMAL TEXT SIZE INCREASE ----- */
+.balance-header h4 {
+  font-size: 1.3rem;   /* was ~1.15rem */
+}
+
+.balance-card p {
+  font-size: 1.05rem;  /* was ~0.95rem */
+  line-height: 1.75;
+}
+
+/* ----- SMOOTH TEXT SCALE ON HOVER ----- */
+.balance-card h4,
+.balance-card p {
+  transition: font-size 0.35s ease, transform 0.35s ease;
+}
+
+/* Slight zoom on hover (premium feel) */
+.balance-card:hover h4 {
+  transform: scale(1.05);
+}
+
+.balance-card:hover p {
+  transform: scale(1.04);
+}
+
+/* ----- KEEP TEXT COLORS SAME ----- */
+.balance-card:hover h4,
+.balance-card:hover p {
+  color: inherit;
+}
+/* =========================
+   TEXT COLOR BLACK ON HOVER
+========================= */
+
+.balance-card:hover h4,
+.balance-card:hover p {
+  color: #000; /* pure black */
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #4f46e5;
+  color: white;
+  padding: 12px 14px;
+  border-radius: 50%;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+
+
+        /* <!-- Smooth Cursor Trail --> */
+
+  .cursor-trail-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999999;
+  }
+
+  .trail-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 15px rgba(100, 255, 218, 0.8),
+      0 0 30px rgba(100, 255, 218, 0.4);
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .trail-dot:first-child {
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 20px rgba(100, 255, 218, 0.9),
+      0 0 40px rgba(100, 255, 218, 0.6);
+    z-index: 2;
+  }
+
+  .cursor-clicking {
+    transform: translate(-50%, -50%) scale(1.5);
+    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
+    box-shadow: 
+      0 0 25px rgba(255, 107, 157, 0.9),
+      0 0 50px rgba(255, 107, 157, 0.6) !important;
+  }
+
+  .cursor-hovering {
+    transform: translate(-50%, -50%) scale(1.3);
+    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
+  }
+
+
+
+/* feedback form */
+
+.feedback-form {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 30px;
+  background-color: #111827;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  background: linear-gradient(
+    180deg,
+    #0f172a,
+    #020617
+  );
+}
+
+.feedback-section h2 {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  margin-bottom: 1.5rem;
+}
+
+.feedback-header{
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+
+
+.feedback-form input ,.feedback-form textarea {
+    padding:12px;
+    border-radius:8px;
+    border: 1px solid #ccc;
+    font-size:1rem;
+    width:100%;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f9f9;
+}
+
+.feedback-form input:focus, .feedback-form textarea:focus {
+    outline:none;
+    border-color: #6366f1;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+}
+.feedback-form button {
+    padding: 12px;
+    border:none;
+    border-radius:8px;
+    background: #6366f1;
+    color:white;
+    font-size:1rem;
+    cursor:pointer;
+    transition: background 0.3s ease;
+}
+
+.feedback-form {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+/* Blue Trailing Cursor - ExpenseFlow About Page */
+.trail-cursor {
+  width: 14px;
+  height: 14px;
+  background: rgba(0, 123, 255, 0.85); /* Blue */
+  border-radius: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: 
+    left 0.1s ease-out,
+    top 0.1s ease-out,
+    transform 0.1s ease-out;
+  z-index: 9999;
+  box-shadow: 
+    0 0 8px rgba(0, 123, 255, 0.7),
+    0 0 16px rgba(0, 123, 255, 0.4);
+}

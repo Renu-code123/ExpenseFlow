@@ -247,6 +247,345 @@
         font-weight: 500;
         margin-right: 8px;
     }
+
+    /* Enhanced Navbar Styles */
+    .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .logo-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .logo-icon i {
+        font-size: 1.5rem;
+        color: #ffffff;
+    }
+
+    .logo-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .brand-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1;
+    }
+
+    .brand-tagline {
+        font-size: 0.75rem;
+        color: #64ffda;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1;
+    }
+
+    .nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .nav-item {
+        position: relative;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #cfd3ff;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nav-link::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .nav-link:hover::before {
+        left: 100%;
+    }
+
+    .nav-link:hover {
+        color: #64ffda;
+        background: rgba(100, 255, 218, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(100, 255, 218, 0.2);
+    }
+
+    .nav-link i {
+        font-size: 1rem;
+        width: 16px;
+        text-align: center;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .currency-selector {
+        position: relative;
+    }
+
+    .currency-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: rgba(100, 255, 218, 0.1);
+        border: 1px solid rgba(100, 255, 218, 0.3);
+        border-radius: 8px;
+        color: #64ffda;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .currency-btn:hover {
+        background: rgba(100, 255, 218, 0.2);
+        border-color: #64ffda;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(100, 255, 218, 0.3);
+    }
+
+    .auth-buttons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .auth-btn {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .auth-btn a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 18px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 1;
+        border-radius: 8px;
+    }
+
+    .auth-btn a i {
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .auth-btn:hover a i {
+        transform: scale(1.1);
+    }
+
+    .signup-btn {
+        background: linear-gradient(135deg, rgba(100, 255, 218, 0.1), rgba(0, 180, 216, 0.1));
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .signup-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #64ffda, #00b4d8);
+        border-radius: 8px;
+        padding: 2px;
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        -webkit-mask-composite: xor;
+        z-index: -1;
+    }
+
+    .signup-btn a {
+        color: #64ffda;
+        font-weight: 600;
+        position: relative;
+        z-index: 2;
+        text-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
+    }
+
+    .signup-btn:hover {
+        background: linear-gradient(135deg, rgba(100, 255, 218, 0.2), rgba(0, 180, 216, 0.2));
+        transform: translateY(-2px);
+        box-shadow: 
+            0 8px 25px rgba(100, 255, 218, 0.3),
+            0 0 20px rgba(100, 255, 218, 0.2);
+    }
+
+    .signup-btn:hover::before {
+        background: linear-gradient(135deg, #64ffda, #00b4d8, #667eea);
+        animation: borderGlow 2s ease-in-out infinite alternate;
+    }
+
+    .signup-btn:hover a {
+        color: #ffffff;
+        text-shadow: 0 0 15px rgba(100, 255, 218, 0.5);
+    }
+
+    .signup-btn:active {
+        transform: translateY(0);
+        box-shadow: 
+            0 4px 15px rgba(100, 255, 218, 0.4),
+            inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    @keyframes borderGlow {
+        0% {
+            background: linear-gradient(135deg, #64ffda, #00b4d8);
+        }
+        50% {
+            background: linear-gradient(135deg, #00b4d8, #667eea);
+        }
+        100% {
+            background: linear-gradient(135deg, #667eea, #64ffda);
+        }
+    }
+
+    @keyframes subtlePulse {
+        0%, 100% {
+            box-shadow: 
+                0 8px 25px rgba(100, 255, 218, 0.3),
+                0 0 20px rgba(100, 255, 218, 0.2);
+        }
+        50% {
+            box-shadow: 
+                0 8px 30px rgba(100, 255, 218, 0.4),
+                0 0 25px rgba(100, 255, 218, 0.3);
+        }
+    }
+
+    .signup-btn {
+        animation: subtlePulse 3s ease-in-out infinite;
+    }
+
+    .signup-btn:hover {
+        animation: none;
+    }
+
+    .login-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: 1px solid transparent;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .login-btn a {
+        color: #ffffff;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-btn.active {
+        background: linear-gradient(135deg, #64ffda, #00b4d8);
+        box-shadow: 0 4px 15px rgba(100, 255, 218, 0.4);
+    }
+
+    /* Mobile Responsive Updates */
+    @media (max-width: 768px) {
+        .logo-text {
+            display: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo-icon i {
+            font-size: 1.2rem;
+        }
+
+        .nav-link span {
+            display: none;
+        }
+
+        .nav-link {
+            padding: 12px;
+            justify-content: center;
+        }
+
+        .auth-btn a span {
+            display: none;
+        }
+
+        .auth-btn a {
+            padding: 10px 12px;
+        }
+
+        .currency-btn span {
+            display: none;
+        }
+
+        .currency-btn {
+            padding: 10px 12px;
+        }
+
+        .nav-menu.active .nav-link {
+            width: 100%;
+            justify-content: flex-start;
+            padding: 16px 24px;
+        }
+
+        .nav-menu.active .nav-link span {
+            display: inline;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .user-profile {
+            gap: 8px;
+        }
+
+        .auth-buttons {
+            gap: 4px;
+        }
+
+        .brand-name {
+            font-size: 1.2rem;
+        }
+    }
     .footer-links {
         display: grid;
         grid-template-columns: repeat(2, minmax(100px, 1fr));
@@ -255,21 +594,255 @@
 </head>
 
 <body>
+        <!-- Smooth Cursor Trail -->
+<style>
+  .cursor-trail-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999999;
+  }
+
+  .trail-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 15px rgba(100, 255, 218, 0.8),
+      0 0 30px rgba(100, 255, 218, 0.4);
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .trail-dot:first-child {
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 20px rgba(100, 255, 218, 0.9),
+      0 0 40px rgba(100, 255, 218, 0.6);
+    z-index: 2;
+  }
+
+  .cursor-clicking {
+    transform: translate(-50%, -50%) scale(1.5);
+    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
+    box-shadow: 
+      0 0 25px rgba(255, 107, 157, 0.9),
+      0 0 50px rgba(255, 107, 157, 0.6) !important;
+  }
+
+  .cursor-hovering {
+    transform: translate(-50%, -50%) scale(1.3);
+    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
+  }
+</style>
+
+<div class="cursor-trail-container" id="cursor-trail"></div>
+
+<script>
+(function() {
+  // Hide default cursor
+  document.body.style.cursor = 'none';
+
+  const container = document.getElementById('cursor-trail');
+  const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const trailCircles = [];
+  const COUNT = 12; // Fewer circles for smoother trail
+
+  // Create trail circles
+  for (let i = 0; i < COUNT; i++) {
+    const circle = document.createElement('div');
+    circle.className = 'trail-dot';
+
+    // Opacity decreases along the trail
+    const opacity = 0.9 - (i / COUNT) * 0.8;
+    circle.style.opacity = opacity.toString();
+
+    // Size decreases along the trail
+    const scale = 1 - (i / COUNT) * 0.5;
+    circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+    container.appendChild(circle);
+    trailCircles.push({ 
+      element: circle, 
+      x: coords.x, 
+      y: coords.y,
+      targetX: coords.x,
+      targetY: coords.y
+    });
+  }
+
+  // Track mouse position
+  let isMoving = false;
+  let lastMouseX = coords.x;
+  let lastMouseY = coords.y;
+  let velocity = { x: 0, y: 0 };
+
+  window.addEventListener('mousemove', e => {
+    coords.x = e.clientX;
+    coords.y = e.clientY;
+
+    // Calculate velocity for smooth movement
+    velocity.x = e.clientX - lastMouseX;
+    velocity.y = e.clientY - lastMouseY;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+
+    isMoving = true;
+
+    // Reset movement timeout
+    clearTimeout(window.movementTimeout);
+    window.movementTimeout = setTimeout(() => {
+      isMoving = false;
+    }, 50);
+  });
+
+  // Click effect
+  window.addEventListener('mousedown', () => {
+    trailCircles.forEach(circle => {
+      circle.element.classList.add('cursor-clicking');
+    });
+  });
+
+  window.addEventListener('mouseup', () => {
+    trailCircles.forEach(circle => {
+      circle.element.classList.remove('cursor-clicking');
+    });
+  });
+
+  // Hover effect for interactive elements
+  window.addEventListener('mouseover', e => {
+    const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
+    trailCircles.forEach(circle => {
+      circle.element.classList.toggle('cursor-hovering', !!interactive);
+    });
+  });
+
+  // Smooth animation function
+  function animateTrail() {
+    let targetX = coords.x;
+    let targetY = coords.y;
+
+    // Add velocity offset to first circle for more natural feel
+    const velocityOffset = 0.5;
+    const offsetX = velocity.x * velocityOffset;
+    const offsetY = velocity.y * velocityOffset;
+
+    trailCircles.forEach((circle, index) => {
+      // First circle follows cursor exactly
+      if (index === 0) {
+        circle.x = targetX + offsetX;
+        circle.y = targetY + offsetY;
+      } 
+      // Other circles follow with smooth delay
+      else {
+        const prevCircle = trailCircles[index - 1];
+
+        // Smooth interpolation factor (changes based on movement speed)
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        const lerpFactor = isMoving ? 
+          Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
+          0.1; // Slow movement = more spread
+
+        circle.x += (prevCircle.x - circle.x) * lerpFactor;
+        circle.y += (prevCircle.y - circle.y) * lerpFactor;
+      }
+
+      // Apply position with easing
+      circle.element.style.left = circle.x + 'px';
+      circle.element.style.top = circle.y + 'px';
+
+      // Dynamic opacity based on speed and position
+      if (index > 0) {
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        const baseOpacity = 0.9 - (index / COUNT) * 0.8;
+        const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
+        circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
+      }
+
+      // Update target for next circle
+      targetX = circle.x;
+      targetY = circle.y;
+    });
+
+    requestAnimationFrame(animateTrail);
+  }
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    // Adjust if cursor goes out of bounds
+    if (coords.x > window.innerWidth) coords.x = window.innerWidth;
+    if (coords.y > window.innerHeight) coords.y = window.innerHeight;
+  });
+
+  // Handle mouse leave/enter
+  window.addEventListener('mouseleave', () => {
+    trailCircles.forEach(circle => {
+      circle.element.style.opacity = '0';
+    });
+  });
+
+  window.addEventListener('mouseenter', () => {
+    trailCircles.forEach((circle, index) => {
+      const opacity = 0.9 - (index / COUNT) * 0.8;
+      circle.element.style.opacity = opacity.toString();
+    });
+  });
+
+  // Start animation
+  animateTrail();
+})();
+</script>
+
   <!-- Header -->
   <header class="header">
     <nav class="navbar">
       <div class="nav-container">
         <div class="nav-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
+          <div class="logo-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <div class="logo-text">
+            <span class="brand-name">ExpenseFlow</span>
+            <span class="brand-tagline">Smart Finance</span>
+          </div>
         </div>
         <div class="nav-menu" id="nav-menu">
-          <a href="#dashboard" class="nav-link active">Dashboard</a>
-          <a href="Monthlysummary.html" class="nav-link ">Monthly Summary</a>
-          <a href="CurrencyConverter.html" class="nav-link ">Currency Converter</a>
-          <a href="#analytics" class="nav-link">Analytics</a>
-          <a href="#goals" class="nav-link">Goals</a>
-          <a href="#settings" class="nav-link">Settings</a>
+          <div class="nav-item">
+            <a href="dashboard.html" class="nav-link">
+              <i class="fas fa-chart-pie"></i>
+              <span>Dashboard</span>
+            </a>
+          </div>
+          <div class="nav-item">
+            <a href="Monthlysummary.html" class="nav-link">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Monthly Summary</span>
+            </a>
+          </div>
+          <div class="nav-item">
+            <a href="CurrencyConverter.html" class="nav-link">
+              <i class="fas fa-exchange-alt"></i>
+              <span>Currency Converter</span>
+            </a>
+          </div>
+          <div class="nav-item">
+            <a href="feedback.html" class="nav-link">
+              <i class="fas fa-comment-dots"></i>
+              <span>Feedback</span>
+            </a>
+          </div>
+          <div class="nav-item">
+            <a href="schemes.html" class="nav-link">
+              <i class="fas fa-piggy-bank"></i>
+              <span>Schemes</span>
+            </a>
+          </div>
         </div>
         <div class="nav-toggle" id="nav-toggle">
           <span class="bar"></span>
@@ -277,16 +850,26 @@
           <span class="bar"></span>
         </div>
         <div class="user-profile">
-          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
-            <i class="fas fa-coins"></i>
-            <span id="current-currency">INR</span>
-          </button>
-            <div id="redirect">
-                <a href="signup.html">Sign up</a>
+          <div class="currency-selector">
+            <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+              <i class="fas fa-coins"></i>
+              <span id="current-currency">INR</span>
+            </button>
+          </div>
+          <div class="auth-buttons">
+            <div class="auth-btn signup-btn">
+                <a href="signup.html">
+                  <i class="fas fa-user-plus"></i>
+                  <span>Sign Up</span>
+                </a>
             </div>
-            <div id="redirect">
-                <a href="login.html">Login</a>
+            <div class="auth-btn login-btn active">
+                <a href="login.html">
+                  <i class="fas fa-sign-in-alt"></i>
+                  <span>Login</span>
+                </a>
             </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -356,9 +939,9 @@
                 <h4>Company</h4>
                 <ul class="footer-links">
                     <li><a href="AboutUs.html">About Us</a></li>
-                    <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
-                    <li><a href="terms_service.html">Terms of Service</a></li>
-                    <li><a href="Help-Center.html">Help Center</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Help Center</a></li>
                     <li><a href="#">Contact</a></li>
                 </ul>
             </div>
@@ -366,10 +949,11 @@
 
         <div class="footer-bottom">
             <div class="footer-container">
-                <p>
-                    &copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for
-                    better financial management.
-                </p>
+                  <p id="copyright" style="text-align:center;"></p>
+                  <script>
+                    document.getElementById("copyright").innerHTML =
+                      `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+                  </script>
                 <div class="footer-stats">
                     <span>🏆 Trusted by 10,000+ users</span>
                     <span>💰 ₹50M+ tracked</span>
@@ -378,7 +962,8 @@
             </div>
         </div>
     </footer>
-    <script src="auth.js"></script>
+    <script src="login.js"></script>
+
 </body>
 
 </html>
