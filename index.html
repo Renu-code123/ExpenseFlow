@@ -4257,5 +4257,32 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     </script>
     </div> <!-- End #protectedContent -->
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTopBtn" class="scroll-to-top" aria-label="Scroll to top">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+    <script>
+      // Scroll to Top Button - Home Page Only
+      document.addEventListener("DOMContentLoaded", function () {
+        const scrollBtn = document.getElementById("scrollToTopBtn");
+      
+        if (!scrollBtn) return;
+      
+        window.addEventListener("scroll", () => {
+          if (window.scrollY > 300) {
+            scrollBtn.classList.add("show");
+          } else {
+            scrollBtn.classList.remove("show");
+          }
+        });
+      
+        scrollBtn.addEventListener("click", () => {
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+          });
+        });
+      });
+    </script>
   </body>
 </html>
