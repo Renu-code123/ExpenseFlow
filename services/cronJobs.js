@@ -11,9 +11,64 @@ const currencyService = require('../services/currencyService');
 const InvoiceService = require('../services/invoiceService');
 const ReminderService = require('../services/reminderService');
 const alertService = require('./alertService');
+const backupService = require('../services/backupService');
 
 class CronJobs {
   static init() {
+    // ========== BACKUP JOBS ==========
+    
+    // Daily backup - Every day at 2:00 AM UTC
+    cron.schedule('0 2 * * *', async () => {
+      try {
+        console.log('[CronJobs] Starting daily database backup...');
+        const result = await backupService.createDatabaseBackup();
+        console.log('[CronJobs] Daily backup completed:', result.backupName);
+        await alertService.notifyAdmin('Daily Backup Success', `Backup: ${result.backupName}, Collections: ${result.collections}, Size: ${(result.size / 1024 / 1024).toFixed(2)}MB`);
+      } catch (err) {
+        console.error('[CronJobs] Error in daily backup:', err);
+        await alertService.notifyAdmin('Cron Failure: Daily Backup', err.stack || err.message);
+      }
+    });
+
+    // Weekly backup - Every Sunday at 3:00 AM UTC
+    cron.schedule('0 3 * * 0', async () => {
+      try {
+        console.log('[CronJobs] Starting weekly database backup...');
+        const result = await backupService.createDatabaseBackup();
+        console.log('[CronJobs] Weekly backup completed:', result.backupName);
+        await alertService.notifyAdmin('Weekly Backup Success', `Backup: ${result.backupName}, Collections: ${result.collections}, Size: ${(result.size / 1024 / 1024).toFixed(2)}MB`);
+      } catch (err) {
+        console.error('[CronJobs] Error in weekly backup:', err);
+        await alertService.notifyAdmin('Cron Failure: Weekly Backup', err.stack || err.message);
+      }
+    });
+
+    // Monthly backup - 1st day of month at 4:00 AM UTC
+    cron.schedule('0 4 1 * *', async () => {
+      try {
+        console.log('[CronJobs] Starting monthly database backup...');
+        const result = await backupService.createDatabaseBackup();
+        console.log('[CronJobs] Monthly backup completed:', result.backupName);
+        await alertService.notifyAdmin('Monthly Backup Success', `Backup: ${result.backupName}, Collections: ${result.collections}, Size: ${(result.size / 1024 / 1024).toFixed(2)}MB`);
+      } catch (err) {
+        console.error('[CronJobs] Error in monthly backup:', err);
+        await alertService.notifyAdmin('Cron Failure: Monthly Backup', err.stack || err.message);
+      }
+    });
+
+    // Apply retention policy - Daily at 5:00 AM UTC (cleanup old backups)
+    cron.schedule('0 5 * * *', async () => {
+      try {
+        console.log('[CronJobs] Applying backup retention policy...');
+        const result = await backupService.applyRetentionPolicy();
+        console.log('[CronJobs] Retention policy applied:', result);
+        await alertService.notifyAdmin('Backup Retention Cleanup', `Daily: ${result.daily} deleted, Weekly: ${result.weekly} deleted`);
+      } catch (err) {
+        console.error('[CronJobs] Error in backup retention policy:', err);
+        await alertService.notifyAdmin('Cron Failure: Backup Retention', err.stack || err.message);
+      }
+    });
+
     // Process recurring expenses - Daily at 6 AM
 
     cron.schedule('0 6 * * *', async () => {

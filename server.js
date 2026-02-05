@@ -127,13 +127,10 @@ global.io = io;
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('MongoDB connected');
-    // Initialize cron jobs after DB connection
-    CronJobs.init();
-    console.log('Email cron jobs initialized');
-    
-    // Initialize backup scheduling
+    // Initialize cron jobs after DB connection (includes backup scheduling)
     // Issue #462: Automated Backup System for Financial Data
-    initializeBackupScheduling();
+    CronJobs.init();
+    console.log('✓ Cron jobs initialized (includes backup scheduling)');
   })
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -195,106 +192,6 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'production' ? undefined : err.stack
   });
 });
-
-/**
- * Initialize Automated Backup Scheduling
- * Issue #462: Automated Backup System for Financial Data
- * 
- * Schedules three backup types:
- * - Daily backups at 2:00 AM UTC (retains last 7 days)
- * - Weekly backups on Sundays at 3:00 AM UTC (retains last 4 weeks)
- * - Monthly backups on 1st of month at 4:00 AM UTC (indefinite retention)
- */
-async function initializeBackupScheduling() {
-  try {
-    console.log('Initializing automated backup scheduling...');
-
-    // Daily backup - Every day at 2:00 AM UTC
-    cron.schedule('0 2 * * *', async () => {
-      try {
-        console.log('[BACKUP] Starting daily backup...');
-        const result = await backupService.createDatabaseBackup();
-        console.log('[BACKUP] Daily backup completed successfully');
-        backupService.logBackup({
-          type: 'daily',
-          size: result.size,
-          status: 'success',
-          destination: result.destination
-        });
-      } catch (error) {
-        console.error('[BACKUP] Daily backup failed:', error);
-        backupService.logBackup({
-          type: 'daily',
-          status: 'failed',
-          error: error.message
-        });
-      }
-    }, { timezone: 'UTC' });
-
-    // Weekly backup - Every Sunday at 3:00 AM UTC
-    cron.schedule('0 3 * * 0', async () => {
-      try {
-        console.log('[BACKUP] Starting weekly backup...');
-        const result = await backupService.createDatabaseBackup();
-        console.log('[BACKUP] Weekly backup completed successfully');
-        backupService.logBackup({
-          type: 'weekly',
-          size: result.size,
-          status: 'success',
-          destination: result.destination
-        });
-      } catch (error) {
-        console.error('[BACKUP] Weekly backup failed:', error);
-        backupService.logBackup({
-          type: 'weekly',
-          status: 'failed',
-          error: error.message
-        });
-      }
-    }, { timezone: 'UTC' });
-
-    // Monthly backup - 1st of every month at 4:00 AM UTC
-    cron.schedule('0 4 1 * *', async () => {
-      try {
-        console.log('[BACKUP] Starting monthly backup...');
-        const result = await backupService.createDatabaseBackup();
-        console.log('[BACKUP] Monthly backup completed successfully');
-        backupService.logBackup({
-          type: 'monthly',
-          size: result.size,
-          status: 'success',
-          destination: result.destination
-        });
-      } catch (error) {
-        console.error('[BACKUP] Monthly backup failed:', error);
-        backupService.logBackup({
-          type: 'monthly',
-          status: 'failed',
-          error: error.message
-        });
-      }
-    }, { timezone: 'UTC' });
-
-    // Cleanup old backups - Daily at 5:00 AM UTC
-    cron.schedule('0 5 * * *', async () => {
-      try {
-        console.log('[BACKUP] Running retention policy cleanup...');
-        const result = await backupService.applyRetentionPolicy();
-        console.log('[BACKUP] Retention policy applied. Removed:', result.removed);
-      } catch (error) {
-        console.error('[BACKUP] Retention policy failed:', error);
-      }
-    }, { timezone: 'UTC' });
-
-    console.log('✓ Backup scheduling initialized successfully');
-    console.log('  - Daily backups: 2:00 AM UTC');
-    console.log('  - Weekly backups: Sundays 3:00 AM UTC');
-    console.log('  - Monthly backups: 1st of month 4:00 AM UTC');
-    console.log('  - Cleanup: Daily 5:00 AM UTC');
-  } catch (error) {
-    console.error('Failed to initialize backup scheduling:', error);
-  }
-}
 
 // Root route to serve the UI
 app.get('/', (req, res) => {
