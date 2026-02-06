@@ -7,6 +7,8 @@ const AuditLog = require('../models/AuditLog');
 const emailService = require('../services/emailService');
 const securityMonitor = require('../services/securityMonitor');
 const SecurityService = require('../services/securityService');
+const DeviceFingerprint = require('../models/DeviceFingerprint');
+const { captureDeviceFingerprint, generateFingerprint } = require('../middleware/deviceFingerprint');
 const auth = require('../middleware/auth');
 const { AuthSchemas, validateRequest } = require('../middleware/inputValidator');
 const {
@@ -60,6 +62,30 @@ router.post('/register', registerLimiter, validateRequest(AuthSchemas.register),
   emailService.sendWelcomeEmail(user).catch(err =>
     console.error('Welcome email failed:', err)
   );
+
+  // Capture Device Fingerprint
+  try {
+    // Scope fingerprint to user
+    const baseFingerprint = generateFingerprint(req);
+    const fingerprintHash = `${baseFingerprint}_${user._id}`;
+
+    await DeviceFingerprint.create({
+      user: user._id,
+      fingerprint: fingerprintHash,
+      deviceInfo: {
+        userAgent: req.headers['user-agent'],
+        screen: {},
+        language: req.headers['accept-language'],
+        platform: req.headers['sec-ch-ua-platform']
+      },
+      networkInfo: {
+        ipAddress: req.ip || req.connection.remoteAddress
+      },
+      status: 'trusted'
+    });
+  } catch (fpError) {
+    console.error('Failed to save device fingerprint on register:', fpError);
+  }
 
   return ResponseFactory.created(res, {
     token,
@@ -156,6 +182,40 @@ router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (r
         totpUsed: user.twoFactorAuth?.enabled || false
       }
     });
+
+    // Capture Device Fingerprint
+    try {
+      // Scope fingerprint to user to allow multiple users on same device (prevents unique constraint error)
+      const baseFingerprint = generateFingerprint(req);
+      const fingerprintHash = `${baseFingerprint}_${user._id}`;
+
+      const existingDevice = await DeviceFingerprint.findOne({ fingerprint: fingerprintHash });
+
+      if (!existingDevice) {
+        await DeviceFingerprint.create({
+          user: user._id,
+          fingerprint: fingerprintHash,
+          deviceInfo: {
+            userAgent: req.headers['user-agent'],
+            screen: req.body.screen || {},
+            language: req.headers['accept-language'],
+            platform: req.headers['sec-ch-ua-platform']
+          },
+          networkInfo: {
+            ipAddress: req.ip || req.connection.remoteAddress
+          },
+          status: 'trusted'
+        });
+      } else {
+        // Update last seen
+        existingDevice.lastSeen = new Date();
+        existingDevice.loginCount += 1;
+        await existingDevice.save();
+      }
+    } catch (fpError) {
+      console.error('Failed to save device fingerprint:', fpError);
+      // Don't block login on fingerprint error
+    }
 
     res.json({
       token,

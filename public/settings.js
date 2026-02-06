@@ -274,13 +274,13 @@ class NotificationSettingsController {
   attachEventListeners() {
     // Close button
     this.modal.querySelector('.settings-modal-close').addEventListener('click', () => this.close());
-    
+
     // Cancel button
     document.getElementById('cancelSettingsBtn').addEventListener('click', () => this.close());
-    
+
     // Save button
     document.getElementById('saveSettingsBtn').addEventListener('click', () => this.savePreferences());
-    
+
     // Close on backdrop click
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) this.close();
@@ -337,7 +337,7 @@ class NotificationSettingsController {
       await this.loadVapidKey();
 
       this.populateForm();
-      
+
       document.getElementById('settingsLoading').style.display = 'none';
       document.getElementById('settingsContent').style.display = 'block';
     } catch (error) {
@@ -811,7 +811,7 @@ class NotificationCenterController {
 
   renderNotifications() {
     const container = document.getElementById('notificationList');
-    
+
     if (this.notifications.length === 0) {
       container.innerHTML = `
         <div class="notification-empty">
@@ -823,7 +823,7 @@ class NotificationCenterController {
     }
 
     container.innerHTML = this.notifications.map(n => this.renderNotification(n)).join('');
-    
+
     const loadMoreBtn = document.getElementById('loadMoreNotifications');
     if (loadMoreBtn) {
       loadMoreBtn.style.display = this.hasMore ? 'block' : 'none';
@@ -857,7 +857,7 @@ class NotificationCenterController {
     this.notifications.unshift(notification);
     this.unreadCount++;
     this.updateBadge(this.unreadCount);
-    
+
     if (this.isOpen) {
       this.renderNotifications();
     }
@@ -868,7 +868,7 @@ class NotificationCenterController {
 
   async handleNotificationClick(notificationId) {
     const notification = this.notifications.find(n => n._id === notificationId);
-    
+
     if (!notification?.read) {
       await this.markAsRead(notificationId);
     }
@@ -941,7 +941,7 @@ class NotificationCenterController {
 
   getTimeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-    
+
     const intervals = {
       year: 31536000,
       month: 2592000,
@@ -957,7 +957,7 @@ class NotificationCenterController {
         return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
       }
     }
-    
+
     return 'Just now';
   }
 
@@ -974,7 +974,7 @@ class NotificationCenterController {
     `;
 
     document.body.appendChild(toast);
-    
+
     toast.querySelector('.toast-close').addEventListener('click', () => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
@@ -993,8 +993,200 @@ class NotificationCenterController {
   }
 }
 
+
+class SecurityController {
+  constructor() {
+    this.sessionsList = document.getElementById('active-sessions-list');
+    this.securityLogBody = document.getElementById('security-log-body');
+    this.init();
+  }
+
+  init() {
+    // Attach listener to Security tab button
+    // Find the button that switches to security tab
+    const securityTabBtn = document.querySelector('button[data-tab="security"]') ||
+      Array.from(document.querySelectorAll('.nav-item')).find(btn => btn.textContent.trim().includes('Security'));
+
+    if (securityTabBtn) {
+      securityTabBtn.addEventListener('click', () => this.loadData());
+    }
+
+    // Also load if already active (e.g. on page load if hash matches)
+    if (document.getElementById('security-tab').classList.contains('active')) {
+      this.loadData();
+    }
+
+    // Attach event listeners for Revoke buttons (delegation)
+    if (this.sessionsList) {
+      this.sessionsList.addEventListener('click', (e) => {
+        if (e.target.closest('.revoke-session-btn')) {
+          const btn = e.target.closest('.revoke-session-btn');
+          this.revokeSession(btn.dataset.id);
+        }
+      });
+    }
+
+    // Revoke All button
+    const revokeAllBtn = document.getElementById('revoke-all-btn');
+    if (revokeAllBtn) {
+      revokeAllBtn.addEventListener('click', () => this.revokeAllSessions());
+    }
+  }
+
+  async loadData() {
+    await Promise.all([
+      this.loadActiveSessions(),
+      this.loadSecurityLog()
+    ]);
+  }
+
+  getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  async loadActiveSessions() {
+    if (!this.sessionsList) return;
+
+    try {
+      this.sessionsList.innerHTML = '<div class="setting-item"><div class="setting-info">Loading...</div></div>';
+
+      const response = await fetch('/api/auth/sessions', {
+        headers: this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.renderSessions(data.sessions);
+      } else {
+        throw new Error('Failed to load sessions');
+      }
+    } catch (error) {
+      console.error('Load sessions error:', error);
+      this.sessionsList.innerHTML = '<div class="setting-item"><div class="setting-info" style="color:red">Failed to load sessions</div></div>';
+    }
+  }
+
+  renderSessions(sessions) {
+    if (sessions.length === 0) {
+      this.sessionsList.innerHTML = '<div class="setting-item"><div class="setting-info">No active sessions found.</div></div>';
+      return;
+    }
+
+    this.sessionsList.innerHTML = sessions.map(session => {
+      const isCurrent = session.isCurrent;
+      const deviceName = session.device?.userAgent?.match(/\(([^)]+)\)/)?.[1] || session.device?.userAgent || 'Unknown Device';
+      // Simple parse for Browser/OS could be better but using UA or custom fields
+
+      return `
+        <div class="setting-item session-item">
+          <div class="setting-info">
+            <div class="setting-label">
+                ${session.device?.platform || 'Device'} 
+                ${isCurrent ? '<span class="session-badge current" style="background:#64ffda; color:#0a192f; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-left:8px;">Current</span>' : ''}
+            </div>
+            <div class="setting-description">
+              ${session.location?.city ? `${session.location.city}, ${session.location.country}` : 'Unknown Location'} • 
+              Last active: ${new Date(session.lastAccessAt).toLocaleString()}
+              <br>
+              <small style="opacity:0.7">${deviceName}</small>
+            </div>
+          </div>
+          <div class="setting-control">
+            ${!isCurrent ? `<button class="btn-danger-sm revoke-session-btn" data-id="${session.id}">Revoke</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async loadSecurityLog() {
+    if (!this.securityLogBody) return;
+
+    try {
+      this.securityLogBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem;">Loading...</td></tr>';
+
+      const response = await fetch('/api/auth/security/audit-trail?limit=15', {
+        headers: this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.renderSecurityLog(data.auditTrail);
+      } else {
+        throw new Error('Failed to load security log');
+      }
+    } catch (error) {
+      console.error('Load security log error:', error);
+      this.securityLogBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:red;">Failed to load logs</td></tr>';
+    }
+  }
+
+  renderSecurityLog(logs) {
+    if (!logs || logs.length === 0) {
+      this.securityLogBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem;">No recent activity</td></tr>';
+      return;
+    }
+
+    this.securityLogBody.innerHTML = logs.map(log => `
+      <tr style="border-bottom: 1px solid rgba(100,255,218,0.1);">
+        <td style="padding: 1rem;">${this.formatEventType(log.action)}</td>
+        <td style="padding: 1rem;">${log.ipAddress || 'Unknown'}</td>
+        <td style="padding: 1rem;">${log.deviceInfo?.platform || 'Unknown'}</td>
+        <td style="padding: 1rem;">${new Date(log.createdAt).toLocaleString()}</td>
+      </tr>
+    `).join('');
+  }
+
+  formatEventType(action) {
+    return action.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  }
+
+  async revokeSession(sessionId) {
+    if (!confirm('Are you sure you want to revoke this session?')) return;
+
+    try {
+      const response = await fetch(`/api/auth/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        this.loadActiveSessions(); // Reload list
+        // showToast('Session revoked', 'success'); // Assuming showToast exists or I can add it
+      } else {
+        alert('Failed to revoke session');
+      }
+    } catch (error) {
+      console.error('Revoke error:', error);
+    }
+  }
+
+  async revokeAllSessions() {
+    if (!confirm('Are you sure you want to sign out of all other devices?')) return;
+
+    try {
+      const response = await fetch('/api/auth/sessions/revoke-all', {
+        method: 'POST',
+        headers: this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        this.loadActiveSessions();
+        alert('All other sessions revoked');
+      } else {
+        alert('Failed to revoke sessions');
+      }
+    } catch (error) {
+      console.error('Revoke all error:', error);
+    }
+  }
+}
+
 // Initialize controllers
 document.addEventListener('DOMContentLoaded', () => {
   window.notificationSettings = new NotificationSettingsController();
   window.notificationCenter = new NotificationCenterController();
+  window.securityController = new SecurityController();
 });
+

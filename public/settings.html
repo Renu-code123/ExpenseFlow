@@ -3,1548 +3,694 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#64ffda">
-  <title>Settings - ExpenseFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings & Profile - ExpenseFlow</title>
+  <link rel="stylesheet" href="settings.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="expensetracker.css">
-  <link rel="stylesheet" href="index.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* Settings Specific Styles */
-    .settings-container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    .settings-header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .settings-header h1 {
-      font-size: 2.5rem;
-      color: #64ffda;
-      margin-bottom: 0.5rem;
-    }
-
-    .settings-header p {
-      color: #a0a0c0;
-      font-size: 1.1rem;
-    }
-
-    .settings-nav {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      overflow-x: auto;
-      padding-bottom: 1rem;
-    }
-
-    .settings-nav::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .settings-nav::-webkit-scrollbar-track {
-      background: rgba(100, 255, 218, 0.1);
-      border-radius: 3px;
-    }
-
-    .settings-nav::-webkit-scrollbar-thumb {
-      background: #64ffda;
-      border-radius: 3px;
-    }
-
-    .tab-btn {
-      background: rgba(100, 255, 218, 0.1);
-      border: 1px solid rgba(100, 255, 218, 0.2);
-      color: #64ffda;
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 1rem;
-      white-space: nowrap;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .tab-btn:hover,
-    .tab-btn.active {
-      background: linear-gradient(135deg, #64ffda, #667eea);
-      color: #0f0f23;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(100, 255, 218, 0.3);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .settings-section {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-radius: 20px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(100, 255, 218, 0.1);
-    }
-
-    .section-title {
-      color: #64ffda;
-      font-size: 1.3rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .section-title i {
-      font-size: 1.5rem;
-    }
-
-    .setting-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem;
-      background: rgba(100, 255, 218, 0.05);
-      border-radius: 12px;
-      margin-bottom: 1rem;
-      border: 1px solid rgba(100, 255, 218, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .setting-item:hover {
-      background: rgba(100, 255, 218, 0.1);
-      border-color: rgba(100, 255, 218, 0.2);
-    }
-
-    .setting-info {
-      flex: 1;
-    }
-
-    .setting-label {
-      color: #ffffff;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      font-size: 1.1rem;
-    }
-
-    .setting-description {
-      color: #a0a0c0;
-      font-size: 0.9rem;
-    }
-
-    .setting-control {
-      margin-left: 1rem;
-    }
-
-    /* Toggle Switch */
-    .toggle-switch {
-      position: relative;
-      width: 60px;
-      height: 30px;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(100, 255, 218, 0.2);
-      transition: 0.4s;
-      border-radius: 30px;
-      border: 1px solid rgba(100, 255, 218, 0.3);
-    }
-
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 22px;
-      width: 22px;
-      left: 4px;
-      bottom: 3px;
-      background-color: #64ffda;
-      transition: 0.4s;
-      border-radius: 50%;
-    }
-
-    input:checked + .toggle-slider {
-      background: linear-gradient(135deg, #64ffda, #667eea);
-    }
-
-    input:checked + .toggle-slider:before {
-      transform: translateX(30px);
-      background-color: #0f0f23;
-    }
-
-    /* Input Styles */
-    .settings-input,
-    .settings-select {
-      width: 100%;
-      padding: 1rem;
-      background: rgba(100, 255, 218, 0.05);
-      border: 1px solid rgba(100, 255, 218, 0.2);
-      border-radius: 10px;
-      color: #ffffff;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-    }
-
-    .settings-input:focus,
-    .settings-select:focus {
-      outline: none;
-      border-color: #64ffda;
-      background: rgba(100, 255, 218, 0.1);
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-      color: #ffffff;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #64ffda, #667eea);
-      color: #0f0f23;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
-    }
-
-    .btn-secondary {
-      background: rgba(100, 255, 218, 0.1);
-      color: #64ffda;
-      border: 1px solid rgba(100, 255, 218, 0.2);
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-secondary:hover {
-      background: rgba(100, 255, 218, 0.2);
-      transform: translateY(-2px);
-    }
-
-    .btn-danger {
-      background: rgba(244, 67, 54, 0.1);
-      color: #f44336;
-      border: 1px solid rgba(244, 67, 54, 0.3);
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .btn-danger:hover {
-      background: rgba(244, 67, 54, 0.2);
-      transform: translateY(-2px);
-    }
-
-    .profile-section {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .profile-image-wrapper {
-      position: relative;
-    }
-
-    .profile-image {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: 4px solid #64ffda;
-      object-fit: cover;
-    }
-
-    .change-photo-btn {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #64ffda, #667eea);
-      border: none;
-      color: #0f0f23;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      transition: all 0.3s ease;
-    }
-
-    .change-photo-btn:hover {
-      transform: scale(1.1);
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    .stat-card {
-      background: rgba(100, 255, 218, 0.05);
-      padding: 1.5rem;
-      border-radius: 12px;
-      border: 1px solid rgba(100, 255, 218, 0.1);
-      text-align: center;
-    }
-
-    .stat-value {
-      color: #64ffda;
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-      color: #a0a0c0;
-      font-size: 0.9rem;
-    }
-
-    .danger-zone {
-      border: 2px solid rgba(244, 67, 54, 0.3);
-      background: rgba(244, 67, 54, 0.05);
-    }
-
-    .danger-zone .section-title {
-      color: #f44336;
-    }
-
-    @media (max-width: 768px) {
-      .settings-container {
-        padding: 1rem;
-      }
-
-      .settings-header h1 {
-        font-size: 1.8rem;
-      }
-
-      .settings-nav {
-        flex-wrap: nowrap;
-      }
-
-      .setting-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .setting-control {
-        margin-left: 0;
-        width: 100%;
-      }
-
-      .profile-section {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 </head>
 
 <body>
-   <!-- Header -->
-  <header class="header">
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="nav-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
-        </div>
-        <div class="nav-menu" id="nav-menu">
-          <a href="dashboard.html" class="nav-link ">Dashboard</a>
-          <a href="accounts.html" class="nav-link">Accounts</a>
-          <a href="analytics.html" class="nav-link ">Analytics</a>
-          <a href="goals.html" class="nav-link ">Goals</a>
 
-          <div class="nav-item dropdown">
-            <a href="#" class="nav-link dropdown-toggle">More</a>
-            <div class="dropdown-menu">
-              <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
-              <a href="settings.html" class="dropdown-link active">Overview</a>
-              <a href="./contributor.html" class="dropdown-link">Contributors</a>
-            </div>
-          </div>
-        </div>
-        
-        <div class="nav-toggle" id="nav-toggle">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </div>
-        <div class="user-profile">
-          <div id="workspace-selector" class="workspace-selector"></div>
-          <select id="language-switcher" class="language-select" aria-label="Language">
-            <option value="en">EN</option>
-            <option value="es">ES</option>
-            <option value="fr">FR</option>
-          </select>
-          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
-            <i class="fas fa-coins"></i>
-            <span id="current-currency">INR</span>
-          </button>
-          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
-            alt="User" class="profile-img">
-          <span class="username" id="navUsername"></span>
-          <div id="redirect">
-            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
-          </div>
-        </div>
+  <!-- Smooth Cursor Trail -->
+  <style>
+    .cursor-trail-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999999;
+    }
+
+    .trail-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+      box-shadow:
+        0 0 15px rgba(100, 255, 218, 0.8),
+        0 0 30px rgba(100, 255, 218, 0.4);
+      transform: translate(-50%, -50%);
+      will-change: transform, opacity;
+      mix-blend-mode: screen;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .trail-dot:first-child {
+      width: 12px;
+      height: 12px;
+      background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+      box-shadow:
+        0 0 20px rgba(100, 255, 218, 0.9),
+        0 0 40px rgba(100, 255, 218, 0.6);
+      z-index: 2;
+    }
+
+    .cursor-clicking {
+      transform: translate(-50%, -50%) scale(1.5);
+      background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
+      box-shadow:
+        0 0 25px rgba(255, 107, 157, 0.9),
+        0 0 50px rgba(255, 107, 157, 0.6) !important;
+    }
+
+    .cursor-hovering {
+      transform: translate(-50%, -50%) scale(1.3);
+      background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
+    }
+  </style>
+
+  <div class="cursor-trail-container" id="cursor-trail"></div>
+
+  <script>
+    (function () {
+      // Hide default cursor
+      document.body.style.cursor = 'none';
+
+      const container = document.getElementById('cursor-trail');
+      const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      const trailCircles = [];
+      const COUNT = 12; // Fewer circles for smoother trail
+
+      // Create trail circles
+      for (let i = 0; i < COUNT; i++) {
+        const circle = document.createElement('div');
+        circle.className = 'trail-dot';
+
+        // Opacity decreases along the trail
+        const opacity = 0.9 - (i / COUNT) * 0.8;
+        circle.style.opacity = opacity.toString();
+
+        // Size decreases along the trail
+        const scale = 1 - (i / COUNT) * 0.5;
+        circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+        container.appendChild(circle);
+        trailCircles.push({
+          element: circle,
+          x: coords.x,
+          y: coords.y,
+          targetX: coords.x,
+          targetY: coords.y
+        });
+      }
+
+      // Track mouse position
+      let isMoving = false;
+      let lastMouseX = coords.x;
+      let lastMouseY = coords.y;
+      let velocity = { x: 0, y: 0 };
+
+      window.addEventListener('mousemove', e => {
+        coords.x = e.clientX;
+        coords.y = e.clientY;
+
+        // Calculate velocity for smooth movement
+        velocity.x = e.clientX - lastMouseX;
+        velocity.y = e.clientY - lastMouseY;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+
+        isMoving = true;
+
+        // Reset movement timeout
+        clearTimeout(window.movementTimeout);
+        window.movementTimeout = setTimeout(() => {
+          isMoving = false;
+        }, 50);
+      });
+
+      // Click effect
+      window.addEventListener('mousedown', () => {
+        trailCircles.forEach(circle => {
+          circle.element.classList.add('cursor-clicking');
+        });
+      });
+
+      window.addEventListener('mouseup', () => {
+        trailCircles.forEach(circle => {
+          circle.element.classList.remove('cursor-clicking');
+        });
+      });
+
+      // Hover effect for interactive elements
+      window.addEventListener('mouseover', e => {
+        const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
+        trailCircles.forEach(circle => {
+          circle.element.classList.toggle('cursor-hovering', !!interactive);
+        });
+      });
+
+      // Smooth animation function
+      function animateTrail() {
+        let targetX = coords.x;
+        let targetY = coords.y;
+
+        // Add velocity offset to first circle for more natural feel
+        const velocityOffset = 0.5;
+        const offsetX = velocity.x * velocityOffset;
+        const offsetY = velocity.y * velocityOffset;
+
+        trailCircles.forEach((circle, index) => {
+          // First circle follows cursor exactly
+          if (index === 0) {
+            circle.x = targetX + offsetX;
+            circle.y = targetY + offsetY;
+          }
+          // Other circles follow with smooth delay
+          else {
+            const prevCircle = trailCircles[index - 1];
+
+            // Smooth interpolation factor (changes based on movement speed)
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            const lerpFactor = isMoving ?
+              Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
+              0.1; // Slow movement = more spread
+
+            circle.x += (prevCircle.x - circle.x) * lerpFactor;
+            circle.y += (prevCircle.y - circle.y) * lerpFactor;
+          }
+
+          // Apply position with easing
+          circle.element.style.left = circle.x + 'px';
+          circle.element.style.top = circle.y + 'px';
+
+          // Dynamic opacity based on speed and position
+          if (index > 0) {
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            const baseOpacity = 0.9 - (index / COUNT) * 0.8;
+            const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
+            circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
+          }
+
+          // Update target for next circle
+          targetX = circle.x;
+          targetY = circle.y;
+        });
+
+        requestAnimationFrame(animateTrail);
+      }
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        // Adjust if cursor goes out of bounds
+        if (coords.x > window.innerWidth) coords.x = window.innerWidth;
+        if (coords.y > window.innerHeight) coords.y = window.innerHeight;
+      });
+
+      // Handle mouse leave/enter
+      window.addEventListener('mouseleave', () => {
+        trailCircles.forEach(circle => {
+          circle.element.style.opacity = '0';
+        });
+      });
+
+      window.addEventListener('mouseenter', () => {
+        trailCircles.forEach((circle, index) => {
+          const opacity = 0.9 - (index / COUNT) * 0.8;
+          circle.element.style.opacity = opacity.toString();
+        });
+      });
+
+      // Start animation
+      animateTrail();
+    })();
+  </script>
+
+
+  <div class="settings-container">
+    <header class="settings-header">
+      <div class="header-left">
+        <a href="dashboard-clean.html" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1><i class="fas fa-cog"></i> Settings & Profile</h1>
       </div>
-    </nav>
-  </header>
+    </header>
 
-  <main class="main-content">
-    <div class="settings-container">
-      <!-- Header -->
-      <div class="settings-header">
-        <h1><i class="fas fa-cog"></i> Settings</h1>
-        <p>Customize your ExpenseFlow experience</p>
-      </div>
-
-      <!-- Settings Navigation Tabs -->
+    <main class="settings-main">
+      <!-- Settings Navigation -->
       <div class="settings-nav">
-        <button class="tab-btn active" onclick="switchTab('profile')">
+        <button class="nav-item active" data-tab="profile">
           <i class="fas fa-user"></i> Profile
         </button>
-        <button class="tab-btn" onclick="switchTab('preferences')">
+        <button class="nav-item" data-tab="preferences">
           <i class="fas fa-sliders-h"></i> Preferences
         </button>
-        <button class="tab-btn" onclick="switchTab('notifications')">
-          <i class="fas fa-bell"></i> Notifications
-        </button>
-        <button class="tab-btn" onclick="switchTab('security')">
+        <button class="nav-item" data-tab="security">
           <i class="fas fa-shield-alt"></i> Security
         </button>
-        <button class="tab-btn" onclick="switchTab('data')">
+        <button class="nav-item" data-tab="notifications">
+          <i class="fas fa-bell"></i> Notifications
+        </button>
+        <button class="nav-item" data-tab="data">
           <i class="fas fa-database"></i> Data & Privacy
         </button>
       </div>
 
-      <!-- Profile Tab -->
-      <div class="tab-content active" id="profile-tab">
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-id-card"></i>
-            Profile Information
-          </h3>
-
+      <!-- Settings Content -->
+      <div class="settings-content">
+        <!-- Profile Tab -->
+        <div id="profile-tab" class="tab-content active">
           <div class="profile-section">
-            <div class="profile-image-wrapper">
-              <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face"
-                alt="Profile" class="profile-image">
-              <button class="change-photo-btn">
-                <i class="fas fa-camera"></i>
-              </button>
+            <div class="profile-header">
+              <div class="profile-avatar">
+                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face"
+                  alt="Profile" id="profile-image">
+                <button class="avatar-edit-btn" id="change-avatar-btn">
+                  <i class="fas fa-camera"></i>
+                </button>
+              </div>
+              <div class="profile-info">
+                <h2 id="profile-name">John Doe</h2>
+                <p id="profile-email">john.doe@example.com</p>
+                <span class="profile-badge">Premium Member</span>
+              </div>
             </div>
-            <div style="flex: 1;">
-              <h2 style="color: #ffffff; margin-bottom: 0.5rem;">John Doe</h2>
-              <p style="color: #a0a0c0;">john.doe@example.com</p>
-              <p style="color: #64ffda; font-size: 0.9rem; margin-top: 0.5rem;">
-                <i class="fas fa-calendar-alt"></i> Member since January 2025
-              </p>
+
+            <div class="profile-form">
+              <div class="form-section">
+                <h3>Personal Information</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" value="John">
+                  </div>
+                  <div class="form-group">
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" value="Doe">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="email">Email Address</label>
+                  <input type="email" id="email" value="john.doe@example.com">
+                </div>
+                <div class="form-group">
+                  <label for="phone">Phone Number</label>
+                  <input type="tel" id="phone" value="+1 (555) 123-4567">
+                </div>
+                <div class="form-group">
+                  <label for="bio">Bio</label>
+                  <textarea id="bio" rows="3"
+                    placeholder="Tell us about yourself...">Financial enthusiast focused on smart money management and achieving financial goals.</textarea>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-secondary">Cancel</button>
+                <button type="button" class="btn-primary" id="save-profile-btn">
+                  <i class="fas fa-save"></i> Save Changes
+                </button>
+              </div>
             </div>
           </div>
-
-          <form>
-            <div class="form-group">
-              <label class="form-label">Full Name</label>
-              <input type="text" class="settings-input" value="John Doe" placeholder="Enter your full name">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input type="email" class="settings-input" value="john.doe@example.com" placeholder="Enter your email">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Phone Number</label>
-              <input type="tel" class="settings-input" value="+91 98765 43210" placeholder="Enter your phone number">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Bio</label>
-              <textarea class="settings-input" rows="4" placeholder="Tell us about yourself...">Finance enthusiast working towards financial freedom</textarea>
-            </div>
-
-            <button type="submit" class="btn-primary">
-              <i class="fas fa-save"></i> Save Changes
-            </button>
-          </form>
         </div>
 
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-chart-bar"></i>
-            Account Statistics
-          </h3>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-value">247</div>
-              <div class="stat-label">Total Transactions</div>
+        <!-- Preferences Tab -->
+        <div id="preferences-tab" class="tab-content">
+          <div class="preferences-section">
+            <div class="form-section">
+              <h3>Currency & Region</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="currency">Default Currency</label>
+                  <select id="currency">
+                    <option value="USD">🇺🇸 USD - US Dollar</option>
+                    <option value="EUR">🇪🇺 EUR - Euro</option>
+                    <option value="GBP">🇬🇧 GBP - British Pound</option>
+                    <option value="INR">🇮🇳 INR - Indian Rupee</option>
+                    <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="timezone">Timezone</label>
+                  <select id="timezone">
+                    <option value="UTC-8">Pacific Time (UTC-8)</option>
+                    <option value="UTC-5">Eastern Time (UTC-5)</option>
+                    <option value="UTC+0">GMT (UTC+0)</option>
+                    <option value="UTC+5:30">India Standard Time (UTC+5:30)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="language">Language</label>
+                <select id="language">
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                  <option value="hi">हिन्दी</option>
+                </select>
+              </div>
             </div>
-            <div class="stat-card">
-              <div class="stat-value">₹8.5L</div>
-              <div class="stat-label">Total Tracked</div>
+
+            <div class="form-section">
+              <h3>Display Settings</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Dark Mode</label>
+                    <small>Use dark theme for better viewing in low light</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="dark-mode" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Compact View</label>
+                    <small>Show more information in less space</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="compact-view">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Show Animations</label>
+                    <small>Enable smooth transitions and animations</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="animations" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
             </div>
-            <div class="stat-card">
-              <div class="stat-value">3</div>
-              <div class="stat-label">Active Goals</div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-primary" id="save-preferences-btn">
+                <i class="fas fa-save"></i> Save Preferences
+              </button>
             </div>
-            <div class="stat-card">
-              <div class="stat-value">92%</div>
-              <div class="stat-label">Budget Adherence</div>
+          </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div id="security-tab" class="tab-content">
+          <div class="security-section">
+            <div class="form-section">
+              <h3>Password & Authentication</h3>
+              <div class="form-group">
+                <label for="current-password">Current Password</label>
+                <input type="password" id="current-password" placeholder="Enter current password">
+              </div>
+              <div class="form-group">
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" placeholder="Enter new password">
+              </div>
+              <div class="form-group">
+                <label for="confirm-password">Confirm New Password</label>
+                <input type="password" id="confirm-password" placeholder="Confirm new password">
+              </div>
+              <button type="button" class="btn-primary" id="change-password-btn">
+                <i class="fas fa-key"></i> Change Password
+              </button>
+            </div>
+
+            <div class="form-section">
+              <h3>Security Preferences</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Login Alerts</label>
+                    <small>Get notified of new login attempts</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <!-- ID matched to likely settings.js preference if any, or just visual -->
+                    <input type="checkbox" id="login-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Two-Factor Authentication</h3>
+              <div class="security-item">
+                <div class="security-info">
+                  <h4>Authenticator App</h4>
+                  <p>Use an authenticator app for additional security</p>
+                  <span class="status-badge enabled">Enabled</span>
+                </div>
+                <button class="btn-secondary" id="manage-2fa-btn">Manage</button>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="fas fa-desktop"></i>
+                Active Sessions
+              </h3>
+              <div id="active-sessions-list">
+                <!-- Sessions will be loaded here -->
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">Loading sessions...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="fas fa-clipboard-list"></i>
+                Security Log
+              </h3>
+              <div style="overflow-x: auto;">
+                <table class="settings-table" style="width: 100%; border-collapse: collapse; color: #fff;">
+                  <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid rgba(100,255,218,0.2);">
+                      <th style="padding: 1rem;">Event</th>
+                      <th style="padding: 1rem;">Location</th>
+                      <th style="padding: 1rem;">Device</th>
+                      <th style="padding: 1rem;">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="security-log-body">
+                    <!-- Logs will be loaded here -->
+                    <tr>
+                      <td colspan="4" style="padding: 1rem; text-align: center; color: #a0a0c0;">Loading security log...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div id="notifications-tab" class="tab-content">
+          <div class="notifications-section">
+            <div class="form-section">
+              <h3>Email Notifications</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Budget Alerts</label>
+                    <small>Get notified when you're close to budget limits</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="budget-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Weekly Reports</label>
+                    <small>Receive weekly spending summaries</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="weekly-reports" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Goal Reminders</label>
+                    <small>Get reminded about your financial goals</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="goal-reminders">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Push Notifications</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Transaction Alerts</label>
+                    <small>Instant notifications for new transactions</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="transaction-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Security Alerts</label>
+                    <small>Important security and login notifications</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="security-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-primary" id="save-notifications-btn">
+                <i class="fas fa-save"></i> Save Notification Settings
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data & Privacy Tab -->
+        <div id="data-tab" class="tab-content">
+          <div class="data-section">
+            <div class="form-section">
+              <h3>Data Export</h3>
+              <p>Download a copy of your data in various formats</p>
+              <div class="export-options">
+                <button class="btn-secondary" id="export-csv-btn">
+                  <i class="fas fa-file-csv"></i> Export as CSV
+                </button>
+                <button class="btn-secondary" id="export-json-btn">
+                  <i class="fas fa-file-code"></i> Export as JSON
+                </button>
+                <button class="btn-secondary" id="export-pdf-btn">
+                  <i class="fas fa-file-pdf"></i> Export as PDF Report
+                </button>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Privacy Settings</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Analytics & Insights</label>
+                    <small>Allow us to analyze your data to provide better insights</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="analytics-consent" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Marketing Communications</label>
+                    <small>Receive tips, updates, and promotional content</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="marketing-consent">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section danger-zone">
+              <h3>Danger Zone</h3>
+              <div class="danger-actions">
+                <div class="danger-item">
+                  <div class="danger-info">
+                    <h4>Delete All Data</h4>
+                    <p>Permanently delete all your transactions, budgets, and goals</p>
+                  </div>
+                  <button class="btn-danger" id="delete-data-btn">Delete Data</button>
+                </div>
+                <div class="danger-item">
+                  <div class="danger-info">
+                    <h4>Delete Account</h4>
+                    <p>Permanently delete your account and all associated data</p>
+                  </div>
+                  <button class="btn-danger" id="delete-account-btn">Delete Account</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Preferences Tab -->
-      <div class="tab-content" id="preferences-tab">
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-palette"></i>
-            Appearance
-          </h3>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Dark Mode</div>
-              <div class="setting-description">Use dark theme across the application</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Compact View</div>
-              <div class="setting-description">Show more content in less space</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-globe"></i>
-            Localization
-          </h3>
-
-          <div class="form-group">
-            <label class="form-label">Currency</label>
-            <select class="settings-select">
-              <option value="INR" selected>₹ Indian Rupee (INR)</option>
-              <option value="USD">$ US Dollar (USD)</option>
-              <option value="EUR">€ Euro (EUR)</option>
-              <option value="GBP">£ British Pound (GBP)</option>
-              <option value="JPY">¥ Japanese Yen (JPY)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Language</label>
-            <select class="settings-select">
-              <option value="en" selected>English</option>
-              <option value="hi">हिन्दी (Hindi)</option>
-              <option value="es">Español (Spanish)</option>
-              <option value="fr">Français (French)</option>
-              <option value="de">Deutsch (German)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Date Format</label>
-            <select class="settings-select">
-              <option value="dd/mm/yyyy" selected>DD/MM/YYYY</option>
-              <option value="mm/dd/yyyy">MM/DD/YYYY</option>
-              <option value="yyyy-mm-dd">YYYY-MM-DD</option>
-            </select>
-          </div>
-
-          <button type="submit" class="btn-primary">
-            <i class="fas fa-save"></i> Save Preferences
-          </button>
-        </div>
-      </div>
-
-      <!-- Notifications Tab -->
-      <div class="tab-content" id="notifications-tab">
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-envelope"></i>
-            Email Notifications
-          </h3>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Transaction Alerts</div>
-              <div class="setting-description">Get notified when new transactions are added</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Budget Warnings</div>
-              <div class="setting-description">Alert me when approaching budget limits</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Goal Milestones</div>
-              <div class="setting-description">Celebrate when reaching savings goals</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Weekly Summary</div>
-              <div class="setting-description">Receive weekly spending reports</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-mobile-alt"></i>
-            Push Notifications
-          </h3>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Enable Push Notifications</div>
-              <div class="setting-description">Receive notifications on your device</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Sound</div>
-              <div class="setting-description">Play sound with notifications</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Security Tab -->
-      <div class="tab-content" id="security-tab">
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-key"></i>
-            Password & Authentication
-          </h3>
-
-          <form>
-            <div class="form-group">
-              <label class="form-label">Current Password</label>
-              <input type="password" class="settings-input" placeholder="Enter current password">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">New Password</label>
-              <input type="password" class="settings-input" placeholder="Enter new password">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Confirm New Password</label>
-              <input type="password" class="settings-input" placeholder="Confirm new password">
-            </div>
-
-            <button type="submit" class="btn-primary">
-              <i class="fas fa-lock"></i> Change Password
-            </button>
-          </form>
-        </div>
-
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-shield-alt"></i>
-            Security Options
-          </h3>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Two-Factor Authentication</div>
-              <div class="setting-description">Add an extra layer of security to your account</div>
-            </div>
-            <div class="setting-control">
-              <button class="btn-secondary">Enable 2FA</button>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Login Alerts</div>
-              <div class="setting-description">Get notified of new login attempts</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Active Sessions</div>
-              <div class="setting-description">View and manage your active login sessions</div>
-            </div>
-            <div class="setting-control">
-              <button class="btn-secondary">Manage Sessions</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data & Privacy Tab -->
-      <div class="tab-content" id="data-tab">
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-download"></i>
-            Data Management
-          </h3>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Export Data</div>
-              <div class="setting-description">Download all your financial data in CSV format</div>
-            </div>
-            <div class="setting-control">
-              <button class="btn-secondary">
-                <i class="fas fa-file-export"></i> Export
-              </button>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Backup Data</div>
-              <div class="setting-description">Create a backup of your ExpenseFlow data</div>
-            </div>
-            <div class="setting-control">
-              <button class="btn-secondary">
-                <i class="fas fa-cloud-download-alt"></i> Backup
-              </button>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Import Data</div>
-              <div class="setting-description">Import transactions from CSV or other formats</div>
-            </div>
-            <div class="setting-control">
-              <button class="btn-secondary">
-                <i class="fas fa-file-import"></i> Import
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3 class="section-title">
-            <i class="fas fa-user-shield"></i>
-            Privacy Settings
-          </h3>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Analytics & Performance</div>
-              <div class="setting-description">Help us improve by sharing anonymous usage data</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Personalized Recommendations</div>
-              <div class="setting-description">Receive AI-powered financial insights based on your spending</div>
-            </div>
-            <div class="setting-control">
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section danger-zone">
-          <h3 class="section-title">
-            <i class="fas fa-exclamation-triangle"></i>
-            Danger Zone
-          </h3>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Clear All Data</div>
-              <div class="setting-description">Permanently delete all transactions and data (cannot be undone)</div>
-            </div>
-            <div class="setting-control">
-              <button class="btn-danger">
-                <i class="fas fa-trash-alt"></i> Clear Data
-              </button>
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-label">Delete Account</div>
-              <div class="setting-description">Permanently delete your account and all associated data</div>
-            </div>
-            <div class="setting-control">
-              <button class="btn-danger">
-                <i class="fas fa-user-times"></i> Delete Account
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <script>
-    // Tab switching functionality
-    function switchTab(tabName) {
-      // Remove active class from all tabs and buttons
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-
-      // Add active class to selected tab and button
-      document.getElementById(tabName + '-tab').classList.add('active');
-      event.target.classList.add('active');
-    }
-
-    // Mobile menu toggle
-    document.getElementById('nav-toggle').addEventListener('click', function() {
-      document.getElementById('nav-menu').classList.toggle('active');
-    });
-
-    // Form submission handlers (add your actual logic here)
-    document.querySelectorAll('form').forEach(form => {
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        alert('Settings saved successfully!');
-      });
-    });
-
-    // Danger zone confirmations
-    document.querySelectorAll('.btn-danger').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const action = this.textContent.trim();
-        if (confirm(`Are you sure you want to ${action}? This action cannot be undone.`)) {
-          console.log(`Confirmed: ${action}`);
-          // Add actual deletion logic here
-        }
-      });
-    });
-  </script>
-</body>
-
-</html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings & Profile - ExpenseFlow</title>
-    <link rel="stylesheet" href="settings.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-<body>
-
-          <!-- Smooth Cursor Trail -->
-<style>
-  .cursor-trail-container {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 999999;
-  }
-
-  .trail-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 15px rgba(100, 255, 218, 0.8),
-      0 0 30px rgba(100, 255, 218, 0.4);
-    transform: translate(-50%, -50%);
-    will-change: transform, opacity;
-    mix-blend-mode: screen;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-
-  .trail-dot:first-child {
-    width: 12px;
-    height: 12px;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 20px rgba(100, 255, 218, 0.9),
-      0 0 40px rgba(100, 255, 218, 0.6);
-    z-index: 2;
-  }
-
-  .cursor-clicking {
-    transform: translate(-50%, -50%) scale(1.5);
-    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
-    box-shadow: 
-      0 0 25px rgba(255, 107, 157, 0.9),
-      0 0 50px rgba(255, 107, 157, 0.6) !important;
-  }
-
-  .cursor-hovering {
-    transform: translate(-50%, -50%) scale(1.3);
-    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
-  }
-</style>
-
-<div class="cursor-trail-container" id="cursor-trail"></div>
-
-<script>
-(function() {
-  // Hide default cursor
-  document.body.style.cursor = 'none';
-
-  const container = document.getElementById('cursor-trail');
-  const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  const trailCircles = [];
-  const COUNT = 12; // Fewer circles for smoother trail
-
-  // Create trail circles
-  for (let i = 0; i < COUNT; i++) {
-    const circle = document.createElement('div');
-    circle.className = 'trail-dot';
-
-    // Opacity decreases along the trail
-    const opacity = 0.9 - (i / COUNT) * 0.8;
-    circle.style.opacity = opacity.toString();
-
-    // Size decreases along the trail
-    const scale = 1 - (i / COUNT) * 0.5;
-    circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-    container.appendChild(circle);
-    trailCircles.push({ 
-      element: circle, 
-      x: coords.x, 
-      y: coords.y,
-      targetX: coords.x,
-      targetY: coords.y
-    });
-  }
-
-  // Track mouse position
-  let isMoving = false;
-  let lastMouseX = coords.x;
-  let lastMouseY = coords.y;
-  let velocity = { x: 0, y: 0 };
-
-  window.addEventListener('mousemove', e => {
-    coords.x = e.clientX;
-    coords.y = e.clientY;
-
-    // Calculate velocity for smooth movement
-    velocity.x = e.clientX - lastMouseX;
-    velocity.y = e.clientY - lastMouseY;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-
-    isMoving = true;
-
-    // Reset movement timeout
-    clearTimeout(window.movementTimeout);
-    window.movementTimeout = setTimeout(() => {
-      isMoving = false;
-    }, 50);
-  });
-
-  // Click effect
-  window.addEventListener('mousedown', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.add('cursor-clicking');
-    });
-  });
-
-  window.addEventListener('mouseup', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.remove('cursor-clicking');
-    });
-  });
-
-  // Hover effect for interactive elements
-  window.addEventListener('mouseover', e => {
-    const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
-    trailCircles.forEach(circle => {
-      circle.element.classList.toggle('cursor-hovering', !!interactive);
-    });
-  });
-
-  // Smooth animation function
-  function animateTrail() {
-    let targetX = coords.x;
-    let targetY = coords.y;
-
-    // Add velocity offset to first circle for more natural feel
-    const velocityOffset = 0.5;
-    const offsetX = velocity.x * velocityOffset;
-    const offsetY = velocity.y * velocityOffset;
-
-    trailCircles.forEach((circle, index) => {
-      // First circle follows cursor exactly
-      if (index === 0) {
-        circle.x = targetX + offsetX;
-        circle.y = targetY + offsetY;
-      } 
-      // Other circles follow with smooth delay
-      else {
-        const prevCircle = trailCircles[index - 1];
-
-        // Smooth interpolation factor (changes based on movement speed)
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const lerpFactor = isMoving ? 
-          Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
-          0.1; // Slow movement = more spread
-
-        circle.x += (prevCircle.x - circle.x) * lerpFactor;
-        circle.y += (prevCircle.y - circle.y) * lerpFactor;
+    </main>
+    <script>
+      // Tab switching functionality
+      function switchTab(tabName) {
+        // Remove active class from all tabs and buttons
+        document.querySelectorAll('.tab-content').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        document.querySelectorAll('.nav-item').forEach(btn => {
+          btn.classList.remove('active');
+        });
+
+        // Add active class to selected tab and button
+        const activeTab = document.getElementById(tabName + '-tab');
+        if (activeTab) activeTab.classList.add('active');
+
+        // Highlight the button that was clicked (based on data-tab)
+        const activeBtn = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
       }
 
-      // Apply position with easing
-      circle.element.style.left = circle.x + 'px';
-      circle.element.style.top = circle.y + 'px';
+      // Attach click listeners to nav items
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab(btn.dataset.tab);
+        });
+      });
 
-      // Dynamic opacity based on speed and position
-      if (index > 0) {
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const baseOpacity = 0.9 - (index / COUNT) * 0.8;
-        const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
-        circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
+      // Mobile menu toggle (if nav-toggle exists)
+      const navToggle = document.getElementById('nav-toggle');
+      if (navToggle) {
+        navToggle.addEventListener('click', function () {
+          const navMenu = document.getElementById('nav-menu');
+          if (navMenu) navMenu.classList.toggle('active');
+        });
       }
 
-      // Update target for next circle
-      targetX = circle.x;
-      targetY = circle.y;
-    });
+      // Form submission handlers (visual feedback)
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          // Simple visual feedback
+          const btn = form.querySelector('button[type="submit"]');
+          if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Saved';
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+            }, 2000);
+          }
+        });
+      });
 
-    requestAnimationFrame(animateTrail);
-  }
-
-  // Handle window resize
-  window.addEventListener('resize', () => {
-    // Adjust if cursor goes out of bounds
-    if (coords.x > window.innerWidth) coords.x = window.innerWidth;
-    if (coords.y > window.innerHeight) coords.y = window.innerHeight;
-  });
-
-  // Handle mouse leave/enter
-  window.addEventListener('mouseleave', () => {
-    trailCircles.forEach(circle => {
-      circle.element.style.opacity = '0';
-    });
-  });
-
-  window.addEventListener('mouseenter', () => {
-    trailCircles.forEach((circle, index) => {
-      const opacity = 0.9 - (index / COUNT) * 0.8;
-      circle.element.style.opacity = opacity.toString();
-    });
-  });
-
-  // Start animation
-  animateTrail();
-})();
-</script>
-
-
-    <div class="settings-container">
-        <header class="settings-header">
-            <div class="header-left">
-                <a href="dashboard-clean.html" class="back-btn">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-                <h1><i class="fas fa-cog"></i> Settings & Profile</h1>
-            </div>
-        </header>
-
-        <main class="settings-main">
-            <!-- Settings Navigation -->
-            <div class="settings-nav">
-                <button class="nav-item active" data-tab="profile">
-                    <i class="fas fa-user"></i> Profile
-                </button>
-                <button class="nav-item" data-tab="preferences">
-                    <i class="fas fa-sliders-h"></i> Preferences
-                </button>
-                <button class="nav-item" data-tab="security">
-                    <i class="fas fa-shield-alt"></i> Security
-                </button>
-                <button class="nav-item" data-tab="notifications">
-                    <i class="fas fa-bell"></i> Notifications
-                </button>
-                <button class="nav-item" data-tab="data">
-                    <i class="fas fa-database"></i> Data & Privacy
-                </button>
-            </div>
-
-            <!-- Settings Content -->
-            <div class="settings-content">
-                <!-- Profile Tab -->
-                <div id="profile-tab" class="tab-content active">
-                    <div class="profile-section">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face" alt="Profile" id="profile-image">
-                                <button class="avatar-edit-btn" id="change-avatar-btn">
-                                    <i class="fas fa-camera"></i>
-                                </button>
-                            </div>
-                            <div class="profile-info">
-                                <h2 id="profile-name">John Doe</h2>
-                                <p id="profile-email">john.doe@example.com</p>
-                                <span class="profile-badge">Premium Member</span>
-                            </div>
-                        </div>
-
-                        <div class="profile-form">
-                            <div class="form-section">
-                                <h3>Personal Information</h3>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="first-name">First Name</label>
-                                        <input type="text" id="first-name" value="John">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="last-name">Last Name</label>
-                                        <input type="text" id="last-name" value="Doe">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="email">Email Address</label>
-                                    <input type="email" id="email" value="john.doe@example.com">
-                                </div>
-                                <div class="form-group">
-                                    <label for="phone">Phone Number</label>
-                                    <input type="tel" id="phone" value="+1 (555) 123-4567">
-                                </div>
-                                <div class="form-group">
-                                    <label for="bio">Bio</label>
-                                    <textarea id="bio" rows="3" placeholder="Tell us about yourself...">Financial enthusiast focused on smart money management and achieving financial goals.</textarea>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="button" class="btn-secondary">Cancel</button>
-                                <button type="button" class="btn-primary" id="save-profile-btn">
-                                    <i class="fas fa-save"></i> Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Preferences Tab -->
-                <div id="preferences-tab" class="tab-content">
-                    <div class="preferences-section">
-                        <div class="form-section">
-                            <h3>Currency & Region</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="currency">Default Currency</label>
-                                    <select id="currency">
-                                        <option value="USD">🇺🇸 USD - US Dollar</option>
-                                        <option value="EUR">🇪🇺 EUR - Euro</option>
-                                        <option value="GBP">🇬🇧 GBP - British Pound</option>
-                                        <option value="INR">🇮🇳 INR - Indian Rupee</option>
-                                        <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="timezone">Timezone</label>
-                                    <select id="timezone">
-                                        <option value="UTC-8">Pacific Time (UTC-8)</option>
-                                        <option value="UTC-5">Eastern Time (UTC-5)</option>
-                                        <option value="UTC+0">GMT (UTC+0)</option>
-                                        <option value="UTC+5:30">India Standard Time (UTC+5:30)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="language">Language</label>
-                                <select id="language">
-                                    <option value="en">English</option>
-                                    <option value="es">Español</option>
-                                    <option value="fr">Français</option>
-                                    <option value="de">Deutsch</option>
-                                    <option value="hi">हिन्दी</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Display Settings</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Dark Mode</label>
-                                        <small>Use dark theme for better viewing in low light</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="dark-mode" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Compact View</label>
-                                        <small>Show more information in less space</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="compact-view">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Show Animations</label>
-                                        <small>Enable smooth transitions and animations</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="animations" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" class="btn-primary" id="save-preferences-btn">
-                                <i class="fas fa-save"></i> Save Preferences
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Security Tab -->
-                <div id="security-tab" class="tab-content">
-                    <div class="security-section">
-                        <div class="form-section">
-                            <h3>Password & Authentication</h3>
-                            <div class="form-group">
-                                <label for="current-password">Current Password</label>
-                                <input type="password" id="current-password" placeholder="Enter current password">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-password">New Password</label>
-                                <input type="password" id="new-password" placeholder="Enter new password">
-                            </div>
-                            <div class="form-group">
-                                <label for="confirm-password">Confirm New Password</label>
-                                <input type="password" id="confirm-password" placeholder="Confirm new password">
-                            </div>
-                            <button type="button" class="btn-primary" id="change-password-btn">
-                                <i class="fas fa-key"></i> Change Password
-                            </button>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Two-Factor Authentication</h3>
-                            <div class="security-item">
-                                <div class="security-info">
-                                    <h4>Authenticator App</h4>
-                                    <p>Use an authenticator app for additional security</p>
-                                    <span class="status-badge enabled">Enabled</span>
-                                </div>
-                                <button class="btn-secondary" id="manage-2fa-btn">Manage</button>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Login Sessions</h3>
-                            <div class="sessions-list">
-                                <div class="session-item">
-                                    <div class="session-info">
-                                        <h4>Current Session</h4>
-                                        <p>Chrome on Windows • New York, NY</p>
-                                        <small>Active now</small>
-                                    </div>
-                                    <span class="session-badge current">Current</span>
-                                </div>
-                                <div class="session-item">
-                                    <div class="session-info">
-                                        <h4>Mobile App</h4>
-                                        <p>iPhone • New York, NY</p>
-                                        <small>2 hours ago</small>
-                                    </div>
-                                    <button class="btn-danger-sm">Revoke</button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn-danger" id="revoke-all-btn">
-                                <i class="fas fa-sign-out-alt"></i> Sign Out All Devices
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notifications Tab -->
-                <div id="notifications-tab" class="tab-content">
-                    <div class="notifications-section">
-                        <div class="form-section">
-                            <h3>Email Notifications</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Budget Alerts</label>
-                                        <small>Get notified when you're close to budget limits</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="budget-alerts" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Weekly Reports</label>
-                                        <small>Receive weekly spending summaries</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="weekly-reports" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Goal Reminders</label>
-                                        <small>Get reminded about your financial goals</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="goal-reminders">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Push Notifications</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Transaction Alerts</label>
-                                        <small>Instant notifications for new transactions</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="transaction-alerts" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Security Alerts</label>
-                                        <small>Important security and login notifications</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="security-alerts" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" class="btn-primary" id="save-notifications-btn">
-                                <i class="fas fa-save"></i> Save Notification Settings
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Data & Privacy Tab -->
-                <div id="data-tab" class="tab-content">
-                    <div class="data-section">
-                        <div class="form-section">
-                            <h3>Data Export</h3>
-                            <p>Download a copy of your data in various formats</p>
-                            <div class="export-options">
-                                <button class="btn-secondary" id="export-csv-btn">
-                                    <i class="fas fa-file-csv"></i> Export as CSV
-                                </button>
-                                <button class="btn-secondary" id="export-json-btn">
-                                    <i class="fas fa-file-code"></i> Export as JSON
-                                </button>
-                                <button class="btn-secondary" id="export-pdf-btn">
-                                    <i class="fas fa-file-pdf"></i> Export as PDF Report
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Privacy Settings</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Analytics & Insights</label>
-                                        <small>Allow us to analyze your data to provide better insights</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="analytics-consent" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Marketing Communications</label>
-                                        <small>Receive tips, updates, and promotional content</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="marketing-consent">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-section danger-zone">
-                            <h3>Danger Zone</h3>
-                            <div class="danger-actions">
-                                <div class="danger-item">
-                                    <div class="danger-info">
-                                        <h4>Delete All Data</h4>
-                                        <p>Permanently delete all your transactions, budgets, and goals</p>
-                                    </div>
-                                    <button class="btn-danger" id="delete-data-btn">Delete Data</button>
-                                </div>
-                                <div class="danger-item">
-                                    <div class="danger-info">
-                                        <h4>Delete Account</h4>
-                                        <p>Permanently delete your account and all associated data</p>
-                                    </div>
-                                    <button class="btn-danger" id="delete-account-btn">Delete Account</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-    <script src="protect.js"></script>
-    <script src="settings.js"></script>
+      // Danger zone confirmations
+      document.querySelectorAll('.btn-danger').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          // Prevent default only if it's not the revoke button which has specific handler
+          if (!this.id.includes('revoke')) {
+            const action = this.textContent.trim();
+            if (!confirm(`Are you sure you want to ${action}? This action cannot be undone.`)) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }
+        });
+      });
+    </script>
+  </div>
+  <script src="protect.js"></script>
+  <script src="settings.js"></script>
 </body>
+
 </html>
