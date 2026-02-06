@@ -230,6 +230,10 @@
                 data-i18n-placeholder="history.search">
               <i class="fas fa-search search-icon"></i>
             </div>
+            <div class="select-all-container">
+              <input type="checkbox" id="select-all" class="select-all-checkbox">
+              <label for="select-all">Select All</label>
+            </div>
             <div class="filter-buttons">
               <button class="filter-btn active" data-filter="all" data-i18n="history.filter.all">All</button>
               <button class="filter-btn" data-filter="income" data-i18n="history.filter.income">Income</button>
@@ -795,8 +799,68 @@
               <button class="btn-secondary" onclick="openCreateWorkspaceModal()">
                 <i class="fas fa-plus"></i> Create New Workspace
               </button>
+              <button class="btn-secondary" onclick="openCreateWorkspaceModal()">
+                <i class="fas fa-plus"></i> Create New Workspace
+              </button>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bulk Action Bar -->
+    <div id="bulk-action-bar" class="bulk-action-bar">
+      <span id="selected-count" class="selected-count">1 selected</span>
+      <div class="bulk-actions">
+        <button id="bulk-edit-btn" class="bulk-btn">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+        <button id="bulk-delete-btn" class="bulk-btn delete-btn">
+          <i class="fas fa-trash"></i> Delete
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk Edit Modal -->
+    <div id="bulk-edit-modal" class="bulk-edit-modal">
+      <div class="bulk-edit-content">
+        <div class="bulk-edit-header">
+          <h3>Bulk Edit</h3>
+          <button id="close-bulk-modal" class="close-modal">&times;</button>
+        </div>
+        <form id="bulk-edit-form">
+          <div class="bulk-form-group">
+            <label for="bulk-category">Category</label>
+            <select id="bulk-category" class="bulk-form-select">
+              <option value="">No Change</option>
+              <option value="food">🍽️ Food & Dining</option>
+              <option value="transport">🚗 Transportation</option>
+              <option value="shopping">🛒 Shopping</option>
+              <option value="entertainment">🎬 Entertainment</option>
+              <option value="utilities">💡 Utilities</option>
+              <option value="healthcare">🏥 Healthcare</option>
+              <option value="education">📚 Education</option>
+              <option value="travel">✈️ Travel</option>
+               <option value="salary">💼 Salary</option>
+                <option value="investment">📈 Investment</option>
+                <option value="other">📋 Other</option>
+            </select>
+          </div>
+          <div class="bulk-form-group">
+            <label for="bulk-type">Type</label>
+            <select id="bulk-type" class="bulk-form-select">
+              <option value="">No Change</option>
+              <option value="income">💰 Income</option>
+              <option value="expense">💸 Expense</option>
+            </select>
+          </div>
+          <div class="bulk-modal-actions">
+            <button type="button" class="btn-cancel" id="cancel-bulk-edit">Cancel</button>
+            <button type="submit" class="btn-submit">Update All</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
           <div class="settings-card">
             <h4><i class="fas fa-user-friends"></i> Members</h4>

@@ -107,6 +107,63 @@ router.put('/:id', auth, validateRequest(ExpenseSchemas.create), asyncHandler(as
 }));
 
 /**
+ * @route   PATCH /api/expenses/bulk-update
+ * @desc    Bulk update expenses
+ * @access  Private
+ */
+router.patch('/bulk-update', auth, validateRequest(ExpenseSchemas.bulkUpdate), asyncHandler(async (req, res) => {
+  const { ids, updates } = req.body;
+  const io = req.app.get('io');
+
+  const result = await expenseRepository.updateMany(
+    { _id: { $in: ids }, user: req.user._id },
+    { $set: updates }
+  );
+
+  if (result.matchedCount === 0) {
+    throw new NotFoundError('No expenses found to update');
+  }
+
+  // Emit real-time event
+  if (io) {
+    io.to(`user_${req.user._id}`).emit('bulk_expense_updated', { ids, updates });
+  }
+
+  return ResponseFactory.success(res, {
+    matched: result.matchedCount,
+    modified: result.modifiedCount
+  }, `Successfully updated ${result.modifiedCount} expenses`);
+}));
+
+/**
+ * @route   POST /api/expenses/bulk-delete
+ * @desc    Bulk delete expenses
+ * @access  Private
+ */
+router.post('/bulk-delete', auth, validateRequest(ExpenseSchemas.bulkDelete), asyncHandler(async (req, res) => {
+  const { ids } = req.body;
+  const io = req.app.get('io');
+
+  const result = await expenseRepository.deleteMany({
+    _id: { $in: ids },
+    user: req.user._id
+  });
+
+  if (result.deletedCount === 0) {
+    throw new NotFoundError('No expenses found to delete');
+  }
+
+  // Emit real-time event
+  if (io) {
+    io.to(`user_${req.user._id}`).emit('bulk_expense_deleted', { ids });
+  }
+
+  return ResponseFactory.success(res, {
+    deleted: result.deletedCount
+  }, `Successfully deleted ${result.deletedCount} expenses`);
+}));
+
+/**
  * @route   DELETE /api/expenses/:id
  * @desc    Delete an expense
  * @access  Private
@@ -115,6 +172,12 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
   const expense = await expenseRepository.deleteOne({ _id: req.params.id, user: req.user._id });
 
   if (!expense) throw new NotFoundError('Expense not found');
+
+  // Real-time notification for single delete (adding since it might be missing or useful)
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`user_${req.user._id}`).emit('expense_deleted', { id: req.params.id });
+  }
 
   return ResponseFactory.success(res, null, 'Expense deleted successfully');
 }));

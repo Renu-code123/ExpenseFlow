@@ -23,6 +23,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const navMenu = document.getElementById("nav-menu");
 
   /* =====================
+     BULK DOM ELEMENTS
+  ====================== */
+  const selectAllCheckbox = document.getElementById("select-all");
+  const bulkActionBar = document.getElementById("bulk-action-bar");
+  const selectedCountSpan = document.getElementById("selected-count");
+  const bulkEditBtn = document.getElementById("bulk-edit-btn");
+  const bulkDeleteBtn = document.getElementById("bulk-delete-btn");
+  const bulkEditModal = document.getElementById("bulk-edit-modal");
+  const closeBulkModalBtn = document.getElementById("close-bulk-modal");
+  const cancelBulkEditBtn = document.getElementById("cancel-bulk-edit");
+  const bulkEditForm = document.getElementById("bulk-edit-form");
+  const bulkCategorySelect = document.getElementById("bulk-category");
+  const bulkTypeSelect = document.getElementById("bulk-type");
+
+  /* =====================
      STATE
   ====================== */
   let transactions = [];
@@ -32,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let socket = null;
   let isOnline = navigator.onLine;
   let currentFilter = 'all';
+  let selectedTransactions = new Set(); // Stores IDs of selected transactions
 
   /* =====================
      API CONFIGURATION
@@ -98,9 +114,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on('expense_deleted', (data) => {
       transactions = transactions.filter(t => t.id !== data.id);
+      selectedTransactions.delete(data.id); // Remove from selection if deleted
+      updateActionBar();
       displayTransactions();
       updateValues();
       showNotification('Expense deleted from another device', 'info');
+    });
+
+    socket.on('bulk_expense_updated', (data) => {
+      const { ids, updates } = data;
+      let updatedCount = 0;
+
+      transactions = transactions.map(t => {
+        if (ids.includes(t.id)) {
+          updatedCount++;
+          return { ...t, ...updates };
+        }
+        return t;
+      });
+
+      if (updatedCount > 0) {
+        displayTransactions();
+        updateValues();
+        showNotification(`${updatedCount} expenses updated via bulk action`, 'info');
+      }
+    });
+
+    socket.on('bulk_expense_deleted', (data) => {
+      const { ids } = data;
+      transactions = transactions.filter(t => !ids.includes(t.id));
+
+      ids.forEach(id => selectedTransactions.delete(id));
+      updateActionBar();
+
+      displayTransactions();
+      updateValues();
+      showNotification(`${ids.length} expenses deleted via bulk action`, 'info');
     });
 
     socket.on('disconnect', () => {
@@ -404,7 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const savedExpense = await saveExpense(expense);
+      const savedExpense = await saveTransaction(expense);
 
       // Convert to local format using display amounts
       const displayAmount = savedExpense.displayAmount || savedExpense.amount;
@@ -446,7 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!transactionToRemove) return;
 
     try {
-      await deleteExpense(id);
+      await deleteTransaction(id);
       transactions = transactions.filter(transaction => transaction.id !== id);
       displayTransactions();
       updateValues();
@@ -460,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load transactions from API
   async function loadTransactions() {
     try {
-      const expenses = await fetchExpenses();
+      const expenses = await fetchTransactions();
       transactions = expenses;
       displayTransactions();
       updateValues();
@@ -503,6 +552,8 @@ document.addEventListener("DOMContentLoaded", () => {
     filteredTransactions
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .forEach(transaction => addTransactionDOM(transaction));
+
+    updateMasterCheckbox();
   }
 
   function addTransactionDOM(transaction) {
@@ -526,9 +577,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     item.innerHTML = `
       <div class="transaction-content">
-        <div class="transaction-main">
-          <span class="transaction-text">${transaction.text}</span>
-          <span class="transaction-amount">${currencySymbol}${Math.abs(transaction.amount).toFixed(2)}</span>
+        <div class="transaction-item-wrapper">
+          <input type="checkbox" class="transaction-checkbox" data-id="${transaction.id}" 
+            ${selectedTransactions.has(transaction.id) ? 'checked' : ''} onchange="toggleSelection('${transaction.id}')">
+          <div class="transaction-main">
+            <span class="transaction-text">${transaction.text}</span>
+            <span class="transaction-amount">${currencySymbol}${Math.abs(transaction.amount).toFixed(2)}</span>
+          </div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
           <span class="transaction-category" style="background-color: ${categoryInfo.color}20; color: ${categoryInfo.color};">
@@ -633,11 +688,200 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =====================
+     BULK ACTION FUNCTIONS
+  ====================== */
+
+  function toggleSelection(id) {
+    if (selectedTransactions.has(id)) {
+      selectedTransactions.delete(id);
+    } else {
+      selectedTransactions.add(id);
+    }
+    updateActionBar();
+    updateMasterCheckbox();
+
+    // Update checkbox in DOM without full re-render
+    const checkbox = document.querySelector(`.transaction-checkbox[data-id="${id}"]`);
+    if (checkbox) checkbox.checked = selectedTransactions.has(id);
+  }
+
+  function toggleSelectAll() {
+    const isChecked = selectAllCheckbox.checked;
+
+    // Get currently visible transactions based on filter
+    let visibleTransactions = transactions;
+    if (currentFilter !== 'all') {
+      visibleTransactions = transactions.filter(t => t.type === currentFilter);
+    }
+
+    if (isChecked) {
+      visibleTransactions.forEach(t => selectedTransactions.add(t.id));
+    } else {
+      // Only deselect visible ones (or deselect all?)
+      // Standard behavior: deselect all
+      selectedTransactions.clear();
+    }
+
+    displayTransactions(); // Re-render to update all checkboxes
+    updateActionBar();
+  }
+
+  function updateActionBar() {
+    const count = selectedTransactions.size;
+    selectedCountSpan.textContent = `${count} selected`;
+
+    if (count > 0) {
+      bulkActionBar.classList.add('visible');
+    } else {
+      bulkActionBar.classList.remove('visible');
+    }
+  }
+
+  function updateMasterCheckbox() {
+    // Check if all visible transactions are selected
+    let visibleTransactions = transactions;
+    if (currentFilter !== 'all') {
+      visibleTransactions = transactions.filter(t => t.type === currentFilter);
+    }
+
+    if (visibleTransactions.length === 0) {
+      if (selectAllCheckbox) selectAllCheckbox.checked = false;
+      return;
+    }
+
+    const allSelected = visibleTransactions.every(t => selectedTransactions.has(t.id));
+    if (selectAllCheckbox) selectAllCheckbox.checked = allSelected;
+  }
+
+  async function confirmBulkDelete() {
+    const count = selectedTransactions.size;
+    if (count === 0) return;
+
+    if (confirm(`Are you sure you want to delete ${count} transactions? This cannot be undone.`)) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/expenses/bulk-delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          body: JSON.stringify({ ids: Array.from(selectedTransactions) })
+        });
+
+        if (!response.ok) throw new Error('Failed to delete expenses');
+
+        const result = await response.json();
+        showNotification(`Successfully deleted ${result.data.deleted} expenses`, 'success');
+
+        // Optimistic update
+        transactions = transactions.filter(t => !selectedTransactions.has(t.id));
+        selectedTransactions.clear();
+        updateActionBar();
+        displayTransactions();
+        updateValues();
+
+      } catch (error) {
+        console.error('Bulk delete failed:', error);
+        showNotification('Failed to delete expenses', 'error');
+      }
+    }
+  }
+
+  function openBulkEditModal() {
+    if (selectedTransactions.size === 0) return;
+    bulkEditModal.classList.add('active');
+  }
+
+  function closeBulkEditModal() {
+    bulkEditModal.classList.remove('active');
+    bulkEditForm.reset();
+  }
+
+  async function handleBulkEditSubmit(e) {
+    e.preventDefault();
+
+    const updates = {};
+    if (bulkCategorySelect.value) updates.category = bulkCategorySelect.value;
+    if (bulkTypeSelect.value) updates.type = bulkTypeSelect.value;
+
+    if (Object.keys(updates).length === 0) {
+      showNotification('No changes selected', 'warning');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/expenses/bulk-update`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          ids: Array.from(selectedTransactions),
+          updates
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update expenses');
+
+      const result = await response.json();
+      showNotification(`Successfully updated ${result.data.modified} expenses`, 'success');
+
+      // Optimistic update
+      const ids = Array.from(selectedTransactions);
+      transactions = transactions.map(t => {
+        if (ids.includes(t.id)) {
+          return { ...t, ...updates };
+        }
+        return t;
+      });
+
+      selectedTransactions.clear();
+      updateActionBar();
+      displayTransactions();
+      updateValues();
+      closeBulkEditModal();
+
+    } catch (error) {
+      console.error('Bulk update failed:', error);
+      showNotification('Failed to update expenses', 'error');
+    }
+  }
+
+  /* =====================
      INITIALIZATION
   ====================== */
   async function Init() {
     await loadTransactions();
     initializeSocket();
+
+    // Bulk Action Event Listeners
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', toggleSelectAll);
+    }
+
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.addEventListener('click', confirmBulkDelete);
+    }
+
+    if (bulkEditBtn) {
+      bulkEditBtn.addEventListener('click', openBulkEditModal);
+    }
+
+    if (closeBulkModalBtn) {
+      closeBulkModalBtn.addEventListener('click', closeBulkEditModal);
+    }
+
+    if (cancelBulkEditBtn) {
+      cancelBulkEditBtn.addEventListener('click', closeBulkEditModal);
+    }
+
+    if (bulkEditForm) {
+      bulkEditForm.addEventListener('submit', handleBulkEditSubmit);
+    }
+
+    // Make toggleSelection global so inline onchange works
+    window.toggleSelection = toggleSelection;
   }
 
   // Event listeners

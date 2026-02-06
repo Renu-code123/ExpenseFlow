@@ -185,6 +185,26 @@ const ExpenseSchemas = {
     maxAmount: Joi.number().min(0).optional(),
     merchant: Joi.string().trim().optional(),
     tags: Joi.array().items(Joi.string()).optional()
+  }).unknown(false),
+
+  bulkDelete: Joi.object({
+    ids: Joi.array().items(CommonSchemas.mongoId).min(1).required().messages({
+      'array.min': 'At least one expense must be selected'
+    })
+  }).unknown(false),
+
+  bulkUpdate: Joi.object({
+    ids: Joi.array().items(CommonSchemas.mongoId).min(1).required(),
+    updates: Joi.object({
+      category: Joi.string()
+        .valid('food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'other', 'salary', 'investment')
+        .optional(),
+      workspaceId: CommonSchemas.mongoId.optional(),
+      currency: CommonSchemas.currency.optional(),
+      type: Joi.string().valid('income', 'expense').optional()
+    }).required().min(1).messages({
+      'object.min': 'At least one field to update must be provided'
+    })
   }).unknown(false)
 };
 
