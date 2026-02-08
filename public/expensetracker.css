@@ -9631,3 +9631,335 @@ input:checked + .toggle-slider::before {
 }
 
 .checkbox-container input { width: 16px; height: 16px; }
+
+/* ============================================
+   STRATEGIC TREASURY & LIQUIDITY MANAGEMENT
+   Issue #590: Enterprise Treasury Suite
+   ============================================ */
+
+.treasury-header {
+    margin-bottom: 30px;
+}
+
+.header-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.metric-card {
+    padding: 20px;
+    text-align: center;
+}
+
+.metric-card label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.metric-card h2 {
+    font-size: 2rem;
+    margin: 10px 0;
+    color: var(--text-primary);
+}
+
+.metric-trend {
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.metric-trend.positive { color: #64ffda; }
+.metric-trend.negative { color: #ff6b6b; }
+.metric-trend.warning { color: #ff9f43; }
+
+.health-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.health-fill {
+    height: 100%;
+    transition: width 0.5s ease, background-color 0.5s ease;
+}
+
+.treasury-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 25px;
+}
+
+.treasury-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.vaults-list, .thresholds-list, .hedges-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vault-card {
+    padding: 15px;
+}
+
+.vault-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.vault-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.vault-icon.operating { background: rgba(100, 255, 218, 0.15); color: #64ffda; }
+.vault-icon.reserve { background: rgba(72, 219, 251, 0.15); color: #48dbfb; }
+.vault-icon.investment { background: rgba(255, 159, 67, 0.15); color: #ff9f43; }
+.vault-icon.forex { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+
+.vault-info strong { display: block; font-size: 0.9rem; }
+.vault-info span { font-size: 0.7rem; color: var(--text-secondary); }
+
+.vault-balance {
+    margin: 15px 0;
+}
+
+.vault-balance label { font-size: 0.7rem; color: var(--text-secondary); }
+.vault-balance h3 { margin: 5px 0; font-size: 1.4rem; color: var(--accent-primary); }
+
+.vault-stats {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.vault-stats .stat label { font-size: 0.65rem; color: var(--text-secondary); display: block; }
+.vault-stats .stat span { font-size: 0.85rem; }
+
+.threshold-item, .hedge-item {
+    padding: 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-primary);
+}
+
+.threshold-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.threshold-info strong { font-size: 0.85rem; }
+
+.severity-pill {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.severity-pill.info { background: rgba(72, 219, 251, 0.2); color: #48dbfb; }
+.severity-pill.warning { background: rgba(255, 159, 67, 0.2); color: #ff9f43; }
+.severity-pill.critical { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+.severity-pill.emergency { background: rgba(255, 0, 0, 0.3); color: #ff0000; }
+
+.threshold-value {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.hedge-pair {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.hedge-type {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+.hedge-details {
+    display: flex;
+    gap: 15px;
+}
+
+.hedge-details .detail {
+    flex: 1;
+}
+
+.hedge-details .detail label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    display: block;
+}
+
+.hedge-details .detail span {
+    font-size: 0.85rem;
+}
+
+.hedge-details .detail.positive { color: #64ffda; }
+.hedge-details .detail.negative { color: #ff6b6b; }
+
+.forecast-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.forecast-controls select {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.chart-container {
+    height: 350px;
+    padding: 20px 0;
+}
+
+.chart-container-small {
+    height: 250px;
+    padding: 15px 0;
+}
+
+.forecast-insights {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.insight-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.insight-card.critical { border-left-color: #ff6b6b; }
+.insight-card.warning { border-left-color: #ff9f43; }
+.insight-card.positive { border-left-color: #64ffda; }
+.insight-card.info { border-left-color: #48dbfb; }
+
+.insight-icon {
+    font-size: 1.5rem;
+}
+
+.insight-card.critical .insight-icon { color: #ff6b6b; }
+.insight-card.warning .insight-icon { color: #ff9f43; }
+.insight-card.positive .insight-icon { color: #64ffda; }
+
+.insight-content {
+    flex: 1;
+}
+
+.insight-content strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.insight-content p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.severity-badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.severity-badge.low { background: rgba(100, 255, 218, 0.2); color: #64ffda; }
+.severity-badge.medium { background: rgba(255, 159, 67, 0.2); color: #ff9f43; }
+.severity-badge.high { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+.severity-badge.emergency { background: rgba(255, 0, 0, 0.3); color: #ff0000; }
+
+.analytics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.portfolio-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.metric-item label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.metric-item strong {
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+}
+
+.violations-alert {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #ff6b6b;
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: #ff6b6b;
+}
+
+.violation-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.violation-item.critical { border-left: 3px solid #ff6b6b; }
+.violation-item.warning { border-left: 3px solid #ff9f43; }
+
+.no-insights {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 20px;
+}

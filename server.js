@@ -43,8 +43,8 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: [process.env.FRONTEND_URL ||
-     "http://localhost:3000",
-     'https://accounts.clerk.dev',
+      "http://localhost:3000",
+      'https://accounts.clerk.dev',
       'https://*.clerk.accounts.dev'
     ],
     methods: ["GET", "POST"],
@@ -63,10 +63,10 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: [
-        "'self'", 
-        "'unsafe-inline'", 
-        "https://cdnjs.cloudflare.com", 
-        "https://fonts.googleapis.com", 
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.googleapis.com",
         "https://api.github.com"
       ],
       scriptSrc: [
@@ -83,10 +83,10 @@ app.use(helmet({
       scriptSrcAttr: ["'unsafe-inline'"],
       workerSrc: ["'self'", "blob:"],
       imgSrc: [
-        "'self'", 
-        "data:", 
-        "https:", 
-        "https://res.cloudinary.com", 
+        "'self'",
+        "data:",
+        "https:",
+        "https://res.cloudinary.com",
         "https://api.github.com",
         "https://img.clerk.com" // For Clerk user avatars
       ],
@@ -290,6 +290,7 @@ app.use('/api/folders', require('./routes/folders'));
 app.use('/api/procurement', require('./routes/procurement'));
 app.use('/api/compliance', require('./routes/compliance'));
 app.use('/api/project-billing', require('./routes/project-billing'));
+app.use('/api/treasury', require('./routes/treasury'));
 
 // Import error handling middleware
 const { errorHandler, notFoundHandler } = require('./middleware/errorMiddleware');
