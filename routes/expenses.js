@@ -11,6 +11,8 @@ const { asyncHandler } = require('../middleware/errorMiddleware');
 const { ExpenseSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const { expenseLimiter, exportLimiter } = require('../middleware/rateLimiter');
 const { NotFoundError } = require('../utils/AppError');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
+
 
 const router = express.Router();
 
@@ -19,7 +21,7 @@ const router = express.Router();
  * @desc    Get all expenses with pagination and filtering
  * @access  Private
  */
-router.get('/', auth, validateQuery(ExpenseSchemas.filter), asyncHandler(async (req, res) => {
+router.get('/', requireAuth, validateQuery(ExpenseSchemas.filter), asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 50;
 
@@ -68,7 +70,7 @@ router.get('/', auth, validateQuery(ExpenseSchemas.filter), asyncHandler(async (
  * @desc    Create a new expense
  * @access  Private
  */
-router.post('/', auth, expenseLimiter, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, expenseLimiter, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
   const io = req.app.get('io');
   const expense = await expenseService.createExpense(req.body, req.user._id, io);
 
@@ -80,7 +82,7 @@ router.post('/', auth, expenseLimiter, validateRequest(ExpenseSchemas.create), a
  * @desc    Get specific expense
  * @access  Private
  */
-router.get('/:id', auth, asyncHandler(async (req, res) => {
+router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
   const expense = await expenseRepository.findById(req.params.id);
 
   if (!expense || (expense.user.toString() !== req.user._id.toString() && !expense.workspace)) {
@@ -95,7 +97,7 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
  * @desc    Update an expense
  * @access  Private
  */
-router.put('/:id', auth, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
   const expense = await expenseRepository.updateOne(
     { _id: req.params.id, user: req.user._id },
     req.body
@@ -118,7 +120,7 @@ router.put('/:id', auth, validateRequest(ExpenseSchemas.create), asyncHandler(as
  * @desc    Bulk update expenses
  * @access  Private
  */
-router.patch('/bulk-update', auth, validateRequest(ExpenseSchemas.bulkUpdate), asyncHandler(async (req, res) => {
+router.patch('/bulk-update', requireAuth, validateRequest(ExpenseSchemas.bulkUpdate), asyncHandler(async (req, res) => {
   const { ids, updates } = req.body;
   const io = req.app.get('io');
 
@@ -147,7 +149,7 @@ router.patch('/bulk-update', auth, validateRequest(ExpenseSchemas.bulkUpdate), a
  * @desc    Bulk delete expenses
  * @access  Private
  */
-router.post('/bulk-delete', auth, validateRequest(ExpenseSchemas.bulkDelete), asyncHandler(async (req, res) => {
+router.post('/bulk-delete', requireAuth, validateRequest(ExpenseSchemas.bulkDelete), asyncHandler(async (req, res) => {
   const { ids } = req.body;
   const io = req.app.get('io');
 
@@ -175,7 +177,7 @@ router.post('/bulk-delete', auth, validateRequest(ExpenseSchemas.bulkDelete), as
  * @desc    Delete an expense
  * @access  Private
  */
-router.delete('/:id', auth, asyncHandler(async (req, res) => {
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
   const expense = await expenseRepository.deleteOne({ _id: req.params.id, user: req.user._id });
 
   if (!expense) throw new NotFoundError('Expense not found');
@@ -194,7 +196,7 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
  * @desc    Get expense summary statistics
  * @access  Private
  */
-router.get('/stats/summary', auth, asyncHandler(async (req, res) => {
+router.get('/stats/summary', requireAuth, asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   const start = startDate ? new Date(startDate) : new Date(new Date().setDate(1));
   const end = endDate ? new Date(endDate) : new Date();
@@ -208,7 +210,7 @@ router.get('/stats/summary', auth, asyncHandler(async (req, res) => {
  * @desc    Get expense trends
  * @access  Private
  */
-router.get('/stats/trends', auth, asyncHandler(async (req, res) => {
+router.get('/stats/trends', requireAuth, asyncHandler(async (req, res) => {
   const { days = 30 } = req.query;
   const trends = await expenseRepository.getTrends(req.user._id, parseInt(days));
   return ResponseFactory.success(res, trends);
@@ -219,7 +221,7 @@ router.get('/stats/trends', auth, asyncHandler(async (req, res) => {
  * @desc    Export expenses to CSV/PDF
  * @access  Private
  */
-router.post('/export', auth, exportLimiter, asyncHandler(async (req, res) => {
+router.post('/export', requireAuth, exportLimiter, asyncHandler(async (req, res) => {
   const { format = 'csv', startDate, endDate, workspaceId, category, type, currency, title } = req.body;
 
   const query = {
@@ -268,7 +270,7 @@ router.post('/export', auth, exportLimiter, asyncHandler(async (req, res) => {
  * @desc    Get report preview data
  * @access  Private
  */
-router.post('/report/preview', auth, asyncHandler(async (req, res) => {
+router.post('/report/preview', requireAuth, asyncHandler(async (req, res) => {
   const { startDate, endDate, workspaceId, category, type } = req.body;
 
   const query = {

@@ -42,7 +42,11 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: [process.env.FRONTEND_URL ||
+     "http://localhost:3000",
+     'https://accounts.clerk.dev',
+      'https://*.clerk.accounts.dev'
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -58,20 +62,43 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://api.github.com"],
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://cdnjs.cloudflare.com", 
+        "https://fonts.googleapis.com", 
+        "https://api.github.com"
+      ],
       scriptSrc: [
         "'self'",
         "'unsafe-inline'",
+        "'unsafe-eval'",
+        "blob:",
         "https://cdn.socket.io",
         "https://cdn.jsdelivr.net",
-        "https://api.github.com"
+        "https://api.github.com",
+        "https://challenges.cloudflare.com",
+        "https://*.clerk.accounts.dev"
       ],
       scriptSrcAttr: ["'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "https://res.cloudinary.com", "https://api.github.com"],
+      workerSrc: ["'self'", "blob:"],
+      imgSrc: [
+        "'self'", 
+        "data:", 
+        "https:", 
+        "https://res.cloudinary.com", 
+        "https://api.github.com",
+        "https://img.clerk.com" // For Clerk user avatars
+      ],
       connectSrc: [
         "'self'",
         "http://localhost:3000",
         "ws://localhost:3000",
+
+        // Clerk domains
+        "https://api.clerk.com",
+        "https://clerk.com",
+        "https://*.clerk.accounts.dev",
 
         // APIs
         "https://api.exchangerate-api.com",
@@ -88,7 +115,10 @@ app.use(helmet({
       fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
+      frameSrc: [
+        "'self'",
+        "https://challenges.cloudflare.com" // For Clerk captcha
+      ]
     }
   },
   crossOriginEmbedderPolicy: false

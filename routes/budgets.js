@@ -9,6 +9,7 @@ const { asyncHandler } = require('../middleware/errorMiddleware');
 const { BudgetSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const { budgetLimiter } = require('../middleware/rateLimiter');
 const { NotFoundError } = require('../utils/AppError');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ const router = express.Router();
  * @desc    Create a new budget
  * @access  Private
  */
-router.post('/', auth, budgetLimiter, validateRequest(BudgetSchemas.create), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, budgetLimiter, validateRequest(BudgetSchemas.create), asyncHandler(async (req, res) => {
   const budget = await budgetService.createBudget(req.user._id, req.body);
   return ResponseFactory.created(res, budget, 'Budget created successfully');
 }));
@@ -27,7 +28,7 @@ router.post('/', auth, budgetLimiter, validateRequest(BudgetSchemas.create), asy
  * @desc    Get all budgets with filtering
  * @access  Private
  */
-router.get('/', auth, validateQuery(BudgetSchemas.create), asyncHandler(async (req, res) => {
+router.get('/', requireAuth, validateQuery(BudgetSchemas.create), asyncHandler(async (req, res) => {
   const { period, active } = req.query;
   const filters = {};
 
@@ -44,7 +45,7 @@ router.get('/', auth, validateQuery(BudgetSchemas.create), asyncHandler(async (r
  * @desc    Get budget summary
  * @access  Private
  */
-router.get('/summary', auth, asyncHandler(async (req, res) => {
+router.get('/summary', requireAuth, asyncHandler(async (req, res) => {
   const { period } = req.query;
   const summary = await budgetRepository.getSummary(req.user._id, period);
   return ResponseFactory.success(res, summary);
@@ -55,7 +56,7 @@ router.get('/summary', auth, asyncHandler(async (req, res) => {
  * @desc    Get budget alerts
  * @access  Private
  */
-router.get('/alerts', auth, asyncHandler(async (req, res) => {
+router.get('/alerts', requireAuth, asyncHandler(async (req, res) => {
   const { alerts } = await budgetService.checkBudgetAlerts(req.user._id);
   return ResponseFactory.success(res, alerts);
 }));
@@ -65,7 +66,7 @@ router.get('/alerts', auth, asyncHandler(async (req, res) => {
  * @desc    Get budgets with AI intelligence data
  * @access  Private
  */
-router.get('/intelligence', auth, asyncHandler(async (req, res) => {
+router.get('/intelligence', requireAuth, asyncHandler(async (req, res) => {
   const budgets = await budgetService.getBudgetsWithIntelligence(req.user._id);
   return ResponseFactory.success(res, budgets);
 }));
@@ -75,7 +76,7 @@ router.get('/intelligence', auth, asyncHandler(async (req, res) => {
  * @desc    Update a budget
  * @access  Private
  */
-router.put('/:id', auth, validateRequest(BudgetSchemas.create), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, validateRequest(BudgetSchemas.create), asyncHandler(async (req, res) => {
   const budget = await budgetRepository.updateOne(
     { _id: req.params.id, user: req.user._id },
     req.body
@@ -90,7 +91,7 @@ router.put('/:id', auth, validateRequest(BudgetSchemas.create), asyncHandler(asy
  * @desc    Delete a budget
  * @access  Private
  */
-router.delete('/:id', auth, asyncHandler(async (req, res) => {
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
   const budget = await budgetRepository.deleteOne({ _id: req.params.id, user: req.user._id });
   if (!budget) throw new NotFoundError('Budget not found');
 
@@ -102,7 +103,7 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
  * @desc    Get monthly budget limit and status
  * @access  Private
  */
-router.get('/monthly-limit', auth, asyncHandler(async (req, res) => {
+router.get('/monthly-limit', requireAuth, asyncHandler(async (req, res) => {
   const user = await userRepository.findById(req.user._id);
   if (!user) throw new NotFoundError('User not found');
 
@@ -136,7 +137,7 @@ router.get('/monthly-limit', auth, asyncHandler(async (req, res) => {
  * @desc    Set monthly budget limit
  * @access  Private
  */
-router.post('/monthly-limit', auth, validateRequest(BudgetSchemas.limit), asyncHandler(async (req, res) => {
+router.post('/monthly-limit', requireAuth, validateRequest(BudgetSchemas.limit), asyncHandler(async (req, res) => {
   const { limit } = req.body;
   await userRepository.updateById(req.user._id, { monthlyBudgetLimit: limit });
   return ResponseFactory.success(res, { limit }, 'Monthly budget limit updated successfully');

@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const Expense = require('../models/Expense');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 /**
  * @route   POST /api/sync/delta
  * @desc    Sync offline changes with server
  * @access  Private
  */
-router.post('/delta', auth, async (req, res) => {
+router.post('/delta', requireAuth, async (req, res) => {
   const { changes } = req.body; // Array of { id, version, data, action: 'create'|'update'|'delete' }
   const userId = req.user._id;
   const results = {
@@ -84,7 +85,7 @@ router.post('/delta', auth, async (req, res) => {
  * @desc    Pull changes from server since last sync
  * @access  Private
  */
-router.get('/pull', auth, async (req, res) => {
+router.get('/pull', requireAuth, async (req, res) => {
   const { lastSyncTime } = req.query;
   const userId = req.user._id;
 

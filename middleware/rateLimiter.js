@@ -42,6 +42,12 @@ const createRateLimiter = (options) => {
     message: options.message || 'Too many requests, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
+    // Skip rate limiting for localhost during development
+    skip: (req) => {
+      const ip = req.ip || req.connection?.remoteAddress;
+      const localhostIPs = ['127.0.0.1', '::1', '::ffff:127.0.0.1', 'localhost'];
+      return localhostIPs.includes(ip);
+    },
     handler: (req, res, next, options) => {
       res.status(429).json({
         success: false,
@@ -214,7 +220,7 @@ const fileUploadLimiter = createRateLimiter({
  */
 const bulkOperationLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
-  max: 5, // Max 5 bulk operations per minute
+  max: 15, // Max 5 bulk operations per minute
   message: 'Too many bulk operations. Please wait.',
   prefix: 'bulk-op-limit:',
   skipSuccessfulRequests: false

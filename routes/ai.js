@@ -5,9 +5,10 @@ const { body, query, validationResult } = require('express-validator');
 const aiService = require('../services/aiService');
 const AIPrediction = require('../models/AIPrediction');
 const AITrainingData = require('../models/AITrainingData');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 // Predict expense category
-router.post('/predict/category', auth, [
+router.post('/predict/category',requireAuth, [
   body('description').notEmpty().isString().trim().isLength({ max: 200 }),
   body('amount').isNumeric().isFloat({ min: 0.01 }),
   body('merchant').optional().isString().trim().isLength({ max: 100 })
@@ -44,7 +45,7 @@ router.post('/predict/category', auth, [
 });
 
 // Detect fraud/anomalies
-router.post('/detect/fraud', auth, [
+router.post('/detect/fraud',requireAuth, [
   body('expense').isObject().notEmpty()
 ], async (req, res) => {
   try {
@@ -76,7 +77,7 @@ router.post('/detect/fraud', auth, [
 });
 
 // Cash flow prediction
-router.get('/predict/cashflow', auth, [
+router.get('/predict/cashflow',requireAuth, [
   query('days').optional().isInt({ min: 1, max: 365 })
 ], async (req, res) => {
   try {
@@ -109,7 +110,7 @@ router.get('/predict/cashflow', auth, [
 });
 
 // Get AI recommendations
-router.get('/recommendations', auth, async (req, res) => {
+router.get('/recommendations',requireAuth, async (req, res) => {
   try {
     const recommendations = await aiService.generateRecommendations(req.user.id);
 
@@ -127,7 +128,7 @@ router.get('/recommendations', auth, async (req, res) => {
 });
 
 // Add training data
-router.post('/training/add', auth, [
+router.post('/training/add',requireAuth, [
   body('modelType').isIn(['category_classifier', 'fraud_detector', 'cash_flow_predictor', 'anomaly_detector']),
   body('features').isArray().notEmpty(),
   body('label').notEmpty()
@@ -157,7 +158,7 @@ router.post('/training/add', auth, [
 });
 
 // Validate prediction
-router.post('/predictions/:id/validate', auth, [
+router.post('/predictions/:id/validate', requireAuth, [
   body('actualOutcome').notEmpty(),
   body('isCorrect').isBoolean()
 ], async (req, res) => {
@@ -198,7 +199,7 @@ router.post('/predictions/:id/validate', auth, [
 });
 
 // Get prediction history
-router.get('/predictions', auth, [
+router.get('/predictions', requireAuth, [
   query('type').optional().isIn(['category_prediction', 'cash_flow_forecast', 'anomaly_detection', 'spending_pattern']),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 })
@@ -248,7 +249,7 @@ router.get('/predictions', auth, [
 });
 
 // Get AI analytics
-router.get('/analytics', auth, async (req, res) => {
+router.get('/analytics', requireAuth, async (req, res) => {
   try {
     const [
       totalPredictions,
@@ -302,7 +303,7 @@ router.get('/analytics', auth, async (req, res) => {
 });
 
 // Train model (admin only)
-router.post('/train/:modelType', auth, async (req, res) => {
+router.post('/train/:modelType', requireAuth, async (req, res) => {
   try {
     // Check if user is admin
     if (req.user.role !== 'admin') {

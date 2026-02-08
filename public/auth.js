@@ -163,16 +163,23 @@ if (registerForm) {
     });
 }
 
-// logout function
-function logout() {
-    // Clear auth data
-    localStorage.clear();
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+// logout function using Clerk
+async function logout() {
+    try {
+        // Clear local storage
+        localStorage.removeItem('clerkToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.clear();
 
-    // Optional: clear everything
-    // localStorage.clear();
-
+        // Sign out from Clerk
+        if (window.Clerk) {
+            await window.Clerk.signOut();
+        }
+    } catch (err) {
+        console.error('Logout error:', err);
+    }
+    
     // Redirect to login
     window.location.href = '/login.html';
 }

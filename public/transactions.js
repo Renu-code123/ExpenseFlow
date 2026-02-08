@@ -1,6 +1,4 @@
-if (!localStorage.getItem('token')) {
-    window.location.replace('/login.html');
-}
+// Auth check handled by protect.js (Clerk-based)
 
 // Transactions Page JavaScript
 class TransactionsManager {
@@ -90,9 +88,7 @@ class TransactionsManager {
             });
 
             if (response.status === 401) {
-                // Token invalid or missing → logout
-                localStorage.clear();
-                window.location.replace('/login.html');
+                console.warn('API returned 401 - session may have expired');
                 return;
             }
 

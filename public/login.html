@@ -1,875 +1,5 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no"
-    />
-    <meta name="theme-color" content="#64ffda" />
-    <meta
-      name="description"
-      content="Take control of your finances with our intuitive expense tracker"
-    />
-    <meta
-      name="keywords"
-      content="expense tracker, budget, finance, money management, PWA"
-    />
-    <meta name="author" content="ExpenseFlow" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
-
-    <!-- PWA Meta Tags -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="ExpenseFlow" />
-    <meta name="msapplication-TileColor" content="#0f0f23" />
-    <meta name="msapplication-navbutton-color" content="#64ffda" />
-
-    <!-- Manifest -->
-    <link rel="manifest" href="manifest.json" />
-
-    <!-- Apple Touch Icons -->
-    <link
-      rel="apple-touch-icon"
-      href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDIiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhclswXSkiLz4KPHBhdGggZD0iTTQ4IDY0SDQ4LjA0OEgxNDRWMTI4SDk2VjE0NEgxNDRDMTUyLjgzNyAxNDQgMTYwIDEzNi44MzcgMTYwIDEyOFY2NEM1OCA1Ni4xNjMgNTIuMDQzIDQ4IDQ4IEg0OEM0MC4wNzEgNDggMzIgNTYuMDcxIDMyIDY0VjEyOEMzMiAxMzUuOTI5IDQwLjA3MSAxNDQgNDggMTQ0SDgwVjEyOEg0OFY2NFoiIGZpbGw9IiM2NGZmZGEiLz4KPHBhdGggZD0iTTY0IDgwSDgwVjk2SDY0VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOTYgODBIMTI4Vjk2SDk2VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDBfbGluZWFyWzBdIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K"
-    />
-
-    <title>ExpenseFlow - Smart Money Management</title>
-    <link rel="stylesheet" href="expensetracker.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <style>
-      .logo-icon {
-        margin-left: -180px;
-      }
-     
-      /* =========================
-   MOBILE RESPONSIVE STYLES
-   ========================= */
-      @media (max-width: 768px) {
-        /* General */
-        body {
-          overflow-x: hidden;
-        }
-
-        .container {
-          padding: 1rem;
-        }
-
-        /* Navbar */
-        .nav-menu {
-          position: absolute;
-          top: 70px;
-          left: 0;
-          width: 100%;
-          background: #0f0f23;
-          flex-direction: column;
-          align-items: center;
-          display: none;
-        }
-
-        .nav-menu.active {
-          display: flex;
-        }
-
-        .nav-link {
-          padding: 1rem;
-          width: 100%;
-          text-align: center;
-        }
-
-        .nav-toggle {
-          display: block;
-          cursor: pointer;
-        }
-
-        .user-profile {
-          display: none;
-        }
-
-        /* Hero */
-        .hero-title {
-          font-size: 1.8rem;
-          text-align: center;
-        }
-
-        .hero-subtitle {
-          text-align: center;
-          font-size: 1rem;
-        }
-
-        /* Balance & Cards */
-        .inc-exp-container {
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .balance-card {
-          text-align: center;
-        }
-
-        /* Filters */
-        .filter-controls {
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .advanced-filters {
-          flex-direction: column;
-        }
-
-        .date-filters,
-        .amount-filters {
-          flex-direction: column;
-          width: 100%;
-        }
-
-        /* Transaction Form */
-        .form-row {
-          flex-direction: column;
-        }
-
-        .form-control {
-          width: 100%;
-        }
-
-        /* Footer */
-        .footer-container {
-          flex-direction: column;
-          gap: 2rem;
-          text-align: center;
-        }
-
-        .footer-stats {
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-      }
-
-      /* login styles */
-      .main-content {
-        min-height: calc(100vh -160px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: radial-gradient(circle at top left, #3b3f92, #0f0f23);
-      }
-      .container {
-        width: 100%;
-        max-width: 420px;
-        background-color: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(14px);
-        border-radius: 18px;
-        padding: 2.8rem;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
-        color: #ffffff;
-      }
-      .container h2 {
-        text-align: center;
-        margin-bottom: 1.8rem;
-        font-weight: 600;
-        color: #fff;
-      }
-      .form-group {
-        margin-bottom: 1.3rem;
-      }
-      .form-group label {
-        display: block;
-        margin-bottom: 0.4rem;
-        font-size: 1rem;
-        color: #cfd3ff;
-      }
-      .form-group input {
-        width: 100%;
-        padding: 0.75rem 0.9rem;
-        border-radius: 12px;
-        border: none;
-        outline: none;
-        font-size: 0.95rem;
-        background: rgba(255, 255, 255, 0.15);
-        color: #ffffff;
-      }
-      .form-group input::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-      }
-      .btn {
-        padding: 0.8rem;
-        margin-top: 1rem;
-        border-radius: 14px;
-        border: none;
-        font-size: 500;
-        font-weight: 500;
-        cursor: pointer;
-        color: #ffffff;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        transition:
-          transform 0.2s ease,
-          box-shadow 0.2s ease;
-      }
-      .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-      }
-      /* Signup text */
-      .container p {
-        margin-top: 1.2rem;
-        text-align: center;
-        font-size: 0.9rem;
-        color: #d0d4ff;
-      }
-
-      .container p a {
-        color: #64ffda;
-        text-decoration: none;
-        font-weight: 500;
-      }
-
-      .container p a:hover {
-        text-decoration: underline;
-      }
-
-      /* Mobile adjustments */
-      @media (max-width: 480px) {
-        .container {
-          padding: 2rem 1.5rem;
-          margin: 1rem;
-        }
-
-        .container h2 {
-          font-size: 1.6rem;
-        }
-      }
-      #redirect {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 1px solid #64ffda;
-        background-color: #0f0f23;
-        border-radius: 8px;
-        transition: background-color 0.3s ease;
-      }
-      #redirect a {
-        color: #64ffda;
-        text-decoration: none;
-        font-weight: 500;
-      }
-
-      /* Enhanced Navbar Styles */
-      .nav-logo {
-        display: flex;
-        align-items: center;
-      }
-
-      .logo-icon {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-      }
-
-      .logo-icon i {
-        font-size: 1.5rem;
-        color: #ffffff;
-      }
-
-      .logo-text {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .brand-name {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #ffffff;
-        line-height: 1;
-      }
-
-      .brand-tagline {
-        font-size: 0.75rem;
-        color: #64ffda;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        line-height: 1;
-      }
-
-      .nav-menu {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .nav-item {
-        position: relative;
-        width: 150px;
-      }
-
-      .nav-link {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 16px;
-        border-radius: 10px;
-        text-decoration: none;
-        color: #cfd3ff;
-        font-weight: 500;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        overflow: hidden;
-        width: 120px;
-      }
-
-      .nav-link::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(100, 255, 218, 0.1),
-          transparent
-        );
-        transition: left 0.5s ease;
-      }
-
-      .nav-link:hover::before {
-        left: 100%;
-      }
-
-      .nav-link:hover {
-        color: #64ffda;
-        background: rgba(100, 255, 218, 0.1);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(100, 255, 218, 0.2);
-      }
-
-      .nav-link i {
-        font-size: 1rem;
-        width: 16px;
-        text-align: center;
-      }
-
-      .user-profile {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .currency-selector {
-        position: relative;
-      }
-
-      .currency-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        background: rgba(100, 255, 218, 0.1);
-        border: 1px solid rgba(100, 255, 218, 0.3);
-        border-radius: 8px;
-        color: #64ffda;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 100px;
-      }
-
-      .currency-btn:hover {
-        background: rgba(100, 255, 218, 0.2);
-        border-color: #64ffda;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(100, 255, 218, 0.3);
-      }
-
-      .auth-buttons {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .auth-btn {
-        position: relative;
-        border-radius: 8px;
-        overflow: hidden;
-        width: 120px;
-      }
-
-      .auth-btn a {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 18px;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.9rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        z-index: 1;
-        border-radius: 8px;
-      }
-
-      .auth-btn a i {
-        font-size: 1rem;
-        transition: transform 0.3s ease;
-      }
-
-      .auth-btn:hover a i {
-        transform: scale(1.1);
-      }
-
-      .signup-btn {
-        background: linear-gradient(
-          135deg,
-          rgba(100, 255, 218, 0.1),
-          rgba(0, 180, 216, 0.1)
-        );
-        border: 2px solid transparent;
-        background-clip: padding-box;
-        position: relative;
-        overflow: hidden;
-        width: 130px;
-      }
-
-      .signup-btn::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, #64ffda, #00b4d8);
-        border-radius: 8px;
-        padding: 2px;
-        mask:
-          linear-gradient(#fff 0 0) content-box,
-          linear-gradient(#fff 0 0);
-        mask-composite: exclude;
-        -webkit-mask-composite: xor;
-        z-index: -1;
-      }
-
-      .signup-btn a {
-        color: #64ffda;
-        font-weight: 600;
-        position: relative;
-        z-index: 2;
-        text-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
-      }
-
-      .signup-btn:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(100, 255, 218, 0.2),
-          rgba(0, 180, 216, 0.2)
-        );
-        transform: translateY(-2px);
-        box-shadow:
-          0 8px 25px rgba(100, 255, 218, 0.3),
-          0 0 20px rgba(100, 255, 218, 0.2);
-      }
-
-      .signup-btn:hover::before {
-        background: linear-gradient(135deg, #64ffda, #00b4d8, #667eea);
-        animation: borderGlow 2s ease-in-out infinite alternate;
-      }
-
-      .signup-btn:hover a {
-        color: #ffffff;
-        text-shadow: 0 0 15px rgba(100, 255, 218, 0.5);
-      }
-
-      .signup-btn:active {
-        transform: translateY(0);
-        box-shadow:
-          0 4px 15px rgba(100, 255, 218, 0.4),
-          inset 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      @keyframes borderGlow {
-        0% {
-          background: linear-gradient(135deg, #64ffda, #00b4d8);
-        }
-        50% {
-          background: linear-gradient(135deg, #00b4d8, #667eea);
-        }
-        100% {
-          background: linear-gradient(135deg, #667eea, #64ffda);
-        }
-      }
-
-      @keyframes subtlePulse {
-        0%,
-        100% {
-          box-shadow:
-            0 8px 25px rgba(100, 255, 218, 0.3),
-            0 0 20px rgba(100, 255, 218, 0.2);
-        }
-        50% {
-          box-shadow:
-            0 8px 30px rgba(100, 255, 218, 0.4),
-            0 0 25px rgba(100, 255, 218, 0.3);
-        }
-      }
-
-      .signup-btn {
-        animation: subtlePulse 3s ease-in-out infinite;
-      }
-
-      .signup-btn:hover {
-        animation: none;
-      }
-
-      .login-btn {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border: 1px solid transparent;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-      }
-
-      .login-btn a {
-        color: #ffffff;
-      }
-
-      .login-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-      }
-
-      .login-btn.active {
-        background: linear-gradient(135deg, #64ffda, #00b4d8);
-        box-shadow: 0 4px 15px rgba(100, 255, 218, 0.4);
-      }
-
-      /* Mobile Responsive Updates */
-      @media (max-width: 768px) {
-        .logo-text {
-          display: none;
-        }
-
-        .logo-icon {
-          width: 40px;
-          height: 40px;
-        }
-
-        .logo-icon i {
-          font-size: 1.2rem;
-        }
-
-        .nav-link span {
-          display: none;
-        }
-
-        .nav-link {
-          padding: 12px;
-          justify-content: center;
-        }
-
-        .auth-btn a span {
-          display: none;
-        }
-
-        .auth-btn a {
-          padding: 10px 12px;
-        }
-
-        .currency-btn span {
-          display: none;
-        }
-
-        .currency-btn {
-          padding: 10px 12px;
-        }
-
-        .nav-menu.active .nav-link {
-          width: 100%;
-          justify-content: flex-start;
-          padding: 16px 24px;
-        }
-
-        .nav-menu.active .nav-link span {
-          display: inline;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .user-profile {
-          gap: 8px;
-        }
-
-        .auth-buttons {
-          gap: 4px;
-        }
-
-        .brand-name {
-          font-size: 1.2rem;
-        }
-      }
-      .footer-links {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(100px, 1fr));
-      }
-    </style>
-  </head>
-
-  <body>
-    <!-- Smooth Cursor Trail -->
-    <style>
-      .cursor-trail-container {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: 999999;
-      }
-
-      .trail-dot {
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-        box-shadow:
-          0 0 15px rgba(100, 255, 218, 0.8),
-          0 0 30px rgba(100, 255, 218, 0.4);
-        transform: translate(-50%, -50%);
-        will-change: transform, opacity;
-        mix-blend-mode: screen;
-        transition:
-          opacity 0.3s ease,
-          transform 0.3s ease;
-      }
-
-      .trail-dot:first-child {
-        width: 12px;
-        height: 12px;
-        background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-        box-shadow:
-          0 0 20px rgba(100, 255, 218, 0.9),
-          0 0 40px rgba(100, 255, 218, 0.6);
-        z-index: 2;
-      }
-
-      .cursor-clicking {
-        transform: translate(-50%, -50%) scale(1.5);
-        background: linear-gradient(
-          135deg,
-          #ff6b9d 0%,
-          #ffcc00 100%
-        ) !important;
-        box-shadow:
-          0 0 25px rgba(255, 107, 157, 0.9),
-          0 0 50px rgba(255, 107, 157, 0.6) !important;
-      }
-
-      .cursor-hovering {
-        transform: translate(-50%, -50%) scale(1.3);
-        background: linear-gradient(
-          135deg,
-          #00b4d8 0%,
-          #64ffda 100%
-        ) !important;
-      }
-    </style>
-
-    <div class="cursor-trail-container" id="cursor-trail"></div>
-
-    <script>
-      (function () {
-        // Hide default cursor
-        document.body.style.cursor = "none";
-
-        const container = document.getElementById("cursor-trail");
-        const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-        const trailCircles = [];
-        const COUNT = 12; // Fewer circles for smoother trail
-
-        // Create trail circles
-        for (let i = 0; i < COUNT; i++) {
-          const circle = document.createElement("div");
-          circle.className = "trail-dot";
-
-          // Opacity decreases along the trail
-          const opacity = 0.9 - (i / COUNT) * 0.8;
-          circle.style.opacity = opacity.toString();
-
-          // Size decreases along the trail
-          const scale = 1 - (i / COUNT) * 0.5;
-          circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-          container.appendChild(circle);
-          trailCircles.push({
-            element: circle,
-            x: coords.x,
-            y: coords.y,
-            targetX: coords.x,
-            targetY: coords.y,
-          });
-        }
-
-        // Track mouse position
-        let isMoving = false;
-        let lastMouseX = coords.x;
-        let lastMouseY = coords.y;
-        let velocity = { x: 0, y: 0 };
-
-        window.addEventListener("mousemove", (e) => {
-          coords.x = e.clientX;
-          coords.y = e.clientY;
-
-          // Calculate velocity for smooth movement
-          velocity.x = e.clientX - lastMouseX;
-          velocity.y = e.clientY - lastMouseY;
-          lastMouseX = e.clientX;
-          lastMouseY = e.clientY;
-
-          isMoving = true;
-
-          // Reset movement timeout
-          clearTimeout(window.movementTimeout);
-          window.movementTimeout = setTimeout(() => {
-            isMoving = false;
-          }, 50);
-        });
-
-        // Click effect
-        window.addEventListener("mousedown", () => {
-          trailCircles.forEach((circle) => {
-            circle.element.classList.add("cursor-clicking");
-          });
-        });
-
-        window.addEventListener("mouseup", () => {
-          trailCircles.forEach((circle) => {
-            circle.element.classList.remove("cursor-clicking");
-          });
-        });
-
-        // Hover effect for interactive elements
-        window.addEventListener("mouseover", (e) => {
-          const interactive = e.target.closest(
-            'a, button, input, select, textarea, [role="button"]',
-          );
-          trailCircles.forEach((circle) => {
-            circle.element.classList.toggle("cursor-hovering", !!interactive);
-          });
-        });
-
-        // Smooth animation function
-        function animateTrail() {
-          let targetX = coords.x;
-          let targetY = coords.y;
-
-          // Add velocity offset to first circle for more natural feel
-          const velocityOffset = 0.5;
-          const offsetX = velocity.x * velocityOffset;
-          const offsetY = velocity.y * velocityOffset;
-
-          trailCircles.forEach((circle, index) => {
-            // First circle follows cursor exactly
-            if (index === 0) {
-              circle.x = targetX + offsetX;
-              circle.y = targetY + offsetY;
-            }
-            // Other circles follow with smooth delay
-            else {
-              const prevCircle = trailCircles[index - 1];
-
-              // Smooth interpolation factor (changes based on movement speed)
-              const speed = Math.sqrt(
-                velocity.x * velocity.x + velocity.y * velocity.y,
-              );
-              const lerpFactor = isMoving
-                ? Math.min(0.3 + speed * 0.01, 0.5) // Faster movement = tighter trail
-                : 0.1; // Slow movement = more spread
-
-              circle.x += (prevCircle.x - circle.x) * lerpFactor;
-              circle.y += (prevCircle.y - circle.y) * lerpFactor;
-            }
-
-            // Apply position with easing
-            circle.element.style.left = circle.x + "px";
-            circle.element.style.top = circle.y + "px";
-
-            // Dynamic opacity based on speed and position
-            if (index > 0) {
-              const speed = Math.sqrt(
-                velocity.x * velocity.x + velocity.y * velocity.y,
-              );
-              const baseOpacity = 0.9 - (index / COUNT) * 0.8;
-              const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
-              circle.element.style.opacity = (
-                baseOpacity * speedMultiplier
-              ).toString();
-            }
-
-            // Update target for next circle
-            targetX = circle.x;
-            targetY = circle.y;
-          });
-
-          requestAnimationFrame(animateTrail);
-        }
-
-        // Handle window resize
-        window.addEventListener("resize", () => {
-          // Adjust if cursor goes out of bounds
-          if (coords.x > window.innerWidth) coords.x = window.innerWidth;
-          if (coords.y > window.innerHeight) coords.y = window.innerHeight;
-        });
-
-        // Handle mouse leave/enter
-        window.addEventListener("mouseleave", () => {
-          trailCircles.forEach((circle) => {
-            circle.element.style.opacity = "0";
-          });
-        });
-
-        window.addEventListener("mouseenter", () => {
-          trailCircles.forEach((circle, index) => {
-            const opacity = 0.9 - (index / COUNT) * 0.8;
-            circle.element.style.opacity = opacity.toString();
-          });
-        });
-
-        // Start animation
-        animateTrail();
-      })();
-    </script>
-
-    <!-- Header -->
-    <header class="header" style="width: 100vw">
-      <nav class="navbar">
-        <div class="nav-container">
-          <div class="nav-logo">
-            <div class="logo-icon">
-              <i class="fas fa-wallet"></i>
-            </div>
-            <div class="logo-text">
-              <span class="brand-name">ExpenseFlow</span>
-              <span class="brand-tagline">Smart Finance</span>
-            </div>
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -877,8 +7,7 @@
   <meta name="description" content="Take control of your finances with our intuitive expense tracker">
   <meta name="keywords" content="expense tracker, budget, finance, money management, PWA">
   <meta name="author" content="ExpenseFlow">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+  
   <!-- PWA Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -886,181 +15,349 @@
   <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
   <meta name="msapplication-TileColor" content="#0f0f23">
   <meta name="msapplication-navbutton-color" content="#64ffda">
-
+  
   <!-- Manifest -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon"
-    href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDIiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhclswXSkiLz4KPHBhdGggZD0iTTQ4IDY0SDQ4LjA0OEgxNDRWMTI4SDk2VjE0NEgxNDRDMTUyLjgzNyAxNDQgMTYwIDEzNi44MzcgMTYwIDEyOFY2NEM1OCA1Ni4xNjMgNTIuMDQzIDQ4IDQ4IEg0OEM0MC4wNzEgNDggMzIgNTYuMDcxIDMyIDY0VjEyOEMzMiAxMzUuOTI5IDQwLjA3MSAxNDQgNDggMTQ0SDgwVjEyOEg0OFY2NFoiIGZpbGw9IiM2NGZmZGEiLz4KPHBhdGggZD0iTTY0IDgwSDgwVjk2SDY0VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOTYgODBIMTI4Vjk2SDk2VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDBfbGluZWFyWzBdIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K">
-
-  <title>ExpenseFlow - Smart Money Management</title>
+  
+  <!-- Clerk Authentication SDK - REPLACE WITH YOUR KEY -->
+  <script
+    async
+    crossorigin="anonymous"
+    data-clerk-publishable-key="your publishable key here"
+     src="https://your-app-slug.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+    type="text/javascript"
+  ></script>
+  
+  <title>Login - ExpenseFlow</title>
   <link rel="stylesheet" href="expensetracker.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+<style>
+  .cursor-trail-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999999;
+  }
+
+  .trail-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 15px rgba(100, 255, 218, 0.8),
+      0 0 30px rgba(100, 255, 218, 0.4);
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .trail-dot:first-child {
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+    box-shadow: 
+      0 0 20px rgba(100, 255, 218, 0.9),
+      0 0 40px rgba(100, 255, 218, 0.6);
+    z-index: 2;
+  }
+
+  .cursor-clicking {
+    transform: translate(-50%, -50%) scale(1.5);
+    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
+    box-shadow: 
+      0 0 25px rgba(255, 107, 157, 0.9),
+      0 0 50px rgba(255, 107, 157, 0.6) !important;
+  }
+
+  .cursor-hovering {
+    transform: translate(-50%, -50%) scale(1.3);
+    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
+  }
+
+    /* =========================
+   MOBILE RESPONSIVE STYLES
+   ========================= */
+    @media (max-width: 768px) {
+
+      /* General */
+      body {
+        overflow-x: hidden;
+      }
+
+      .container {
+        padding: 1rem;
+      }
+
+      /* Navbar */
+      .nav-menu {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background: #0f0f23;
+        flex-direction: column;
+        align-items: center;
+        display: none;
+      }
+
+      .nav-menu.active {
+        display: flex;
+      }
+
+      .nav-link {
+        padding: 1rem;
+        width: 100%;
+        text-align: center;
+      }
+
+      .nav-toggle {
+        display: block;
+        cursor: pointer;
+      }
+
+      .user-profile {
+        display: none;
+      }
+
+      /* Hero */
+      .hero-title {
+        font-size: 1.8rem;
+        text-align: center;
+      }
+
+      .hero-subtitle {
+        text-align: center;
+        font-size: 1rem;
+      }
+
+      /* Balance & Cards */
+      .inc-exp-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .balance-card {
+        text-align: center;
+      }
+
+      /* Filters */
+      .filter-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .advanced-filters {
+        flex-direction: column;
+      }
+
+      .date-filters,
+      .amount-filters {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      /* Transaction Form */
+      .form-row {
+        flex-direction: column;
+      }
+
+      .form-control {
+        width: 100%;
+      }
+
+      /* Footer */
+      .footer-container {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+      }
+
+      .footer-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+
+    /* Auth page layout */
+    .main-content {
+      min-height: calc(100vh - 160px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      padding-top:3rem;
+    }
+
+    .auth-page-wrapper {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-left:2rem;
+      margin: 3rem 3rem ;
+    }
+
+    .auth-icon {
+      font-size: 2.5rem;
+      color: #64ffda;
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-title {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      font-size: 1.8rem;
+      color: #ffffff;
+    }
+
+    /* Clerk component overrides */
+    #clerk-sign-in,
+    #clerk-sign-up {
+      width: 100%;
+    }
+
+    /* Make Clerk card blend with dark theme */
+    .cl-rootBox {
+      width: 100% !important;
+    }
+
+    .cl-card {
+      background: rgba(26, 26, 46, 0.95) !important;
+      border: 1px solid rgba(100, 255, 218, 0.15) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+      backdrop-filter: blur(20px) !important;
+    }
+
+    .cl-headerTitle {
+      color: #64ffda !important;
+    }
+
+    .cl-headerSubtitle {
+      color: #a0aec0 !important;
+    }
+
+    .cl-formFieldLabel {
+      color: #e2e8f0 !important;
+    }
+
+    .cl-formFieldInput {
+      background: #2d3748 !important;
+      border-color: #4a5568 !important;
+      color: #e2e8f0 !important;
+    }
+
+    .cl-formButtonPrimary {
+      background: #64ffda !important;
+      color: #0f0f23 !important;
+      font-weight: 600 !important;
+    }
+
+    .cl-formButtonPrimary:hover {
+      background: #4fd1c5 !important;
+    }
+
+    .cl-footerActionLink {
+      color: #64ffda !important;
+    }
+
+    .cl-socialButtonsBlockButton {
+      background: #2d3748 !important;
+      border-color: #4a5568 !important;
+      color: #e2e8f0 !important;
+    }
+
+    .cl-socialButtonsBlockButton:hover {
+      background: #3d4a5c !important;
+    }
+
+    .cl-internal-b3fm6y {
+      color: #a0aec0 !important;
+    }
+
+    .cl-footerAction {
+      color: #a0aec0 !important;
+    }
+
+    /* Footer social link visibility */
+    .social-link {
+      color: #ffffff !important;
+      font-size: 1.1rem;
+    }
+
+    .social-link:hover {
+      color: #0f0f23 !important;
+      background: #64ffda !important;
+    }
+
+    .social-link .fa-github {
+      color: #ffffff;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+      .auth-page-wrapper {
+        padding: 0 0.5rem;
+      }
+      .auth-title {
+        font-size: 1.5rem;
+      }
+    }
+      #redirect{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-left: 12px;
+        border: 1px solid #64ffda;
+        background-color: #0f0f23;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+    #redirect a{
+        color: #64ffda;
+        text-decoration: none;
+        font-weight: 500;
+        margin-right: 8px;
+    }
+      .footer-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(100px, 1fr));
+    }
+</style>
 </head>
-
 <body>
-  <!-- Smooth Cursor Trail -->
-
-
-  <div class="cursor-trail-container" id="cursor-trail"></div>
-
+  <!-- Cursor Trail
+  <div class="cursor-trail-container" id="cursor-trail"></div> -->
 
   <!-- Header -->
   <header class="header">
     <nav class="navbar">
       <div class="nav-container">
         <div class="nav-logo">
-          <div class="logo-icon">
-            <i class="fas fa-wallet"></i>
-          </div>
-          <div class="logo-text">
-            <span class="brand-name">ExpenseFlow</span>
-            <span class="brand-tagline">Smart Finance</span>
-          </div>
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
         </div>
         <div class="nav-menu" id="nav-menu">
-          <div class="nav-item">
-            <a href="dashboard.html" class="nav-link">
-              <i class="fas fa-chart-pie"></i>
-              <span>Dashboard</span>
-            </a>
-          </div>
-          <div class="nav-item">
-            <a href="Monthlysummary.html" class="nav-link">
-              <i class="fas fa-calendar-alt"></i>
-              <span>Monthly Summary</span>
-            </a>
-          </div>
-          <div class="nav-item">
-            <a href="CurrencyConverter.html" class="nav-link">
-              <i class="fas fa-exchange-alt"></i>
-              <span>Currency Converter</span>
-            </a>
-          </div>
-          <div class="nav-item">
-            <a href="feedback.html" class="nav-link">
-              <i class="fas fa-comment-dots"></i>
-              <span>Feedback</span>
-            </a>
-          </div>
-          <div class="nav-menu" id="nav-menu">
-            <div class="nav-item">
-              <a href="dashboard.html" class="nav-link">
-                <i class="fas fa-chart-pie"></i>
-                <span>Dashboard</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="Monthlysummary.html" class="nav-link">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Monthly Summary</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="CurrencyConverter.html" class="nav-link">
-                <i class="fas fa-exchange-alt"></i>
-                <span>Currency Converter</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="feedback.html" class="nav-link">
-                <i class="fas fa-comment-dots"></i>
-                <span>Feedback</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="schemes.html" class="nav-link">
-                <i class="fas fa-piggy-bank"></i>
-                <span>Schemes</span>
-              </a>
-            </div>
-          </div>
-          <div class="nav-toggle" id="nav-toggle">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-          </div>
-          <div class="user-profile">
-            <div class="currency-selector">
-              <button
-                class="currency-btn"
-                onclick="openCurrencyModal()"
-                title="Currency Settings"
-              >
-                <i class="fas fa-coins"></i>
-                <span id="current-currency">INR</span>
-              </button>
-            </div>
-            <div class="auth-buttons">
-              <div class="auth-btn signup-btn">
-                <a href="signup.html">
-                  <i class="fas fa-user-plus"></i>
-                  <span>Sign Up</span>
-                </a>
-              </div>
-              <div class="auth-btn login-btn active">
-                <a href="login.html">
-                  <i class="fas fa-sign-in-alt"></i>
-                  <span>Login</span>
-                </a>
-              </div>
-            </div>
-          </div>
         </div>
-      </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-      <div class="container">
-        <div style="text-align: center; font-size: 2rem; margin-bottom: 0.5rem">
-          <i class="fas fa-lock"></i>
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
         </div>
-        <h2>Login</h2>
-        <form action="" id="loginForm">
-          <div class="form-group">
-            <label for="email">Email:</label>
-            <input
-              type="email"
-              id="loginEmail"
-              required
-              placeholder="enter user email"
-            />
-          </div>
-          <div class="form-group">
-            <label for="password">Password:</label>
-            <input
-              type="password"
-              id="loginPassword"
-              required
-              placeholder="enter user password"
-            />
-          </div>
-          <button type="submit" class="btn">Login</button>
-          <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
-        </form>
-      </div>
-    </main>
-          <div class="auth-buttons">
-            <div class="auth-btn signup-btn">
-              <a href="signup.html">
-                <i class="fas fa-user-plus"></i>
-                <span>Sign Up</span>
-              </a>
+        <div class="user-profile">
+            <div id="redirect">
+                <a href="signup.html">Sign up</a>
             </div>
-            <div class="auth-btn login-btn active">
-              <a href="login.html">
-                <i class="fas fa-sign-in-alt"></i>
-                <span>Login</span>
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </nav>
@@ -1068,80 +365,17 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <div class="container">
-      <div style="text-align:center; font-size:2rem; margin-bottom:0.5rem;">
-        <i class="fas fa-lock"></i>
+    <div class="auth-page-wrapper">
+      <div class="auth-icon">
+      
       </div>
-      <h2>Login</h2>
-      <form action="" id="loginForm">
-        <div class="form-group">
-          <label for="email">Email:</label>
-          <input type="email" id="loginEmail" required placeholder="enter user email">
-        </div>
-        <div class="form-group">
-          <label for="password">Password:</label>
-          <input type="password" id="loginPassword" required placeholder="enter user password">
-        </div>
-        <button type="submit" class="btn">Login</button>
-        <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
-      </form>
+      <h2 class="auth-title"></h2>
+      <!-- Clerk Sign In Component will mount here -->
+      <div id="clerk-sign-in"></div>
     </div>
   </main>
 
-    <footer class="footer">
-      <div class="footer-container">
-        <div class="footer-section">
-          <div class="footer-logo">
-            <i class="fas fa-wallet"></i>
-            <span>ExpenseFlow</span>
-          </div>
-
-          <p class="footer-description">
-            Smart money management made simple. Track, analyze, and optimize
-            your financial habits.
-          </p>
-
-          <div class="social-links">
-            <a
-              href="https://x.com/9504_renu"
-              class="social-link"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="X (Twitter)"
-            >
-              <i class="fab fa-x-twitter"></i>
-            </a>
-
-            <a
-              href="https://github.com/Renu-code123/ExpenseFlow"
-              class="social-link"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Github"
-            >
-              <i class="fab fa-github"></i>
-            </a>
-
-            <a
-              href="mailto:renu89857@gmail.com"
-              class="social-link"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Email"
-            >
-              <i class="far fa-envelope"></i>
-            </a>
-
-            <a
-              href="https://www.linkedin.com/in/renu-kumari-prajapati"
-              class="social-link"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-            >
-              <i class="fab fa-linkedin-in"></i>
-            </a>
-          </div>
+  <!-- Footer -->
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-section">
@@ -1149,84 +383,38 @@
           <i class="fas fa-wallet"></i>
           <span>ExpenseFlow</span>
         </div>
-
         <p class="footer-description">
-          Smart money management made simple. Track, analyze, and optimize
-          your financial habits.
+          Smart money management made simple. Track, analyze, and optimize your financial habits.
         </p>
-
         <div class="social-links">
-          <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer"
-            aria-label="X (Twitter)">
+          <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
             <i class="fab fa-x-twitter"></i>
           </a>
-
-          <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank"
-            rel="noopener noreferrer" aria-label="Github">
+          <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Github">
             <i class="fab fa-github"></i>
           </a>
-
-          <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer"
-            aria-label="Email">
+          <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Email">
             <i class="far fa-envelope"></i>
           </a>
-
-          <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank"
-            rel="noopener noreferrer" aria-label="LinkedIn">
+          <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
             <i class="fab fa-linkedin-in"></i>
           </a>
         </div>
       </div>
-
-        <div class="footer-section">
-          <h4>Company</h4>
-          <ul class="footer-links">
-            <li><a href="AboutUs.html">About Us</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-            <li><a href="#">Terms of Service</a></li>
-            <li><a href="#">Help Center</a></li>
-            <li><a href="#">Contact</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <div class="footer-container">
-          <p id="copyright" style="text-align: center"></p>
-          <script>
-            document.getElementById("copyright").innerHTML =
-              `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
-          </script>
-          <div class="footer-stats">
-            <span>🏆 Trusted by 10,000+ users</span>
-            <span>💰 ₹50M+ tracked</span>
-            <span>📊 99.9% uptime</span>
-          </div>
-        </div>
-      </div>
-    </footer>
-    <script src="login.js"></script>
-  </body>
-</html>
       <div class="footer-section">
         <h4>Company</h4>
         <ul class="footer-links">
           <li><a href="AboutUs.html">About Us</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Help Center</a></li>
-          <li><a href="#">Contact</a></li>
+          <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
+          <li><a href="terms_service.html">Terms of Service</a></li>
+          <li><a href="Help-Center.html">Help Center</a></li>
+          <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
     </div>
-
     <div class="footer-bottom">
       <div class="footer-container">
-        <p id="copyright" style="text-align:center;"></p>
-        <script>
-          document.getElementById("copyright").innerHTML =
-            `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
-        </script>
+        <p id="copyright" style="text-align: center;"></p>
         <div class="footer-stats">
           <span>🏆 Trusted by 10,000+ users</span>
           <span>💰 ₹50M+ tracked</span>
@@ -1235,8 +423,129 @@
       </div>
     </div>
   </footer>
-  <script src="login.js"></script>
 
+  <!-- Scripts -->
+  <script>
+    // Copyright year
+    document.getElementById("copyright").innerHTML = `&copy; ${new Date().getFullYear()} ExpenseFlow. All rights reserved.`;
+
+    // Clerk Authentication
+    window.addEventListener('load', async function() {
+      // Prevent infinite redirect loop
+      const redirectCount = parseInt(sessionStorage.getItem('loginRedirectCount') || '0');
+      if (redirectCount > 3) {
+        console.error('Too many redirects detected, stopping...');
+        sessionStorage.removeItem('loginRedirectCount');
+        document.getElementById('clerk-sign-in').innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: #e74c3c;">
+            <h3>Authentication Error</h3>
+            <p>Unable to initialize authentication. Please clear your browser cache and try again.</p>
+            <button onclick="sessionStorage.clear(); location.reload();" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #64ffda; border: none; border-radius: 4px; cursor: pointer;">
+              Clear Cache & Retry
+            </button>
+          </div>
+        `;
+        return;
+      }
+      
+      try {
+        // Wait for Clerk to load with timeout
+        if (!window.Clerk) {
+          console.error('Clerk SDK not loaded');
+          document.getElementById('clerk-sign-in').innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: #e74c3c;">
+              <h3>Authentication Error</h3>
+              <p>Failed to load authentication. Please refresh the page.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Add timeout to Clerk.load()
+        const loadPromise = window.Clerk.load();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Clerk load timeout')), 10000)
+        );
+        
+        await Promise.race([loadPromise, timeoutPromise]);
+
+        // If already signed in, redirect to dashboard
+        if (window.Clerk.user) {
+          sessionStorage.setItem('loginRedirectCount', (redirectCount + 1).toString());
+          const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/index.html';
+          sessionStorage.removeItem('redirectAfterLogin');
+          window.location.href = redirectUrl;
+          return;
+        }
+
+        // Clear redirect counter on successful load
+        sessionStorage.removeItem('loginRedirectCount');
+
+        // Mount Clerk sign-in component
+        window.Clerk.mountSignIn(document.getElementById('clerk-sign-in'), {
+          afterSignInUrl: '/index.html',
+          signUpUrl: '/signup.html',
+          appearance: {
+            elements: {
+              formButtonPrimary: {
+                backgroundColor: '#64ffda',
+                color: '#0f0f23',
+                '&:hover': {
+                  backgroundColor: '#4fd1c5'
+                }
+              },
+              card: {
+                backgroundColor: '#1a1a2e',
+                boxShadow: '0 8px 32px rgba(100, 255, 218, 0.1)',
+                padding: '2rem'
+              },
+              headerTitle: {
+                color: '#64ffda',
+                fontSize: '1.5rem'
+              },
+              headerSubtitle: {
+                color: '#a0aec0'
+              },
+              formFieldLabel: {
+                color: '#e2e8f0'
+              },
+              formFieldInput: {
+                backgroundColor: '#2d3748',
+                borderColor: '#4a5568',
+                color: '#e2e8f0'
+              },
+              footerActionLink: {
+                color: '#64ffda'
+              },
+              socialButtonsBlockButton: {
+                backgroundColor: '#2d3748',
+                borderColor: '#4a5568',
+                color: '#e2e8f0'
+              }
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error('Error loading Clerk:', error);
+        document.getElementById('clerk-sign-in').innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: #e74c3c;">
+            <h3>Authentication Error</h3>
+            <p>Failed to load authentication. Please refresh the page.</p>
+          </div>
+        `;
+      }
+    });
+
+    // Mobile Navigation Toggle
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    
+    if (navToggle) {
+      navToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+      });
+    }
+  </script>
 </body>
-
 </html>

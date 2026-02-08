@@ -7,6 +7,7 @@ const { asyncHandler } = require('../middleware/errorMiddleware');
 const { GoalSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const { goalLimiter } = require('../middleware/rateLimiter');
 const { NotFoundError, BadRequestError } = require('../utils/AppError');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const router = express.Router();
  * @desc    Get all goals for user
  * @access  Private
  */
-router.get('/', auth, asyncHandler(async (req, res) => {
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const goals = await goalRepository.findByUser(req.user._id, {}, { sort: { createdAt: -1 } });
   return ResponseFactory.success(res, goals);
 }));
@@ -25,7 +26,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  * @desc    Create a new goal
  * @access  Private
  */
-router.post('/', auth, goalLimiter, validateRequest(GoalSchemas.create), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, goalLimiter, validateRequest(GoalSchemas.create), asyncHandler(async (req, res) => {
   const data = { ...req.body, user: req.user._id };
 
   // Add default milestones if not provided
@@ -47,7 +48,7 @@ router.post('/', auth, goalLimiter, validateRequest(GoalSchemas.create), asyncHa
  * @desc    Analyze impact of a potential large expense on all goals
  * @access  Private
  */
-router.get('/analyze/impact', auth, asyncHandler(async (req, res) => {
+router.get('/analyze/impact', requireAuth, asyncHandler(async (req, res) => {
   const { amount } = req.query;
   if (!amount || isNaN(amount)) {
     throw new BadRequestError('Valid amount is required');
@@ -62,7 +63,7 @@ router.get('/analyze/impact', auth, asyncHandler(async (req, res) => {
  * @desc    Get specific goal with prediction
  * @access  Private
  */
-router.get('/:id', auth, asyncHandler(async (req, res) => {
+router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
   const goal = await goalRepository.findOne({ _id: req.params.id, user: req.user._id });
   if (!goal) throw new NotFoundError('Goal not found');
 
@@ -79,7 +80,7 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
  * @desc    Update a goal
  * @access  Private
  */
-router.put('/:id', auth, asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
   const goal = await goalRepository.updateOne(
     { _id: req.params.id, user: req.user._id },
     req.body
@@ -94,7 +95,7 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
  * @desc    Delete a goal
  * @access  Private
  */
-router.delete('/:id', auth, asyncHandler(async (req, res) => {
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
   const goal = await goalRepository.deleteOne({ _id: req.params.id, user: req.user._id });
   if (!goal) throw new NotFoundError('Goal not found');
 
@@ -106,7 +107,7 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
  * @desc    Add contribution to a goal
  * @access  Private
  */
-router.post('/:id/contribute', auth, asyncHandler(async (req, res) => {
+router.post('/:id/contribute', requireAuth, asyncHandler(async (req, res) => {
   const { amount } = req.body;
   if (!amount || amount <= 0) {
     throw new BadRequestError('Valid amount is required');

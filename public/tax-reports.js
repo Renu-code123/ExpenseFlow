@@ -1,6 +1,4 @@
-if (!localStorage.getItem('token')) {
-  window.location.replace('/login.html');
-}
+// Auth check handled by protect.js (Clerk-based)
 
 /**
  * Tax Calculator & Reports Client-Side Manager
@@ -71,7 +69,7 @@ class TaxReportsManager {
   async request(url, options = {}) {
     const token = this.getToken();
   if (!token) {
-  window.location.replace('/login.html');
+  console.warn('No auth token available');
   throw new Error('Not authenticated');
 }
 
@@ -87,8 +85,7 @@ class TaxReportsManager {
     const response = await fetch(`${this.baseUrl}${url}`, config);
     
     if (response.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login.html';
+      console.warn('API returned 401 - session may have expired');
       return;
     }
 
