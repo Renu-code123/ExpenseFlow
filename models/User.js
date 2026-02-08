@@ -69,6 +69,12 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: 50
   },
+  clerkId:{
+    type:String,
+    unique:true,
+    required:true,
+    index:true
+  },
   email: {
     type: String,
     required: true,
@@ -76,10 +82,41 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  firstName:{
+    type:String,
+    trim:true
+  },
+  lastName:{
+    type:String,
+    trim:true
+  },
+  profileImage:{
+    type:String,
+    default:null
+  },
+  role:{
+    type:String,
+    enum:["user","admin"],
+    default:"user"
+  },
+
   password: {
     type: String,
     required: true,
     minlength: 12
+  },
+    // CLERK METADATA - ADD THIS
+  clerkMetadata: {
+    type: Object,
+    default: {}
+  },
+  lastLoginAt:{
+    type: Date,
+    default: Date.now
+  },
+  isActive:{
+    type: Boolean,
+    default: true
   },
   preferredCurrency: {
     type: String,
@@ -255,6 +292,28 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Index for faster queries
+userSchema.index({ clerkId: 1 });
+userSchema.index({ email: 1 });
+
+// Virtual for full name
+userSchema.virtual('fullName').get(function() {
+  return `${this.firstName || ''} ${this.lastName || ''}`.trim();
+});
+
+// Method to sync from Clerk
+userSchema.methods.syncFromClerk = async function(clerkUser) {
+  this.email = clerkUser.emailAddresses[0]?.emailAddress || this.email;
+  this.firstName = clerkUser.firstName || this.firstName;
+  this.lastName = clerkUser.lastName || this.lastName;
+  this.profileImage = clerkUser.imageUrl || this.profileImage;
+  this.clerkMetadata = clerkUser.publicMetadata || {};
+  this.lastLoginAt = new Date();
+  await this.save();
+  return this;
+};
+
 // ...existing code...
 // Account lockout check method
 userSchema.methods.isLocked = function () {

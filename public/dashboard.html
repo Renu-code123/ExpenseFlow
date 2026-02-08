@@ -2,2050 +2,326 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#64ffda">
+    <meta name="description" content="ExpenseFlow Dashboard - Smart Money Management">
     <title>Dashboard - ExpenseFlow</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOCAxMkg4LjAyNEgyNFYyMEgxNlYyNEgyNEMyNC44IDI0IDI1LjYgMjMuMiAyNS42IDIwVjEyQzI1LjYgMTAuOCAyMy4yIDggMjQgOEgyNEM4IDggOCAxMC44IDggMTJWMjBDOCAxOS4yIDEwLjggMjQgOCAyNEgxMlYyMEg4VjEyWiIgZmlsbD0iIzBmMGYyMyIvPgo8L3N2Zz4K">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="dashboard.css">
-</head>
-<body>
-
-        <!-- Smooth Cursor Trail -->
-<style>
-  .cursor-trail-container {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 999999;
-  }
-
-  .trail-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 15px rgba(100, 255, 218, 0.8),
-      0 0 30px rgba(100, 255, 218, 0.4);
-    transform: translate(-50%, -50%);
-    will-change: transform, opacity;
-    mix-blend-mode: screen;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-
-  .trail-dot:first-child {
-    width: 12px;
-    height: 12px;
-    background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-    box-shadow: 
-      0 0 20px rgba(100, 255, 218, 0.9),
-      0 0 40px rgba(100, 255, 218, 0.6);
-    z-index: 2;
-  }
-
-  .cursor-clicking {
-    transform: translate(-50%, -50%) scale(1.5);
-    background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
-    box-shadow: 
-      0 0 25px rgba(255, 107, 157, 0.9),
-      0 0 50px rgba(255, 107, 157, 0.6) !important;
-  }
-
-  .cursor-hovering {
-    transform: translate(-50%, -50%) scale(1.3);
-    background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
-  }
-</style>
-
-<div class="cursor-trail-container" id="cursor-trail"></div>
-<script src="protect.js"></script>
-<script>
-  
-(function() {
-  // Hide default cursor
-  document.body.style.cursor = 'none';
-
-  const container = document.getElementById('cursor-trail');
-  const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  const trailCircles = [];
-  const COUNT = 12; // Fewer circles for smoother trail
-
-  // Create trail circles
-  for (let i = 0; i < COUNT; i++) {
-    const circle = document.createElement('div');
-    circle.className = 'trail-dot';
-
-    // Opacity decreases along the trail
-    const opacity = 0.9 - (i / COUNT) * 0.8;
-    circle.style.opacity = opacity.toString();
-
-    // Size decreases along the trail
-    const scale = 1 - (i / COUNT) * 0.5;
-    circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-    container.appendChild(circle);
-    trailCircles.push({ 
-      element: circle, 
-      x: coords.x, 
-      y: coords.y,
-      targetX: coords.x,
-      targetY: coords.y
-    });
-  }
-
-  // Track mouse position
-  let isMoving = false;
-  let lastMouseX = coords.x;
-  let lastMouseY = coords.y;
-  let velocity = { x: 0, y: 0 };
-
-  window.addEventListener('mousemove', e => {
-    coords.x = e.clientX;
-    coords.y = e.clientY;
-
-    // Calculate velocity for smooth movement
-    velocity.x = e.clientX - lastMouseX;
-    velocity.y = e.clientY - lastMouseY;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-
-    isMoving = true;
-
-    // Reset movement timeout
-    clearTimeout(window.movementTimeout);
-    window.movementTimeout = setTimeout(() => {
-      isMoving = false;
-    }, 50);
-  });
-
-  // Click effect
-  window.addEventListener('mousedown', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.add('cursor-clicking');
-    });
-  });
-
-  window.addEventListener('mouseup', () => {
-    trailCircles.forEach(circle => {
-      circle.element.classList.remove('cursor-clicking');
-    });
-  });
-
-  // Hover effect for interactive elements
-  window.addEventListener('mouseover', e => {
-    const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
-    trailCircles.forEach(circle => {
-      circle.element.classList.toggle('cursor-hovering', !!interactive);
-    });
-  });
-
-  // Smooth animation function
-  function animateTrail() {
-    let targetX = coords.x;
-    let targetY = coords.y;
-
-    // Add velocity offset to first circle for more natural feel
-    const velocityOffset = 0.5;
-    const offsetX = velocity.x * velocityOffset;
-    const offsetY = velocity.y * velocityOffset;
-
-    trailCircles.forEach((circle, index) => {
-      // First circle follows cursor exactly
-      if (index === 0) {
-        circle.x = targetX + offsetX;
-        circle.y = targetY + offsetY;
-      } 
-      // Other circles follow with smooth delay
-      else {
-        const prevCircle = trailCircles[index - 1];
-
-        // Smooth interpolation factor (changes based on movement speed)
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const lerpFactor = isMoving ? 
-          Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
-          0.1; // Slow movement = more spread
-
-        circle.x += (prevCircle.x - circle.x) * lerpFactor;
-        circle.y += (prevCircle.y - circle.y) * lerpFactor;
+    <link rel="stylesheet" href="expensetracker.css">
+    
+    <!-- Clerk Authentication SDK -->
+     <script
+    async
+    crossorigin="anonymous"
+    data-clerk-publishable-key="your publishable key here"
+     src="https://your-app-slug.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+    type="text/javascript"
+  ></script>
+    
+    <style>
+      /* Cursor Trail Styles */
+      .cursor-trail-container {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 999999;
       }
 
-      // Apply position with easing
-      circle.element.style.left = circle.x + 'px';
-      circle.element.style.top = circle.y + 'px';
-
-      // Dynamic opacity based on speed and position
-      if (index > 0) {
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const baseOpacity = 0.9 - (index / COUNT) * 0.8;
-        const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
-        circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
-      }
-
-      // Update target for next circle
-      targetX = circle.x;
-      targetY = circle.y;
-    });
-
-    requestAnimationFrame(animateTrail);
-  }
-
-  // Handle window resize
-  window.addEventListener('resize', () => {
-    // Adjust if cursor goes out of bounds
-    if (coords.x > window.innerWidth) coords.x = window.innerWidth;
-    if (coords.y > window.innerHeight) coords.y = window.innerHeight;
-  });
-
-  // Handle mouse leave/enter
-  window.addEventListener('mouseleave', () => {
-    trailCircles.forEach(circle => {
-      circle.element.style.opacity = '0';
-    });
-  });
-
-  window.addEventListener('mouseenter', () => {
-    trailCircles.forEach((circle, index) => {
-      const opacity = 0.9 - (index / COUNT) * 0.8;
-      circle.element.style.opacity = opacity.toString();
-    });
-  });
-
-  // Start animation
-  animateTrail();
-})();
-</script>
-
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <h1>ExpenseFlow Dashboard</h1>
-            <div class="user-info">
-                <span id="user-name">Welcome, User</span>
-                <button id="logout-btn">Logout</button>
-            </div>
-        </header>
-
-        <main class="dashboard-main">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Balance</h3>
-                    <p class="stat-value" id="total-balance">$0.00</p>
-                </div>
-                <div class="stat-card">
-                    <h3>This Month</h3>
-                    <p class="stat-value" id="month-expenses">$0.00</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Budget Left</h3>
-                    <p class="stat-value" id="budget-left">$0.00</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Transactions</h3>
-                    <p class="stat-value" id="transaction-count">0</p>
-                </div>
-            </div>
-
-            <div class="dashboard-content">
-                <div class="chart-section">
-                    <h2>Spending Overview</h2>
-                    <canvas id="expense-chart"></canvas>
-                </div>
-
-                <div class="recent-transactions">
-                    <h2>Recent Transactions</h2>
-                    <div id="transactions-list">
-                        <!-- Transactions will be loaded here -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="quick-actions">
-                <button class="action-btn" id="add-expense-btn">Add Expense</button>
-                <button class="action-btn" id="view-budgets-btn">View Budgets</button>
-                <button class="action-btn" id="export-data-btn">Export Data</button>
-            </div>
-        </main>
-    </div>
-
-    <script src="dashboard.js"></script>
-</body>
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#64ffda">
-  <meta name="description" content="Take control of your finances with our intuitive expense tracker">
-  <meta name="keywords" content="expense tracker, budget, finance, money management, PWA">
-  <meta name="author" content="ExpenseFlow">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <!-- PWA Meta Tags -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
-  <meta name="msapplication-TileColor" content="#0f0f23">
-  <meta name="msapplication-navbutton-color" content="#64ffda">
-
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon"
-    href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDIiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhclswXSkiLz4KPHBhdGggZD0iTTQ4IDY0SDQ4LjA0OEgxNDRWMTI4SDk2VjE0NEgxNDRDMTUyLjgzNyAxNDQgMTYwIDEzNi44MzcgMTYwIDEyOFY2NEM1OCA1Ni4xNjMgNTIuMDQzIDQ4IDQ4IEg0OEM0MC4wNzEgNDggMzIgNTYuMDcxIDMyIDY0VjEyOEMzMiAxMzUuOTI5IDQwLjA3MSAxNDQgNDggMTQ0SDgwVjEyOEg0OFY2NFoiIGZpbGw9IiM2NGZmZGEiLz4KPHBhdGggZD0iTTY0IDgwSDgwVjk2SDY0VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOTYgODBIMTI4Vjk2SDk2VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDBfbGluZWFyWzBdIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K">
-
-  <title>ExpenseFlow - Smart Money Management</title>
-  <link rel="stylesheet" href="expensetracker.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* =========================
-   MOBILE RESPONSIVE STYLES
-   ========================= */
-    @media (max-width: 768px) {
-
-      /* General */
-      body {
-        overflow-x: hidden;
-      }
-
-      .container {
-        padding: 1rem;
-      }
-
-      /* Navbar */
-      .nav-menu {
+      .trail-dot {
         position: absolute;
-        top: 70px;
-        left: 0;
-        width: 100%;
-        background: #0f0f23;
-        flex-direction: column;
-        align-items: center;
-        display: none;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+        box-shadow: 
+          0 0 15px rgba(100, 255, 218, 0.8),
+          0 0 30px rgba(100, 255, 218, 0.4);
+        transform: translate(-50%, -50%);
+        will-change: transform, opacity;
+        mix-blend-mode: screen;
+        transition: opacity 0.3s ease, transform 0.3s ease;
       }
 
-      .nav-menu.active {
-        display: flex;
+      .trail-dot:first-child {
+        width: 12px;
+        height: 12px;
+        z-index: 2;
       }
 
-      .nav-link {
-        padding: 1rem;
-        width: 100%;
-        text-align: center;
+      .cursor-clicking {
+        transform: translate(-50%, -50%) scale(1.5);
+        background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
       }
 
-      .nav-toggle {
-        display: block;
-        cursor: pointer;
+      .cursor-hovering {
+        transform: translate(-50%, -50%) scale(1.3);
       }
-
-      .user-profile {
-        display: none;
-      }
-
-      /* Hero */
-      .hero-title {
-        font-size: 1.8rem;
-        text-align: center;
-      }
-
-      .hero-subtitle {
-        text-align: center;
-        font-size: 1rem;
-      }
-
-      /* Balance & Cards */
-      .inc-exp-container {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .balance-card {
-        text-align: center;
-      }
-
-      /* Filters */
-      .filter-controls {
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .advanced-filters {
-        flex-direction: column;
-      }
-
-      .date-filters,
-      .amount-filters {
-        flex-direction: column;
-        width: 100%;
-      }
-
-      /* Transaction Form */
-      .form-row {
-        flex-direction: column;
-      }
-
-      .form-control {
-        width: 100%;
-      }
-
-      /* Footer */
-      .footer-container {
-        flex-direction: column;
-        gap: 2rem;
-        text-align: center;
-      }
-
-      .footer-stats {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-    }
-
-    #redirect {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: 12px;
-      border: 1px solid #64ffda;
-      background-color: #0f0f23;
-      padding: 6px 12px;
-      border-radius: 8px;
-      transition: background-color 0.3s ease;
-    }
-
-    #redirect a {
-      color: #64ffda;
-      text-decoration: none;
-      font-weight: 500;
-      margin-right: 8px;
-    }
-
-    .i18n-multiline {
-      white-space: pre-line;
-    }
-
-    .footer-links {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(100px, 1fr));
-    }
-      .footer-links {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(100px, 1fr));
-        }
-  </style>
+    </style>
 </head>
 
 <body>
-  <!-- Header -->
-  <header class="header">
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="nav-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
-        </div>
-        <div class="nav-menu" id="nav-menu">
-          <a href="dashboard.html" class="nav-link active">Dashboard</a>
-          <a href="accounts.html" class="nav-link">Accounts</a>
-          <a href="analytics.html" class="nav-link">Analytics</a>
-          <a href="goals.html" class="nav-link">Goals</a>
+  <div class="cursor-trail-container" id="cursor-trail"></div>
 
-          <div class="nav-item dropdown">
-            <a href="#" class="nav-link dropdown-toggle">More</a>
-            <div class="dropdown-menu">
-              <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
-              <a href="settings.html" class="dropdown-link">Overview</a>
-              <a href="./contributor.html" class="dropdown-link">Contributors</a>
-            </div>
-          </div>
-        </div>
-        
-        <div class="nav-toggle" id="nav-toggle">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </div>
-        <div class="user-profile">
-          <div id="workspace-selector" class="workspace-selector"></div>
-          <select id="language-switcher" class="language-select" aria-label="Language">
-            <option value="en">EN</option>
-            <option value="es">ES</option>
-            <option value="fr">FR</option>
-          </select>
-          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
-            <i class="fas fa-coins"></i>
-            <span id="current-currency">INR</span>
-          </button>
-          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
-            alt="User" class="profile-img">
-          <span class="username" id="navUsername"></span>
-          <div id="redirect">
-            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
-          </div>
-        </div>
-      </div>
-    </nav>
-  </header>
-
-  <!-- Main Content -->
-  <main class="main-content">
-    <!-- Full Hero Section -->
-    <div class="hero-section-full">
-      <div class="hero-background-animation">
-        <div class="floating-shape shape-1"></div>
-        <div class="floating-shape shape-2"></div>
-        <div class="floating-shape shape-3"></div>
-      </div>
-      <div class="hero-content-wrapper">
-        <div class="hero-badge">
-          <i class="fas fa-star"></i>
-          <span data-i18n="hero.badge">Trusted by 10,000+ users worldwide</span>
-        </div>
-        <h1 class="hero-title i18n-multiline" data-i18n="hero.title">Smart Money Management
-          Made Simple</h1>
-        <p class="hero-subtitle i18n-multiline" data-i18n="hero.subtitle">Take control of your finances with our
-          intelligent expense tracker.
-          Track, analyze, and optimize your spending habits effortlessly.</p>
-        <div class="hero-cta">
-          <button class="cta-primary" onclick="document.getElementById('form').scrollIntoView({ behavior: 'smooth' })">
-            <i class="fas fa-rocket"></i> <span data-i18n="hero.cta.start">Start Tracking Now</span>
-          </button>
-          <button class="cta-secondary"
-            onclick="document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' })">
-            <i class="fas fa-info-circle"></i> <span data-i18n="hero.cta.learn">Learn More</span>
-          </button>
-        </div>
-        <div class="hero-features">
-          <div class="feature-pill">
-            <i class="fas fa-robot"></i>
-            <span>AI-Powered</span>
-          </div>
-          <div class="feature-pill">
-            <i class="fas fa-lock"></i>
-            <span>Secure & Private</span>
-          </div>
-          <div class="feature-pill">
-            <i class="fas fa-mobile-alt"></i>
-            <span>Works Offline</span>
-          </div>
-          <div class="feature-pill">
-            <i class="fas fa-globe"></i>
-            <span>Multi-Currency</span>
-          </div>
-        </div>
-        <div class="scroll-indicator">
-          <i class="fas fa-chevron-down"></i>
-          <span>Scroll to explore</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Features Section -->
-    <section id="features-section" class="features-showcase">
-      <div class="container">
-        <div class="section-header-center">
-          <h2 class="section-title" data-i18n="feature.heading">Powerful Features for Smart Finance</h2>
-          <p class="section-subtitle" data-i18n="feature.subheading">Everything you need to manage your money effectively</p>
-        </div>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-brain"></i>
-            </div>
-            <h3>AI Categorization</h3>
-            <p>Automatically categorize your expenses with intelligent machine learning algorithms</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-chart-pie"></i>
-            </div>
-            <h3>Visual Analytics</h3>
-            <p>Beautiful charts and insights to understand your spending patterns at a glance</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-sync-alt"></i>
-            </div>
-            <h3>Recurring Expenses</h3>
-            <p>Track subscriptions and recurring bills automatically with smart reminders</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-file-export"></i>
-            </div>
-            <h3>Export & Reports</h3>
-            <p>Generate detailed reports in CSV or PDF format for tax season</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-bullseye"></i>
-            </div>
-            <h3>Budget Goals</h3>
-            <p>Set financial goals and track your progress with intuitive dashboards</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-shield-alt"></i>
-            </div>
-            <h3>Secure & Private</h3>
-            <p>Bank-level encryption keeps your financial data safe and private</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section class="how-it-works">
-      <div class="container">
-        <div class="section-header-center">
-          <h2 class="section-title">How It Works</h2>
-          <p class="section-subtitle">Get started in three simple steps</p>
-        </div>
-        <div class="steps-grid">
-          <div class="step-card">
-            <div class="step-number">1</div>
-            <div class="step-icon">
-              <i class="fas fa-plus-circle"></i>
-            </div>
-            <h3>Add Expenses</h3>
-            <p>Quickly log your daily expenses with our simple form. AI suggests categories automatically.</p>
-          </div>
-          <div class="step-card">
-            <div class="step-number">2</div>
-            <div class="step-icon">
-              <i class="fas fa-chart-line"></i>
-            </div>
-            <h3>Track & Analyze</h3>
-            <p>Watch your spending patterns emerge through beautiful visualizations and insights.</p>
-          </div>
-          <div class="step-card">
-            <div class="step-number">3</div>
-            <div class="step-icon">
-              <i class="fas fa-piggy-bank"></i>
-            </div>
-            <h3>Save More</h3>
-            <p>Make informed decisions based on data and achieve your financial goals faster.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="container">
-      <!-- Quick Stats Overview -->
-      <div class="quick-stats">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <i class="fas fa-wallet"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.balance">Total Balance</p>
-            <h3 class="stat-value" id="quick-balance">₹0.00</h3>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <i class="fas fa-arrow-up"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.income">This Month Income</p>
-            <h3 class="stat-value income" id="quick-income">₹0.00</h3>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-            <i class="fas fa-arrow-down"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.expense">This Month Expenses</p>
-            <h3 class="stat-value expense" id="quick-expense">₹0.00</h3>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <i class="fas fa-piggy-bank"></i>
-          </div>
-          <div class="stat-content">
-            <p class="stat-label" data-i18n="stats.savings">Savings Rate</p>
-            <h3 class="stat-value" id="quick-savings">0%</h3>
-          </div>
-        </div>
-      </div>
-
-      <!-- Balance Card -->
-      <div class="balance-card">
-        <div class="balance-header">
-          <i class="fas fa-chart-line"></i>
-          <h4>Your Balance</h4>
-        </div>
-        <h1 id="balance" class="balance-amount">&#8377;0.00</h1>
-        <div class="balance-trend">
-          <span class="trend-indicator positive">↗</span>
-          <span class="trend-text">+2.5% from last month</span>
-        </div>
-      </div>
-
-      <!-- Income & Expense Cards -->
-      <div class="inc-exp-container">
-        <div class="income-card">
-          <div class="card-icon income-icon">
-            <i class="fas fa-arrow-up"></i>
-          </div>
-          <div class="card-content">
-            <h4>Income</h4>
-            <p id="money-plus" class="money-plus">
-              +&#8377;0.00
-            </p>
-          </div>
-        </div>
-        <div class="expense-card">
-          <div class="card-icon expense-icon">
-            <i class="fas fa-arrow-down"></i>
-          </div>
-          <div class="card-content">
-            <h4>Expense</h4>
-            <p id="money-minus" class="money-minus">
-              -&#8377;0.00
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Monthly Budget Card -->
-      <div class="budget-card" id="monthly-budget-card" style="display: none;">
-        <div class="budget-header">
-          <i class="fas fa-wallet"></i>
-          <h4>Monthly Budget</h4>
-          <button id="set-budget-btn" class="set-budget-btn" title="Set Monthly Budget">
-            <i class="fas fa-cog"></i>
-          </button>
-        </div>
-        <div class="budget-content">
-          <div class="budget-amount">
-            <span id="budget-limit" class="budget-limit">₹0.00</span>
-            <span class="budget-label">Limit</span>
-          </div>
-          <div class="budget-spent">
-            <span id="budget-spent" class="budget-spent">₹0.00</span>
-            <span class="budget-label">Spent</span>
-          </div>
-          <div class="budget-remaining">
-            <span id="budget-remaining" class="budget-remaining">₹0.00</span>
-            <span class="budget-label">Remaining</span>
-          </div>
-        </div>
-        <div class="budget-progress">
-          <div class="progress-bar">
-            <div id="budget-progress-fill" class="progress-fill"></div>
-          </div>
-          <span id="budget-percentage" class="progress-text">0%</span>
-        </div>
-        <div id="budget-alert" class="budget-alert" style="display: none;">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span id="budget-alert-text">Budget limit exceeded!</span>
-        </div>
-      </div>
-
-      <!-- Transaction History -->
-      <div class="history-section">
-        <div class="section-header">
-          <h3><i class="fas fa-history"></i> <span data-i18n="history.title">Transaction History</span></h3>
-          <div class="filter-controls">
-            <div class="search-container">
-              <input type="text" id="search-input" placeholder="Search transactions..." class="search-input"
-                data-i18n-placeholder="history.search">
-              <i class="fas fa-search search-icon"></i>
-            </div>
-            <div class="filter-buttons">
-              <button class="filter-btn active" data-filter="all" data-i18n="history.filter.all">All</button>
-              <button class="filter-btn" data-filter="income" data-i18n="history.filter.income">Income</button>
-              <button class="filter-btn" data-filter="expense" data-i18n="history.filter.expense">Expense</button>
-            </div>
-            <div class="advanced-filters">
-              <select id="category-filter" class="category-select">
-                <option value="all" data-i18n="history.category.all">All Categories</option>
-                <option value="food">🍽️ Food & Dining</option>
-                <option value="transport">🚗 Transportation</option>
-                <option value="shopping">🛒 Shopping</option>
-                <option value="entertainment">🎬 Entertainment</option>
-                <option value="bills">💡 Bills & Utilities</option>
-                <option value="healthcare">🏥 Healthcare</option>
-                <option value="education">📚 Education</option>
-                <option value="travel">✈️ Travel</option>
-                <option value="salary">💼 Salary</option>
-                <option value="freelance">💻 Freelance</option>
-                <option value="investment">📈 Investment</option>
-                <option value="other">📋 Other</option>
-              </select>
-              <div class="date-filters">
-                <input type="date" id="date-from" class="date-input" placeholder="From">
-                <input type="date" id="date-to" class="date-input" placeholder="To">
-              </div>
-              <div class="amount-filters">
-                <input type="number" id="amount-min" placeholder="Min Amount" class="amount-input" step="0.01">
-                <input type="number" id="amount-max" placeholder="Max Amount" class="amount-input" step="0.01">
-              </div>
-              <button class="clear-filters-btn" id="clear-filters">
-                <i class="fas fa-times"></i> <span data-i18n="history.clear">Clear Filters</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <ul id="list" class="list">
-          <!-- Transactions will be added here -->
-        </ul>
-      </div>
-
-      <!-- Data Management Section -->
-      <div class="data-management-section">
-        <h3><i class="fas fa-database"></i> <span data-i18n="data.title">Data Management</span></h3>
-        <div class="data-actions">
-          <div class="export-section">
-            <h4 data-i18n="data.export">Export Data</h4>
-            <div class="export-buttons">
-              <button class="export-btn" id="export-csv">
-                <i class="fas fa-file-csv"></i> <span data-i18n="data.export.csv">Quick CSV</span>
-              </button>
-              <button class="export-btn pdf-btn" id="export-pdf">
-                <i class="fas fa-file-pdf"></i> <span data-i18n="data.export.pdf">Quick PDF</span>
-              </button>
-              <button class="export-btn advanced-btn" id="open-export-modal">
-                <i class="fas fa-cog"></i> <span data-i18n="data.export.advanced">Advanced Export</span>
-              </button>
-            </div>
-          </div>
-          <div class="import-section">
-            <h4 data-i18n="data.import">Import Data</h4>
-            <div class="import-controls">
-              <input type="file" id="import-file" accept=".csv,.json" class="file-input">
-              <label for="import-file" class="file-label">
-                <i class="fas fa-upload"></i> <span data-i18n="data.import.choose">Choose File</span>
-              </label>
-              <button class="import-btn" id="import-data" disabled>
-                <i class="fas fa-download"></i> <span data-i18n="data.import.run">Import Data</span>
-              </button>
-            </div>
-            <div class="import-options">
-              <label class="checkbox-label">
-                <input type="checkbox" id="merge-data" checked>
-                <span class="checkmark"></span>
-                <span data-i18n="data.import.merge">Merge with existing data</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Export Modal -->
-      <div class="export-modal" id="export-modal">
-        <div class="export-modal-content">
-          <div class="export-modal-header">
-            <h3><i class="fas fa-download"></i> <span data-i18n="export.modal.title">Export Expenses</span></h3>
-            <button class="modal-close-btn" id="export-modal-close">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-
-          <div class="export-modal-body">
-            <!-- Format Selection -->
-            <div class="export-format-section">
-              <h4 data-i18n="export.format.title">Export Format</h4>
-              <div class="format-options">
-                <label class="format-option">
-                  <input type="radio" name="export-format" id="export-format" value="csv" checked>
-                  <div class="format-card">
-                    <i class="fas fa-file-csv"></i>
-                    <span class="format-name" data-i18n="export.format.csv">CSV</span>
-                    <span class="format-desc" data-i18n="export.format.csv.desc">Excel compatible</span>
-                  </div>
-                </label>
-                <label class="format-option">
-                  <input type="radio" name="export-format" value="pdf">
-                  <div class="format-card">
-                    <i class="fas fa-file-pdf"></i>
-                    <span class="format-name" data-i18n="export.format.pdf">PDF Report</span>
-                    <span class="format-desc" data-i18n="export.format.pdf.desc">With charts & summary</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <!-- Filters -->
-            <div class="export-filters-section">
-              <h4 data-i18n="export.filters.title">Filter Options</h4>
-              <div class="filter-grid">
-                <div class="form-control">
-                  <label for="export-start-date">Start Date</label>
-                  <input type="date" id="export-start-date">
-                </div>
-                <div class="form-control">
-                  <label for="export-end-date">End Date</label>
-                  <input type="date" id="export-end-date">
-                </div>
-                <div class="form-control">
-                  <label for="export-category-filter">Category</label>
-                  <select id="export-category-filter">
-                    <option value="all">All Categories</option>
-                    <option value="food">🍽️ Food & Dining</option>
-                    <option value="transport">🚗 Transportation</option>
-                    <option value="shopping">🛒 Shopping</option>
-                    <option value="entertainment">🎬 Entertainment</option>
-                    <option value="utilities">💡 Bills & Utilities</option>
-                    <option value="healthcare">🏥 Healthcare</option>
-                    <option value="other">📋 Other</option>
-                  </select>
-                </div>
-                <div class="form-control">
-                  <label for="export-type-filter">Type</label>
-                  <select id="export-type-filter">
-                    <option value="all">All Types</option>
-                    <option value="income">💰 Income Only</option>
-                    <option value="expense">💸 Expenses Only</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Preview -->
-            <div class="export-preview-section">
-              <h4 data-i18n="export.preview.title">Export Preview</h4>
-              <div class="export-preview" id="export-preview">
-                <div class="export-preview-loading">Loading preview...</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="export-modal-footer">
-            <button type="button" class="btn-cancel" id="export-cancel-btn" data-i18n="export.actions.cancel">Cancel</button>
-            <button type="button" class="btn-submit" id="export-submit-btn">
-              <i class="fas fa-download"></i> <span data-i18n="export.actions.export">Export</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Add Transaction Form -->
-      <div class="form-section">
-        <h3><i class="fas fa-plus-circle"></i> <span data-i18n="form.title">Add New Transaction</span></h3>
-        <form id="form" class="transaction-form">
-          <div class="form-row">
-            <div class="ocr-scan-container" style="width: 100%; margin-bottom: 1.5rem;">
-              <div class="ocr-scan-wrapper"
-                style="border: 2px dashed rgba(100, 255, 218, 0.3); border-radius: 12px; padding: 1.5rem; text-align: center; background: rgba(100, 255, 218, 0.05); transition: all 0.3s ease;">
-                <i class="fas fa-camera"
-                  style="font-size: 2rem; color: var(--accent-primary); margin-bottom: 0.5rem;"></i>
-                <h4>Don't want to type?</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Upload a receipt and
-                  let AI fill the fields for you.</p>
-                <label for="receipt-scan-input" class="cta-secondary"
-                  style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.6rem 1.2rem; font-size: 0.9rem;">
-                  <i class="fas fa-file-upload"></i> Scan Receipt
-                </label>
-                <input type="file" id="receipt-scan-input" accept="image/*,application/pdf" style="display: none;">
-              </div>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-control">
-              <label for="text" data-i18n="form.description">Description</label>
-              <input type="text" id="text" placeholder="Enter transaction description" required
-                data-i18n-placeholder="form.description.placeholder" />
-            </div>
-            <div class="form-control">
-              <label for="category">Category <span id="category-confidence"
-                  class="confidence-badge hidden"></span></label>
-              <select id="category" required>
-                <option value="">Select Category</option>
-                <option value="food">🍽️ Food & Dining</option>
-                <option value="transport">🚗 Transportation</option>
-                <option value="shopping">🛒 Shopping</option>
-                <option value="entertainment">🎬 Entertainment</option>
-                <option value="bills">💡 Bills & Utilities</option>
-                <option value="healthcare">🏥 Healthcare</option>
-                <option value="education">📚 Education</option>
-                <option value="travel">✈️ Travel</option>
-                <option value="salary">💼 Salary</option>
-                <option value="freelance">💻 Freelance</option>
-                <option value="investment">📈 Investment</option>
-                <option value="other">📋 Other</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-control">
-              <label for="amount" data-i18n="form.amount">Amount</label>
-              <input type="number" id="amount" placeholder="Enter amount" step="0.01" required
-                data-i18n-placeholder="form.amount.placeholder">
-              <small>Tip: Use negative values for expenses, positive for income</small>
-            </div>
-            <div class="form-control">
-              <label for="currency" data-i18n="form.currency">Currency</label>
-              <select id="currency" required>
-                <option value="">Loading currencies...</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-control">
-              <label for="type" data-i18n="form.type">Transaction Type</label>
-              <select id="type" required>
-                <option value="">Select Type</option>
-                <option value="income" data-i18n="form.type.income">💰 Income</option>
-                <option value="expense" data-i18n="form.type.expense">💸 Expense</option>
-              </select>
-            </div>
-            <div class="form-control"></div>
-          </div>
-          <button type="submit" class="btn-submit">
-            <i class="fas fa-plus"></i>
-            <span data-i18n="form.submit">Add Transaction</span>
-          </button>
-        </form>
-      </div>
-
-      <!-- Recurring Expenses Section -->
-      <div class="recurring-section" id="recurring-section">
-        <div class="section-header">
-          <h3><i class="fas fa-sync-alt"></i> <span data-i18n="recurring.title">Recurring Expenses & Subscriptions</span></h3>
-          <button class="add-recurring-btn" id="add-recurring-btn">
-            <i class="fas fa-plus"></i> <span data-i18n="recurring.add">Add Recurring</span>
-          </button>
-        </div>
-
-        <!-- Recurring Statistics -->
-        <div class="recurring-stats" id="recurring-stats">
-          <!-- Stats will be rendered here -->
-        </div>
-
-        <!-- Recurring Expenses List -->
-        <div class="recurring-list" id="recurring-list">
-          <!-- Recurring expenses will be rendered here -->
-        </div>
-      </div>
-
-      <!-- Recurring Expense Modal -->
-      <div class="recurring-modal" id="recurring-modal">
-        <div class="recurring-modal-content">
-          <div class="recurring-modal-header">
-            <h3 id="recurring-modal-title">Add Recurring Expense</h3>
-            <button class="modal-close-btn" id="recurring-modal-close">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <form id="recurring-form" class="recurring-form">
-            <input type="hidden" id="recurring-id">
-
-            <div class="form-row">
-              <div class="form-control">
-                <label for="recurring-description">Description *</label>
-                <input type="text" id="recurring-description" placeholder="e.g., Netflix Subscription" required>
-              </div>
-              <div class="form-control">
-                <label for="recurring-amount">Amount (₹) *</label>
-                <input type="number" id="recurring-amount" placeholder="499.00" step="0.01" min="0.01" required>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-control">
-                <label for="recurring-category">Category *</label>
-                <select id="recurring-category" required>
-                  <option value="">Select Category</option>
-                  <option value="subscription">📺 Subscription</option>
-                  <option value="rent">🏠 Rent</option>
-                  <option value="insurance">🛡️ Insurance</option>
-                  <option value="utilities">💡 Utilities</option>
-                  <option value="entertainment">🎬 Entertainment</option>
-                  <option value="food">🍽️ Food</option>
-                  <option value="transport">🚗 Transport</option>
-                  <option value="healthcare">🏥 Healthcare</option>
-                  <option value="shopping">🛒 Shopping</option>
-                  <option value="other">📋 Other</option>
-                </select>
-              </div>
-              <div class="form-control">
-                <label for="recurring-type">Type *</label>
-                <select id="recurring-type" required>
-                  <option value="expense">💸 Expense</option>
-                  <option value="income">💰 Income</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-control">
-                <label for="recurring-frequency">Frequency *</label>
-                <select id="recurring-frequency" required>
-                  <option value="monthly">Monthly</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="biweekly">Bi-weekly</option>
-                  <option value="daily">Daily</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </div>
-              <div class="form-control">
-                <label for="recurring-reminder-days">Remind Before (days)</label>
-                <input type="number" id="recurring-reminder-days" value="3" min="0" max="30">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-control">
-                <label for="recurring-start-date">Start Date *</label>
-                <input type="date" id="recurring-start-date" required>
-              </div>
-              <div class="form-control">
-                <label for="recurring-next-due">Next Due Date *</label>
-                <input type="date" id="recurring-next-due" required>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-control">
-                <label for="recurring-end-date">End Date (optional)</label>
-                <input type="date" id="recurring-end-date">
-              </div>
-              <div class="form-control checkbox-control">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="recurring-auto-create" checked>
-                  <span class="checkmark"></span>
-                  Auto-create expense on due date
-                </label>
-              </div>
-            </div>
-
-            <div class="form-control full-width">
-              <label for="recurring-notes">Notes (optional)</label>
-              <textarea id="recurring-notes" rows="3" placeholder="Add any notes..."></textarea>
-            </div>
-
-            <div class="modal-actions">
-              <button type="button" class="btn-cancel" id="recurring-cancel-btn">Cancel</button>
-              <button type="submit" class="btn-submit">
-                <i class="fas fa-save"></i> Save
-              </button>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <!-- Analytics Dashboard Section -->
-      <section id="analytics" class="analytics-section">
-        <div class="section-header">
-          <h3><i class="fas fa-chart-bar"></i> Financial Analytics & Forecasting</h3>
-          <div class="analytics-actions">
-            <select id="trends-period" class="period-select">
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-            <button id="refresh-analytics" class="refresh-btn">
-              <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-          </div>
-        </div>
-
-        <div id="analytics-dashboard" class="analytics-grid">
-          <!-- Top Row: Velocity and Forecast -->
-          <div class="analytics-row top-row">
-            <div id="velocity-widget" class="analytics-card velocity-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Calculating velocity...</span>
-              </div>
-            </div>
-            <div id="forecast-widget" class="analytics-card forecast-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Generating forecast...</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Middle Row: Trends and Category Breakdown -->
-          <div class="analytics-row main-charts">
-            <div id="trends-chart" class="analytics-card trends-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading trends...</span>
-              </div>
-            </div>
-            <div id="category-chart" class="analytics-card category-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading distribution...</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Row: Insights and Predictions -->
-          <div class="analytics-row details-row">
-            <div id="insights-container" class="analytics-card insights-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Gathering insights...</span>
-              </div>
-            </div>
-            <div id="predictions-widget" class="analytics-card predictions-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Predicting spending...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Settings Section -->
-    <section id="settings" class="settings-section">
-      <div class="section-header">
-        <h3><i class="fas fa-cog"></i> Settings</h3>
-      </div>
-
-      <div class="settings-container">
-        <!-- Workspace Settings Tab -->
-        <div class="settings-tabs">
-          <button class="settings-tab active" onclick="switchSettingsTab('workspace')">Workspace</button>
-          <button class="settings-tab" onclick="switchSettingsTab('approvals')">Approvals</button>
-          <button class="settings-tab" onclick="switchSettingsTab('profile')">Profile</button>
-        </div>
-
-        <!-- Workspace Settings -->
-        <div id="workspace-settings" class="settings-content active">
-          <div class="settings-card">
-            <h4><i class="fas fa-users"></i> Workspace Management</h4>
-            <div class="workspace-info">
-              <div class="current-workspace">
-                <label>Current Workspace:</label>
-                <span id="current-workspace-name">Personal</span>
-              </div>
-              <div class="workspace-selector">
-                <label for="workspace-select">Switch Workspace:</label>
-                <select id="workspace-select" onchange="switchWorkspace()">
-                  <option value="personal">Personal</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="workspace-actions">
-              <button class="btn-secondary" onclick="openCreateWorkspaceModal()">
-                <i class="fas fa-plus"></i> Create New Workspace
-              </button>
-            </div>
-          </div>
-
-          <div class="settings-card">
-            <h4><i class="fas fa-user-friends"></i> Members</h4>
-            <div id="members-list" class="members-list">
-              <!-- Members will be loaded here -->
-            </div>
-            <button class="btn-secondary" onclick="openInviteModal()">
-              <i class="fas fa-user-plus"></i> Invite Member
-            </button>
-          </div>
-        </div>
-
-        <!-- Approvals Settings -->
-        <div id="approvals-settings" class="settings-content">
-          <div class="settings-card">
-            <h4><i class="fas fa-check-circle"></i> Expense Approvals</h4>
-            <div class="approval-config">
-              <div class="form-control">
-                <label for="approval-required">Require Approval for Expenses Over:</label>
-                <input type="number" id="approval-required" placeholder="10000" min="0" step="100">
-                <small>Set to 0 to disable approval workflow</small>
-              </div>
-              <button class="btn-submit" onclick="saveApprovalSettings()">
-                <i class="fas fa-save"></i> Save Settings
-              </button>
-            </div>
-          </div>
-
-          <div class="settings-card">
-            <h4><i class="fas fa-clock"></i> Pending Approvals</h4>
-            <div id="pending-approvals" class="approvals-list">
-              <!-- Pending approvals will be loaded here -->
-            </div>
-          </div>
-
-          <div class="settings-card">
-            <h4><i class="fas fa-history"></i> Approval History</h4>
-            <div id="approval-history" class="approvals-list">
-              <!-- Approval history will be loaded here -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Profile Settings -->
-        <div id="profile-settings" class="settings-content">
-          <div class="settings-card">
-            <h4><i class="fas fa-user"></i> Profile Information</h4>
-            <div class="profile-form">
-              <div class="form-control">
-                <label for="profile-name">Full Name:</label>
-                <input type="text" id="profile-name" placeholder="Your full name">
-              </div>
-              <div class="form-control">
-                <label for="profile-email">Email:</label>
-                <input type="email" id="profile-email" placeholder="your.email@example.com" readonly>
-              </div>
-              <button class="btn-submit" onclick="updateProfile()">
-                <i class="fas fa-save"></i> Update Profile
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Investment Portfolio Section -->
-  <section id="investments" class="investments-section container" style="padding-top: 100px;">
-    <div class="section-header">
-      <h3><i class="fas fa-chart-line"></i> Investment Portfolio</h3>
-      <button class="add-goal-btn" onclick="openInvestmentModal()">
-        <i class="fas fa-plus"></i> Add Holding
-      </button>
-    </div>
-
-    <!-- Portfolio Summary -->
-    <div class="quick-stats">
-      <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-          <i class="fas fa-coins"></i>
-        </div>
-        <div class="stat-content">
-          <p class="stat-label">Total Portfolio Value</p>
-          <h3 class="stat-value" id="portfolio-total-value">₹0.00</h3>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-          <i class="fas fa-arrow-trend-up"></i>
-        </div>
-        <div class="stat-content">
-          <p class="stat-label">Total Profit/Loss</p>
-          <h3 class="stat-value" id="portfolio-total-pl">₹0.00</h3>
-          <small id="portfolio-pl-percent" class="trend-text">0.00%</small>
-        </div>
-      </div>
-    </div>
-
-    <!-- Holdings List -->
-    <div class="investments-list-container">
-      <div class="list-header">
-        <h4>Your Holdings</h4>
-        <button class="refresh-btn-sm" title="Refresh Prices" onclick="loadInvestments()">
-          <i class="fas fa-sync-alt"></i> Refresh
+  <div class="dashboard-container">
+    <header class="dashboard-header">
+      <h1>ExpenseFlow Dashboard</h1>
+      <div class="user-info">
+        <span id="user-name">Loading...</span>
+        <button onclick="handleLogout()" class="btn-secondary">
+          <i class="fas fa-sign-out-alt"></i> Logout
         </button>
       </div>
-      <div id="investments-list" class="investments-grid">
-        <!-- Investments will be rendered here -->
-        <div class="widget-loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          <span>Loading portfolio...</span>
-        </div>
-      </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- Add Investment Modal -->
-  <div id="investment-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-chart-pie"></i> Add Investment</h3>
-        <span class="close-modal" onclick="closeInvestmentModal()">&times;</span>
+    <main class="dashboard-main">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Balance</h3>
+          <p class="stat-value" id="total-balance">$0.00</p>
+          <span class="stat-change positive">+0%</span>
+        </div>
+        <div class="stat-card">
+          <h3>Monthly Income</h3>
+          <p class="stat-value" id="monthly-income">$0.00</p>
+          <span class="stat-change positive">+0%</span>
+        </div>
+        <div class="stat-card">
+          <h3>Monthly Expenses</h3>
+          <p class="stat-value" id="monthly-expenses">$0.00</p>
+          <span class="stat-change negative">+0%</span>
+        </div>
+        <div class="stat-card">
+          <h3>Savings</h3>
+          <p class="stat-value" id="savings">$0.00</p>
+          <span class="stat-change positive">+0%</span>
+        </div>
       </div>
-      <form id="investment-form">
-        <div class="modal-body">
-          <div class="form-control">
-            <label for="inv-type">Asset Type</label>
-            <select id="inv-type" required onchange="updateSymbolPlaceholder()">
-              <option value="crypto">Cryptocurrency</option>
-              <option value="stock">Stock</option>
-              <option value="fund">Mutual Fund</option>
-              <option value="gold">Gold/Silver</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <div class="form-control">
-              <label for="inv-symbol">Symbol/Ticker</label>
-              <input type="text" id="inv-symbol" placeholder="e.g., BTC, AAPL" required uppercase>
-              <small id="symbol-hint">For crypto, use ticker (BTC, ETH)</small>
-            </div>
-            <div class="form-control">
-              <label for="inv-name">Asset Name</label>
-              <input type="text" id="inv-name" placeholder="e.g., Bitcoin, Apple Inc." required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-control">
-              <label for="inv-quantity">Quantity</label>
-              <input type="number" id="inv-quantity" placeholder="0.00" step="any" required>
-            </div>
-            <div class="form-control">
-              <label for="inv-buy-price">Buy Price (Per Unit)</label>
-              <input type="number" id="inv-buy-price" placeholder="₹0.00" step="any" required>
-            </div>
-          </div>
+
+      <div class="dashboard-content">
+        <div class="recent-transactions">
+          <h2>Recent Transactions</h2>
+          <ul id="transaction-list" class="transaction-list">
+            <li class="loading">Loading transactions...</li>
+          </ul>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closeInvestmentModal()">Cancel</button>
-          <button type="submit" class="btn-submit">Add to Portfolio</button>
+
+        <div class="quick-actions">
+          <h2>Quick Actions</h2>
+          <button class="action-btn" onclick="window.location.href='index.html'">
+            <i class="fas fa-plus"></i> Add Expense
+          </button>
+          <button class="action-btn" onclick="window.location.href='analytics.html'">
+            <i class="fas fa-chart-line"></i> View Analytics
+          </button>
+          <button class="action-btn" onclick="window.location.href='goals.html'">
+            <i class="fas fa-bullseye"></i> Manage Goals
+          </button>
         </div>
-      </form>
-    </div>
+      </div>
+    </main>
   </div>
 
-  <!-- Currency Settings Modal -->
-  <div id="currency-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-money-bill-wave"></i> <span data-i18n="currency.modal.title">Currency Settings</span>
-        </h3>
-        <span class="close-modal" onclick="closeCurrencyModal()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="form-control">
-          <label for="preferred-currency" data-i18n="currency.preferred">Preferred Currency</label>
-          <select id="preferred-currency" class="currency-select">
-            <option value="">Loading currencies...</option>
-          </select>
-          <small data-i18n="currency.info">All expenses will be converted to this currency for display</small>
-        </div>
-        <div class="form-control">
-          <label data-i18n="currency.exchange">Exchange Rate Info</label>
-          <div class="exchange-rate-info" id="exchange-rate-info">
-            <p>Select a currency to see current exchange rates</p>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeCurrencyModal()" data-i18n="currency.cancel">Cancel</button>
-        <button class="btn-submit" onclick="saveCurrencyPreference()" data-i18n="currency.save">Save Settings</button>
-      </div>
-    </div>
-  </div>
-
-  <footer class="footer">
-    <div class="footer-bottom">
-      <p id="copyright" style="text-align:center;"></p>
-      <script>
-        document.getElementById("copyright").innerHTML =
-          `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
-      </script>
-
-    </div>
-  </footer>
-    <div class="footer-container">
-
-      <div class="footer-section">
-        <div class="footer-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
-        </div>
-
-  <p class="footer-description">
-    Smart money management made simple. Track, analyze, and optimize your financial habits.
-  </p>
-
-  <div class="social-links">
-    <a
-      href="https://x.com/9504_renu"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="X (Twitter)"
-    >
-      <i class="fab fa-x-twitter"></i>
-    </a>
-
-    <a
-      href="https://github.com/Renu-code123/ExpenseFlow"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Github"
-    >
-      <i class="fab fa-github"></i>
-    </a>
-
-    <a
-      href="mailto:renu89857@gmail.com"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Email"
-    >
-      <i class="far fa-envelope"></i>
-    </a>
-
-    <a
-      href="https://www.linkedin.com/in/renu-kumari-prajapati"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="LinkedIn"
-    >
-      <i class="fab fa-linkedin-in"></i>
-    </a>
-  </div>
-</div>
-
-
-      <div class="footer-section">
-        <h4>Company</h4>
-        <ul class="footer-links">
-          <li><a href="AboutUs.html">About Us</a></li>
-          <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
-          <li><a href="terms_service.html">Terms of Service</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-section">
-        <h4>Features</h4>
-        <ul class="footer-links">
-          <li><a href="#">Expense Tracking</a></li>
-          <li><a href="#">Budget Planning</a></li>
-          <li><a href="#">Analytics Dashboard</a></li>
-          <li><a href="#">Goal Setting</a></li>
-        </ul>
-      </div>
-
-    </div>
-
-    <div class="footer-bottom">
-      <div class="footer-container">
-        <p>&copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for better financial management.</p>
-        <div class="footer-stats">
-          <span>🏆 Trusted by 10,000+ users</span>
-          <span>💰 ₹50M+ tracked</span>
-          <span>📊 99.9% uptime</span>
-        </div>
-      </div>
-    </div>
-  </footer>
-
+  <!-- Scripts -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="trackerscript.js"></script>
-  <script src="api-integration.js"></script>
-  <script src="realtime-sync.js"></script>
-  <script src="analytics-dashboard.js"></script>
-  <script src="investment-portfolio.js"></script>
-  <script>
-    // Recurring Modal Control
-    function openRecurringModal() {
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.add('active');
-        document.getElementById('recurring-modal-title').textContent = 'Add Recurring Expense';
-        document.getElementById('recurring-form').reset();
-      }
-    }
-
-    function closeRecurringModal() {
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('active');
-      }
-    }
-
-    // Initialize recurring button
-    document.addEventListener('DOMContentLoaded', function() {
-      const addBtn = document.getElementById('add-recurring-btn');
-      if (addBtn) {
-        addBtn.addEventListener('click', openRecurringModal);
-      }
-
-      const closeBtn = document.getElementById('recurring-modal-close');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', closeRecurringModal);
-      }
-
-      const cancelBtn = document.getElementById('recurring-cancel-btn');
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', closeRecurringModal);
-      }
-
-      // Close modal when clicking outside
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            closeRecurringModal();
-          }
-        });
-      }
-    });
-  </script>
-  <script>
-    // Currency Management Functions
-    let supportedCurrencies = [];
-    let currentUserCurrency = 'INR';
-
-    // Load supported currencies on page load
-    async function loadSupportedCurrencies() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const response = await fetch('/api/currency/supported', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          supportedCurrencies = data.data.currencies;
-          populateCurrencySelects();
-        }
-      } catch (error) {
-        console.error('Error loading currencies:', error);
-      }
-    }
-
-    // Populate currency dropdowns
-    function populateCurrencySelects() {
-      const currencySelect = document.getElementById('currency');
-      const preferredCurrencySelect = document.getElementById('preferred-currency');
-
-  <style>
-    @keyframes spin {
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    .progress-fill.high {
-      background: #4caf50 !important;
-    }
-
-    .progress-fill.medium {
-      background: #ffc107 !important;
-    }
-
-    .progress-fill.low {
-      background: #f44336 !important;
-    }
-  </style>
-
-  <!-- Workspace Modal -->
-  <div id="workspace-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-users"></i> Create Shared Workspace</h3>
-        <span class="close-modal" onclick="closeWorkspaceModal()">&times;</span>
-      </div>
-      <form id="create-workspace-form">
-        <div class="modal-body">
-          <div class="form-control">
-            <label for="workspace-name-input">Workspace Name *</label>
-            <input type="text" id="workspace-name-input" placeholder="e.g., Family, Hackathon Team" required>
-          </div>
-          <div class="form-control">
-            <label for="workspace-desc-input">Description (Optional)</label>
-            <textarea id="workspace-desc-input" rows="3" placeholder="What is this workspace for?"></textarea>
-          </div>
-          <p class="info-text">
-            <i class="fas fa-info-circle"></i> After creating, you can invite members from the workspace settings.
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closeWorkspaceModal()">Cancel</button>
-          <button type="submit" class="btn-submit">Create Workspace</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Invite Member Modal -->
-  <div id="invite-modal" class="modal invite-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-user-plus"></i> Invite Member</h3>
-        <span class="close-modal" onclick="closeInviteModal()">&times;</span>
-      </div>
-      <form id="invite-form" class="invite-form">
-        <div class="modal-body">
-          <div class="form-control">
-            <label for="invite-email">Email Address *</label>
-            <input type="email" id="invite-email" placeholder="member@example.com" required>
-            <small>Enter the email address of the person you want to invite</small>
-          </div>
-          <div class="form-control">
-            <label for="invite-role">Role *</label>
-            <select id="invite-role" class="role-select" required>
-              <option value="">Select Role</option>
-              <option value="viewer">Viewer - Can view expenses and reports</option>
-              <option value="member">Member - Can add expenses and view all data</option>
-              <option value="manager">Manager - Can manage budgets and approve expenses</option>
-              <option value="admin">Admin - Can manage members and all workspace data</option>
-            </select>
-            <small>Choose the appropriate role for this member</small>
-          </div>
-          <div class="role-permissions">
-            <h5>Role Permissions:</h5>
-            <div id="role-permissions-display">
-              <p>Select a role to see permissions</p>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closeInviteModal()">Cancel</button>
-          <button type="submit" class="btn-submit">Send Invitation</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- API and Feature Scripts -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="auth-integration.js"></script>
-  <script src="api-integration.js"></script>
-  <script src="workspace-feature.js"></script>
-  <script src="budget-goals.js"></script>
-  <script src="receipt-upload.js"></script>
-  <script src="receipt-ocr.js"></script>
-  <script src="analytics-dashboard.js"></script>
-  <script src="realtime-sync.js"></script>
-
-  <!-- PWA Installation Prompt -->
-  <div id="install-prompt" class="install-prompt" style="display: none;">
-    <div class="install-prompt-content">
-      <div class="install-prompt-header">
-        <i class="fas fa-download"></i>
-        <h3 data-i18n="install.title">Install ExpenseFlow</h3>
-      </div>
-      <p data-i18n="install.text">Install ExpenseFlow for quick access and offline functionality!</p>
-      <div class="install-prompt-actions">
-        <button id="install-button" class="install-btn">
-          <i class="fas fa-plus"></i> <span data-i18n="install.install">Install</span>
-        </button>
-        <button id="install-dismiss" class="dismiss-btn">
-          <i class="fas fa-times"></i> <span data-i18n="install.dismiss">Not now</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
   
-  </footer>
+  <!-- Cursor Trail Script -->
+  <script>
+    (function() {
+      document.body.style.cursor = 'none';
+      const container = document.getElementById('cursor-trail');
+      const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      const trailCircles = [];
+      const COUNT = 12;
 
-  <!-- Update Available Notification -->
-  <div id="update-notification" class="update-notification" style="display: none;">
-    <div class="update-content">
-      <i class="fas fa-sync-alt"></i>
-      <span>A new version is available!</span>
-      <button id="update-button" class="update-btn">Update Now</button>
-    </div>
-  </div>
-<script src="auth-check.js"></script>
-<script src="auth.js"></script>
- <script src="trackerscript.js"></script>
-  <script src="analytics-dashboard.js"></script>
-
-
-</body>
-
-</html>
-<script>
-  // Recurring Modal Control
-  function openRecurringModal() {
-    const modal = document.getElementById('recurring-modal');
-    if (modal) {
-      modal.style.display = 'flex';
-      modal.classList.add('active');
-      document.getElementById('recurring-modal-title').textContent = 'Add Recurring Expense';
-      document.getElementById('recurring-form').reset();
-    }
-  }
-
-  function closeRecurringModal() {
-    const modal = document.getElementById('recurring-modal');
-    if (modal) {
-      modal.style.display = 'none';
-      modal.classList.remove('active');
-    }
-  }
-
-      // Close modal when clicking outside
-      const modal = document.getElementById('recurring-modal');
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            closeRecurringModal();
-          }
+      for (let i = 0; i < COUNT; i++) {
+        const circle = document.createElement('div');
+        circle.className = 'trail-dot';
+        const opacity = 0.9 - (i / COUNT) * 0.8;
+        circle.style.opacity = opacity.toString();
+        const scale = 1 - (i / COUNT) * 0.5;
+        circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        container.appendChild(circle);
+        trailCircles.push({ 
+          element: circle, 
+          x: coords.x, 
+          y: coords.y,
+          targetX: coords.x,
+          targetY: coords.y
         });
+      }
+
+      let velocity = { x: 0, y: 0 };
+      let lastMouseX = coords.x;
+      let lastMouseY = coords.y;
+
+      window.addEventListener('mousemove', e => {
+        coords.x = e.clientX;
+        coords.y = e.clientY;
+        velocity.x = e.clientX - lastMouseX;
+        velocity.y = e.clientY - lastMouseY;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      });
+
+      window.addEventListener('mousedown', () => {
+        trailCircles.forEach(circle => circle.element.classList.add('cursor-clicking'));
+      });
+
+      window.addEventListener('mouseup', () => {
+        trailCircles.forEach(circle => circle.element.classList.remove('cursor-clicking'));
+      });
+
+      window.addEventListener('mouseover', e => {
+        const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
+        trailCircles.forEach(circle => {
+          circle.element.classList.toggle('cursor-hovering', !!interactive);
+        });
+      });
+
+      function animateTrail() {
+        let targetX = coords.x;
+        let targetY = coords.y;
+
+        trailCircles.forEach((circle, index) => {
+          if (index === 0) {
+            circle.targetX = targetX;
+            circle.targetY = targetY;
+          } else {
+            circle.targetX = targetX;
+            circle.targetY = targetY;
+          }
+
+          const easing = index === 0 ? 0.3 : 0.15;
+          circle.x += (circle.targetX - circle.x) * easing;
+          circle.y += (circle.targetY - circle.y) * easing;
+
+          circle.element.style.left = circle.x + 'px';
+          circle.element.style.top = circle.y + 'px';
+
+          targetX = circle.x;
+          targetY = circle.y;
+        });
+
+        requestAnimationFrame(animateTrail);
+      }
+
+      window.addEventListener('mouseleave', () => {
+        trailCircles.forEach(circle => circle.element.style.opacity = '0');
+      });
+
+      window.addEventListener('mouseenter', () => {
+        trailCircles.forEach((circle, index) => {
+          const opacity = 0.9 - (index / COUNT) * 0.8;
+          circle.element.style.opacity = opacity.toString();
+        });
+      });
+
+      animateTrail();
+    })();
+  </script>
+
+  <!-- Dashboard functionality -->
+  <script>
+    // Logout handler
+    async function handleLogout() {
+      try {
+        if (window.Clerk) {
+          await window.Clerk.signOut();
+        }
+        window.location.href = '/login.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = '/login.html';
+      }
+    }
+
+    // Authentication check and user info
+    window.addEventListener('load', async function() {
+      try {
+        await window.Clerk.load();
+        
+        if (!window.Clerk.user) {
+          sessionStorage.setItem('redirectAfterLogin', window.location.href);
+          window.location.href = '/login.html';
+          return;
+        }
+
+        // Display user name
+        const userName = window.Clerk.user.fullName || 
+                        window.Clerk.user.primaryEmailAddress?.emailAddress || 
+                        'User';
+        document.getElementById('user-name').textContent = userName;
+
+        // Load dashboard data
+        loadDashboardData();
+      } catch (error) {
+        console.error('Auth check error:', error);
+        window.location.href = '/login.html';
       }
     });
-  </script>
-  <script>
-    // Currency Management Functions
-    let supportedCurrencies = [];
-    let currentUserCurrency = (window.i18n?.getCurrency?.() && window.i18n.getCurrency()) || 'INR';
-    window.currentUserCurrency = currentUserCurrency;
 
-    // Load supported currencies on page load
-    async function loadSupportedCurrencies() {
+    // Load dashboard data
+    async function loadDashboardData() {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const response = await fetch('/api/currency/supported', {
+        const token = await window.Clerk.session.getToken();
+        
+        // Fetch dashboard stats
+        const response = await fetch('/api/expenses/summary', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
 
-    const closeBtn = document.getElementById('recurring-modal-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closeRecurringModal);
-    }
-
-    const cancelBtn = document.getElementById('recurring-cancel-btn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', closeRecurringModal);
-    }
-
-    // Close modal when clicking outside
-    const modal = document.getElementById('recurring-modal');
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          closeRecurringModal();
-        }
-      });
-    }
-  });
-</script>
-<script>
-  // Currency Management Functions
-  let supportedCurrencies = [];
-  let currentUserCurrency = 'INR';
-
-  // Load supported currencies on page load
-  async function loadSupportedCurrencies() {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await fetch('/api/currency/supported', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        supportedCurrencies = data.data.currencies;
-        populateCurrencySelects();
-      }
-    } catch (error) {
-      console.error('Error loading currencies:', error);
-    }
-  }
-
-  // Populate currency dropdowns
-  function populateCurrencySelects() {
-    const currencySelect = document.getElementById('currency');
-    const preferredCurrencySelect = document.getElementById('preferred-currency');
-
-    if (currencySelect && supportedCurrencies.length > 0) {
-      currencySelect.innerHTML = supportedCurrencies.map(curr =>
-        `<option value="${curr.code}">${curr.symbol} ${curr.code} - ${curr.name}</option>`
-      ).join('');
-      currencySelect.value = currentUserCurrency;
-    }
-
-    if (preferredCurrencySelect && supportedCurrencies.length > 0) {
-      preferredCurrencySelect.innerHTML = supportedCurrencies.map(curr =>
-        `<option value="${curr.code}">${curr.symbol} ${curr.code} - ${curr.name}</option>`
-      ).join('');
-      preferredCurrencySelect.value = currentUserCurrency;
-    }
-  }
-
-  // Load user's currency preference
-  async function loadUserCurrencyPreference() {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-        const data = await response.json();
-        if (data.success) {
-          currentUserCurrency = data.data.preferredCurrency;
-          window.currentUserCurrency = currentUserCurrency;
-          if (window.i18n?.setCurrency) {
-            window.i18n.setCurrency(currentUserCurrency);
-          }
-          document.getElementById('current-currency').textContent = currentUserCurrency;
-          populateCurrencySelects();
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        currentUserCurrency = data.data.preferredCurrency;
-        const currentCurrencyEl = document.getElementById('current-currency');
-        if (currentCurrencyEl) currentCurrencyEl.textContent = currentUserCurrency;
-        populateCurrencySelects();
-      }
-    } catch (error) {
-      console.error('Error loading currency preference:', error);
-    }
-  }
-
-  // Open currency settings modal
-  function openCurrencyModal() {
-    const modal = document.getElementById('currency-modal');
-    if (modal) {
-      modal.style.display = 'flex';
-      loadExchangeRateInfo();
-    }
-  }
-
-  // Close currency settings modal
-  function closeCurrencyModal() {
-    const modal = document.getElementById('currency-modal');
-    if (modal) {
-      modal.style.display = 'none';
-    }
-  }
-
-  // Load exchange rate information
-  async function loadExchangeRateInfo() {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/currency/rates?base=${currentUserCurrency}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        const rateInfo = document.getElementById('exchange-rate-info');
-        if (!rateInfo) return;
-
-        const rates = data.data.rates;
-        const popularCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD'];
-
-        let html = '<div class="rate-list">';
-        popularCurrencies.forEach(curr => {
-          if (rates[curr]) {
-            html += `<div class="rate-item">
-                <span class="rate-currency">${curr}</span>
-                <span class="rate-value">${rates[curr].toFixed(4)}</span>
-              </div>`;
-          }
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          currentUserCurrency = newCurrency;
-          window.currentUserCurrency = newCurrency;
-          if (window.i18n?.setCurrency) {
-            window.i18n.setCurrency(newCurrency);
-          }
-          document.getElementById('current-currency').textContent = newCurrency;
-          closeCurrencyModal();
-          // Reload transactions to show in new currency
-          location.reload();
-        } else {
-          alert('Failed to update currency preference');
+        if (response.ok) {
+          const data = await response.json();
+          updateDashboardUI(data);
         }
       } catch (error) {
-        console.error('Error saving currency preference:', error);
-        alert('Error saving currency preference');
+        console.error('Error loading dashboard data:', error);
       }
-    } catch (error) {
-      console.error('Error loading exchange rates:', error);
     }
-  }
 
-  // Save currency preference
-  async function saveCurrencyPreference() {
-    try {
-      const token = localStorage.getItem('token');
-      const prefSelect = document.getElementById('preferred-currency');
-      if (!prefSelect) return;
-
-      const newCurrency = prefSelect.value;
-
-      const response = await fetch('/api/currency/preference', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ currency: newCurrency })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        currentUserCurrency = newCurrency;
-        const currentCurrencyEl = document.getElementById('current-currency');
-        if (currentCurrencyEl) currentCurrencyEl.textContent = newCurrency;
-        closeCurrencyModal();
-        // Reload transactions to show in new currency
-        location.reload();
-      } else {
-        alert('Failed to update currency preference');
+    // Update UI with data
+    function updateDashboardUI(data) {
+      if (data.balance !== undefined) {
+        document.getElementById('total-balance').textContent = `$${data.balance.toFixed(2)}`;
       }
-    });
+      if (data.income !== undefined) {
+        document.getElementById('monthly-income').textContent = `$${data.income.toFixed(2)}`;
+      }
+      if (data.expenses !== undefined) {
+        document.getElementById('monthly-expenses').textContent = `$${data.expenses.toFixed(2)}`;
+      }
+      if (data.savings !== undefined) {
+        document.getElementById('savings').textContent = `$${data.savings.toFixed(2)}`;
+      }
 
-
+      // Update transactions list if available
+      if (data.transactions && data.transactions.length > 0) {
+        const listEl = document.getElementById('transaction-list');
+        listEl.innerHTML = data.transactions.map(tx => `
+          <li class="transaction-item ${tx.type}">
+            <div class="transaction-info">
+              <strong>${tx.description}</strong>
+              <span class="transaction-date">${new Date(tx.date).toLocaleDateString()}</span>
+            </div>
+            <span class="transaction-amount ${tx.type}">
+              ${tx.type === 'income' ? '+' : '-'}$${Math.abs(tx.amount).toFixed(2)}
+            </span>
+          </li>
+        `).join('');
+      }
+    }
   </script>
 
-  <!-- PWA Installation Prompt -->
-  <div id="install-prompt" class="install-prompt" style="display: none;">
-    <div class="install-prompt-content">
-      <div class="install-prompt-header">
-        <i class="fas fa-download"></i>
-        <h3>Install ExpenseFlow</h3>
-      </div>
-      <p>Install ExpenseFlow for quick access and offline functionality!</p>
-      <div class="install-prompt-actions">
-        <button id="install-button" class="install-btn">
-          <i class="fas fa-plus"></i> Install
-        </button>
-        <button id="install-dismiss" class="dismiss-btn">
-          <i class="fas fa-times"></i> Not now
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Offline Indicator -->
-  <div id="offline-indicator" class="offline-indicator" style="display: none;">
-    <i class="fas fa-wifi-slash"></i>
-    <span data-i18n="offline.text">You're offline. Changes will be saved locally.</span>
-  </div>
-
-  <!-- Update Available Notification -->
-  <div id="update-notification" class="update-notification" style="display: none;">
-    <div class="update-content">
-      <i class="fas fa-sync-alt"></i>
-      <span data-i18n="update.text">A new version is available!</span>
-      <button id="update-button" class="update-btn" data-i18n="update.action">Update Now</button>
-    </div>
-  </div>
-  <script src="auth-check.js"></script>
-  <script src="auth.js"></script>
-  <script src="trackerscript.js"></script>
-  <script src="analytics-dashboard.js"></script>
-  <script src="workspace-feature.js"></script>
-
-
+  <script src="dashboard.js"></script>
 </body>
-
 </html>

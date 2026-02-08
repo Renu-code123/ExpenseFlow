@@ -1,6 +1,4 @@
-if (!localStorage.getItem('token')) {
-  window.location.replace('/login.html');
-}
+// Auth check handled by protect.js (Clerk-based)
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -54,17 +52,38 @@ document.addEventListener("DOMContentLoaded", () => {
   ====================== */
   const API_BASE_URL = 'http://localhost:3000/api';
 
-  // Get auth headers
+  // Get auth headers using Clerk session token
+  async function getClerkToken() {
+    try {
+      if (window.Clerk && window.Clerk.session) {
+        return await window.Clerk.session.getToken();
+      }
+    } catch (e) {
+      console.error('Failed to get Clerk token:', e);
+    }
+    return null;
+  }
+
   function getAuthHeaders() {
-    const token = localStorage.getItem('token');
+    // For sync calls, try localStorage fallback
+    const token = localStorage.getItem('clerkToken');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  async function getAuthHeadersAsync() {
+    const token = await getClerkToken();
+    if (token) {
+      localStorage.setItem('clerkToken', token);
+      return { 'Authorization': `Bearer ${token}` };
+    }
+    return getAuthHeaders();
   }
 
   /* =====================
      REAL-TIME SYNC
   ====================== */
   function initializeSocket() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('clerkToken');
     if (!token) return;
 
     socket = io('http://localhost:3000', {
@@ -167,8 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.status === 401) {
-        localStorage.clear();
-        window.location.replace('/login.html');
+        console.warn('API returned 401 - session may have expired');
         return [];
       }
 

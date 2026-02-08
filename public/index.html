@@ -1,7 +1,5 @@
-<script src="auth-check.js"></script>
-<script src="auth.js"></script>
 <!DOCTYPE html>
-<html lang="en" favicon="favicon.ico">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
@@ -10,23 +8,37 @@
   <meta name="description" content="Take control of your finances with our intuitive expense tracker">
   <meta name="keywords" content="expense tracker, budget, finance, money management, PWA">
   <meta name="author" content="ExpenseFlow">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOCAxMkg4LjAyNEgyNFYyMEgxNlYyNEgyNEMyNC44IDI0IDI1LjYgMjMuMiAyNS42IDIwVjEyQzI1LjYgMTAuOCAyMy4yIDggMjQgOEgyNEM4IDggOCAxMC44IDggMTJWMjBDOCAxOS4yIDEwLjggMjQgOCAyNEgxMlYyMEg4VjEyWiIgZmlsbD0iIzBmMGYyMyIvPgo8L3N2Zz4K">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <!-- PWA Meta Tags -->
   <link rel="stylesheet" href="expensetracker.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="css/folders.css">
+
+  <!-- PWA Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
   <meta name="msapplication-TileColor" content="#0f0f23">
   <meta name="msapplication-navbutton-color" content="#64ffda">
-  <link rel="stylesheet" href="index.css">
-  <link rel="stylesheet" href="css/folders.css">
 
   <!-- Manifest -->
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Clerk Authentication SDK -->
+ <script
+    async
+    crossorigin="anonymous"
+    data-clerk-publishable-key="your publishable key here"
+     src="https://your-app-slug.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+    type="text/javascript"
+  ></script>
+  
+  <title>ExpenseFlow - Smart Money Management</title>
 </head>
 
 <body>
@@ -1179,113 +1191,30 @@
   <script src="index.js"> </script>
   <script src="report-generator.js"></script>
 
-  <!-- Create Folder Modal -->
-  <div id="create-folder-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Create New Folder</h3>
-        <span class="close-btn" onclick="closeCreateFolderModal()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Folder Name</label>
-          <input type="text" id="new-folder-name" class="form-control" placeholder="e.g. Tax 2026">
-        </div>
-        <div class="form-group">
-          <label>Color</label>
-          <input type="color" id="new-folder-color" value="#3b82f6" style="width: 100%; height: 40px; margin-top: 5px;">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeCreateFolderModal()">Cancel</button>
-        <button class="btn-submit" id="save-folder-btn">Create</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- OCR Result Modal -->
-  <div id="ocr-result-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-magic"></i> Scan Result</h3>
-        <span class="close-btn" onclick="closeOCRModal()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="ocr-preview">
-          <img id="ocr-preview-img" src="" alt="Receipt Preview"
-            style="max-height: 200px; display: block; margin: 0 auto;">
-          <div class="confidence-meter">
-            <div id="ocr-confidence-bar" class="progress-fill"></div>
-          </div>
-        </div>
-        <div class="form-grid">
-          <div class="form-control">
-            <label>Merchant</label>
-            <input type="text" id="ocr-merchant">
-          </div>
-          <div class="form-control">
-            <label>Date</label>
-            <input type="date" id="ocr-date">
-          </div>
-          <div class="form-control">
-            <label>Amount</label>
-            <input type="number" id="ocr-amount" step="0.01">
-          </div>
-          <div class="form-control">
-            <label>Category</label>
-            <select id="ocr-category">
-              <option value="food">Food</option>
-              <option value="transport">Transport</option>
-              <option value="shopping">Shopping</option>
-              <option value="entertainment">Entertainment</option>
-              <option value="utilities">Utilities</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label>Save to Folder</label>
-            <select id="ocr-folder" class="folder-select">
-              <option value="">Unfiled</option>
-            </select>
-          </div>
-        </div>
-        <p id="ocr-item-count" style="text-align: center; color: var(--text-secondary); margin-top: 10px;"></p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeOCRModal()">Discard</button>
-        <button class="btn-submit" id="ocr-save-btn">Save Expense</button>
-      </div>
-    </div>
-  </div>
+  <!-- Clerk Authentication Check (handled by protect.js above) -->
+  <script>
+    // After Clerk auth succeeds via protect.js, display user info
+    window.addEventListener('load', async function() {
+      try {
+        if (window.Clerk && window.Clerk.user) {
+          const email = window.Clerk.user.primaryEmailAddress?.emailAddress || '';
+          console.log('User authenticated:', email);
+          
+          // Clear any stale redirect counters
+          sessionStorage.removeItem('indexRedirectCount');
+          sessionStorage.removeItem('loginRedirectCount');
 
-  <!-- OCR Itemized Modal (Simplified) -->
-  <div id="ocr-itemized-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Itemized Receipt</h3>
-        <span class="close-btn" id="close-itemized-modal">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div id="itemized-list"></div>
-        <!-- Summary -->
-        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-          <span id="itemized-selected-count">0 items selected</span>
-          <span id="itemized-selected-total">$0.00</span>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" id="save-single-btn">Save as Single</button>
-        <button class="btn-submit" id="save-itemized-btn">Save All Items</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="ocr-loading-overlay" class="loading-overlay">
-    <div class="spinner"></div>
-    <div class="loading-text">Processing...</div>
-  </div>
-
+          // Update username display if element exists
+          const usernameEl = document.getElementById('navUsername');
+          if (usernameEl) {
+            usernameEl.textContent = window.Clerk.user.firstName || email;
+          }
+        }
+      } catch (err) {
+        console.error('Error loading user info:', err);
+      }
+    });
+  </script>
 </body>
-
 </html>

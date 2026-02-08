@@ -12,6 +12,7 @@ const BalanceHistory = require('../models/BalanceHistory');
 const NetWorthSnapshot = require('../models/NetWorthSnapshot');
 const Transfer = require('../models/Transfer');
 const currencyService = require('../services/currencyService');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 // Validation Schemas
 const accountSchema = Joi.object({
@@ -60,7 +61,7 @@ const transferSchema = Joi.object({
  * GET /api/accounts
  * Get all accounts for current user
  */
-router.get('/', auth, async (req, res) => {
+router.get('/',requireAuth, async (req, res) => {
   try {
     const { type, includeHidden, currency, group } = req.query;
     
@@ -96,7 +97,7 @@ router.get('/', auth, async (req, res) => {
  * GET /api/accounts/:id
  * Get single account details
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id',requireAuth, async (req, res) => {
   try {
     const account = await Account.findOne({
       _id: req.params.id,
@@ -118,7 +119,7 @@ router.get('/:id', auth, async (req, res) => {
  * POST /api/accounts
  * Create new account
  */
-router.post('/', auth, async (req, res) => {
+router.post('/',requireAuth, async (req, res) => {
   try {
     const { error, value } = accountSchema.validate(req.body);
     if (error) {
@@ -172,7 +173,7 @@ router.post('/', auth, async (req, res) => {
  * PUT /api/accounts/:id
  * Update account
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id',requireAuth, async (req, res) => {
   try {
     const { error, value } = accountSchema.validate(req.body);
     if (error) {
@@ -225,7 +226,7 @@ router.put('/:id', auth, async (req, res) => {
  * DELETE /api/accounts/:id
  * Soft delete account
  */
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id',requireAuth, async (req, res) => {
   try {
     const account = await Account.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
@@ -248,7 +249,7 @@ router.delete('/:id', auth, async (req, res) => {
  * PATCH /api/accounts/:id/balance
  * Update account balance
  */
-router.patch('/:id/balance', auth, async (req, res) => {
+router.patch('/:id/balance',requireAuth, async (req, res) => {
   try {
     const { balance, description } = req.body;
     
@@ -281,7 +282,7 @@ router.patch('/:id/balance', auth, async (req, res) => {
  * PATCH /api/accounts/reorder
  * Reorder accounts
  */
-router.patch('/reorder', auth, async (req, res) => {
+router.patch('/reorder',requireAuth, async (req, res) => {
   try {
     const { accountIds } = req.body;
     
@@ -313,7 +314,7 @@ router.patch('/reorder', auth, async (req, res) => {
  * POST /api/accounts/transfer
  * Transfer between accounts
  */
-router.post('/transfer', auth, async (req, res) => {
+router.post('/transfer',requireAuth, async (req, res) => {
   try {
     const { error, value } = transferSchema.validate(req.body);
     if (error) {
@@ -355,7 +356,7 @@ router.post('/transfer', auth, async (req, res) => {
  * GET /api/accounts/transfers
  * Get transfer history
  */
-router.get('/transfers/history', auth, async (req, res) => {
+router.get('/transfers/history',requireAuth, async (req, res) => {
   try {
     const { limit = 50, category, startDate, endDate } = req.query;
     
@@ -394,7 +395,7 @@ router.get('/transfers/history', auth, async (req, res) => {
  * POST /api/accounts/transfers/:id/reverse
  * Reverse a transfer
  */
-router.post('/transfers/:id/reverse', auth, async (req, res) => {
+router.post('/transfers/:id/reverse',requireAuth, async (req, res) => {
   try {
     const transfer = await Transfer.findOne({
       _id: req.params.id,
@@ -426,7 +427,7 @@ router.post('/transfers/:id/reverse', auth, async (req, res) => {
  * GET /api/accounts/:id/history
  * Get account balance history
  */
-router.get('/:id/history', auth, async (req, res) => {
+router.get('/:id/history',requireAuth, async (req, res) => {
   try {
     const { days = 30, changeType } = req.query;
     
@@ -471,7 +472,7 @@ router.get('/:id/history', auth, async (req, res) => {
  * GET /api/accounts/networth
  * Get net worth data
  */
-router.get('/networth/summary', auth, async (req, res) => {
+router.get('/networth/summary',requireAuth, async (req, res) => {
   try {
     const { baseCurrency = 'USD' } = req.query;
     
@@ -488,7 +489,7 @@ router.get('/networth/summary', auth, async (req, res) => {
  * GET /api/accounts/networth/trend
  * Get net worth trend data for charts
  */
-router.get('/networth/trend', auth, async (req, res) => {
+router.get('/networth/trend',requireAuth, async (req, res) => {
   try {
     const { days = 30, interval = 'daily', baseCurrency = 'USD' } = req.query;
     
@@ -513,7 +514,7 @@ router.get('/networth/trend', auth, async (req, res) => {
  * POST /api/accounts/networth/snapshot
  * Create manual net worth snapshot
  */
-router.post('/networth/snapshot', auth, async (req, res) => {
+router.post('/networth/snapshot',requireAuth, async (req, res) => {
   try {
     const { baseCurrency = 'USD' } = req.body;
     
@@ -555,7 +556,7 @@ router.post('/networth/snapshot', auth, async (req, res) => {
  * GET /api/accounts/currencies
  * Get supported currencies
  */
-router.get('/currencies/list', auth, async (req, res) => {
+router.get('/currencies/list',requireAuth, async (req, res) => {
   try {
     const currencies = currencyService.getSupportedCurrencies();
     res.json(currencies);
@@ -569,7 +570,7 @@ router.get('/currencies/list', auth, async (req, res) => {
  * GET /api/accounts/currencies/rates
  * Get current exchange rates
  */
-router.get('/currencies/rates', auth, async (req, res) => {
+router.get('/currencies/rates',requireAuth, async (req, res) => {
   try {
     const { baseCurrency = 'USD' } = req.query;
     const rates = await currencyService.getAllRates(baseCurrency);
@@ -584,7 +585,7 @@ router.get('/currencies/rates', auth, async (req, res) => {
  * POST /api/accounts/currencies/convert
  * Convert currency amount
  */
-router.post('/currencies/convert', auth, async (req, res) => {
+router.post('/currencies/convert',requireAuth, async (req, res) => {
   try {
     const { amount, fromCurrency, toCurrency } = req.body;
     
@@ -608,7 +609,7 @@ router.post('/currencies/convert', auth, async (req, res) => {
  * GET /api/accounts/dashboard
  * Get account dashboard data
  */
-router.get('/dashboard/summary', auth, async (req, res) => {
+router.get('/dashboard/summary',requireAuth, async (req, res) => {
   try {
     const { baseCurrency = 'USD' } = req.query;
     

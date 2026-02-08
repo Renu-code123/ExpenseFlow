@@ -4,6 +4,7 @@ const auth = require('../middleware/auth');
 const splitService = require('../services/splitService');
 const settlementService = require('../services/settlementService');
 const Joi = require('joi');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 // Validation schemas
 const createSplitSchema = Joi.object({
@@ -34,7 +35,7 @@ const settlementSchema = Joi.object({
  * @desc    Create a new expense split
  * @access  Private
  */
-router.post('/', auth, async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
     const { error, value } = createSplitSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
@@ -62,7 +63,7 @@ router.post('/', auth, async (req, res) => {
  * @desc    Get user's pending splits
  * @access  Private
  */
-router.get('/', auth, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const splits = await splitService.getUserPendingSplits(req.user._id);
 
@@ -82,7 +83,7 @@ router.get('/', auth, async (req, res) => {
  * @desc    Get split by ID
  * @access  Private
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
   try {
     const split = await splitService.getSplitById(req.params.id, req.user._id);
 
@@ -104,7 +105,7 @@ router.get('/:id', auth, async (req, res) => {
  * @desc    Get splits for an expense
  * @access  Private
  */
-router.get('/expense/:expenseId', auth, async (req, res) => {
+router.get('/expense/:expenseId', requireAuth, async (req, res) => {
   try {
     const splits = await splitService.getSplitsForExpense(req.params.expenseId, req.user._id);
 
@@ -127,7 +128,7 @@ router.get('/expense/:expenseId', auth, async (req, res) => {
  * @desc    Mark user as paid for a split
  * @access  Private
  */
-router.patch('/:id/pay', auth, async (req, res) => {
+router.patch('/:id/pay', requireAuth, async (req, res) => {
   try {
     const split = await splitService.markAsPaid(req.params.id, req.user._id);
 
@@ -150,7 +151,7 @@ router.patch('/:id/pay', auth, async (req, res) => {
  * @desc    Send payment reminder to a participant
  * @access  Private
  */
-router.post('/:id/remind/:participantId', auth, async (req, res) => {
+router.post('/:id/remind/:participantId', requireAuth, async (req, res) => {
   try {
     const split = await splitService.sendReminder(
       req.params.id,
@@ -176,7 +177,7 @@ router.post('/:id/remind/:participantId', auth, async (req, res) => {
  * @desc    Get user's split statistics
  * @access  Private
  */
-router.get('/statistics/user', auth, async (req, res) => {
+router.get('/statistics/user', requireAuth, async (req, res) => {
   try {
     const statistics = await splitService.getUserSplitStatistics(req.user._id);
 
@@ -199,7 +200,7 @@ router.get('/statistics/user', auth, async (req, res) => {
  * @desc    Get simplified debts for a group (debt minimization algorithm)
  * @access  Private
  */
-router.get('/settlements/simplify/:groupId', auth, async (req, res) => {
+router.get('/settlements/simplify/:groupId', requireAuth, async (req, res) => {
   try {
     const result = await settlementService.simplifyDebts(req.params.groupId);
     
@@ -219,7 +220,7 @@ router.get('/settlements/simplify/:groupId', auth, async (req, res) => {
  * @desc    Get settlement center data (simplified debts, balances, pending settlements)
  * @access  Private
  */
-router.get('/settlements/center/:groupId', auth, async (req, res) => {
+router.get('/settlements/center/:groupId', requireAuth, async (req, res) => {
   try {
     const data = await settlementService.getSettlementCenter(
       req.params.groupId,
@@ -241,7 +242,7 @@ router.get('/settlements/center/:groupId', auth, async (req, res) => {
  * @desc    Get all member balances in a group
  * @access  Private
  */
-router.get('/settlements/balances/:groupId', auth, async (req, res) => {
+router.get('/settlements/balances/:groupId', requireAuth, async (req, res) => {
   try {
     const balances = await settlementService.getMemberBalances(req.params.groupId);
     
@@ -260,7 +261,7 @@ router.get('/settlements/balances/:groupId', auth, async (req, res) => {
  * @desc    Get original (non-simplified) debts graph
  * @access  Private
  */
-router.get('/settlements/original/:groupId', auth, async (req, res) => {
+router.get('/settlements/original/:groupId', requireAuth, async (req, res) => {
   try {
     const debts = await settlementService.getOriginalDebts(req.params.groupId);
     
@@ -280,7 +281,7 @@ router.get('/settlements/original/:groupId', auth, async (req, res) => {
  * @desc    Create optimized settlement records from simplified debts
  * @access  Private
  */
-router.post('/settlements/create-optimized/:groupId', auth, async (req, res) => {
+router.post('/settlements/create-optimized/:groupId', requireAuth, async (req, res) => {
   try {
     const result = await settlementService.createOptimizedSettlements(
       req.params.groupId,
@@ -303,7 +304,7 @@ router.post('/settlements/create-optimized/:groupId', auth, async (req, res) => 
  * @desc    Request settlement (debtor marks payment as sent)
  * @access  Private
  */
-router.post('/settlements/:id/request', auth, async (req, res) => {
+router.post('/settlements/:id/request', requireAuth, async (req, res) => {
   try {
     const { error, value } = settlementSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
@@ -333,7 +334,7 @@ router.post('/settlements/:id/request', auth, async (req, res) => {
  * @desc    Confirm settlement (creditor confirms receipt)
  * @access  Private
  */
-router.post('/settlements/:id/confirm', auth, async (req, res) => {
+router.post('/settlements/:id/confirm', requireAuth, async (req, res) => {
   try {
     const settlement = await settlementService.confirmSettlement(
       req.params.id,
@@ -359,7 +360,7 @@ router.post('/settlements/:id/confirm', auth, async (req, res) => {
  * @desc    Reject settlement (creditor rejects)
  * @access  Private
  */
-router.post('/settlements/:id/reject', auth, async (req, res) => {
+router.post('/settlements/:id/reject', requireAuth, async (req, res) => {
   try {
     const { reason } = req.body;
     if (!reason) return res.status(400).json({ error: 'Rejection reason is required' });

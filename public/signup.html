@@ -8,8 +8,6 @@
   <meta name="description" content="Take control of your finances with our intuitive expense tracker">
   <meta name="keywords" content="expense tracker, budget, finance, money management, PWA">
   <meta name="author" content="ExpenseFlow">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
   <!-- PWA Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,7 +28,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Clerk Authentication SDK -->
+  <script
+    async
+    crossorigin="anonymous"
+    data-clerk-publishable-key="your publishable key here"
+     src="https://your-app-slug.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+    type="text/javascript"
+  ></script>
   <style>
     /* =========================
    MOBILE RESPONSIVE STYLES
@@ -136,99 +143,130 @@
       }
     }
 
-    /* login styles */
-    .main-content{
-        min-height:calc(100vh -160px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-         background: radial-gradient(circle at top left, #3b3f92, #0f0f23);
-    }
-    .container{
-        width: 100%;
-        max-width: 420px;
-        background-color: rgba(255,255,255,0.08);
-        backdrop-filter: blur(14px);
-        border-radius: 18px;
-        padding:2.8rem;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.35);
-        color: #ffffff;
-    }
-    .container h2{
-        text-align: center;
-        margin-bottom: 1.8rem;
-        font-weight: 600;
-        color: #fff;
-    }
-    .form-group{
-        margin-bottom: 1.3rem;
-    }
-    .form-group label {
-        display:block;
-        margin-bottom: 0.4rem;
-        font-size: 1rem;
-         color: #cfd3ff;
-    }
-    .form-group input{
-        width:100%;
-        padding:0.75rem 0.9rem;
-        border-radius: 12px;
-        border: none;
-        outline: none;
-        font-size: 0.95rem;
-        background: rgba(255, 255, 255, 0.15);
-        color: #ffffff;
-
-    }
-    .form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-    }
-    .btn{
-        width:100%;
-        padding:0.8rem;
-        margin-top: 1rem;
-        border-radius: 14px;
-        border:none;
-        font-size: 500;
-        font-weight: 500;
-        cursor: pointer;
-        color: #ffffff;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-    }
-    .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-    }
-        /* Signup text */
-    .container p {
-    margin-top: 1.2rem;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #d0d4ff;
+    /* Auth page layout */
+    .main-content {
+      min-height: calc(100vh - 160px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
     }
 
-    .container p a {
-    color: #64ffda;
-    text-decoration: none;
-    font-weight: 500;
+    .auth-page-wrapper {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-left:2rem;
+      margin: 3rem 3rem ;
     }
 
-    .container p a:hover {
-    text-decoration: underline;
+    .auth-icon {
+      font-size: 2.5rem;
+      color: #64ffda;
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-title {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      font-size: 1.8rem;
+      color: #ffffff;
+    }
+
+    /* Clerk component overrides */
+    #clerk-sign-in,
+    #clerk-sign-up {
+      width: 100%;
+    }
+
+    .cl-rootBox {
+      width: 100% !important;
+    }
+
+    .cl-card {
+      background: rgba(26, 26, 46, 0.95) !important;
+      border: 1px solid rgba(100, 255, 218, 0.15) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+      backdrop-filter: blur(20px) !important;
+    }
+
+    .cl-headerTitle {
+      color: #64ffda !important;
+    }
+
+    .cl-headerSubtitle {
+      color: #a0aec0 !important;
+    }
+
+    .cl-formFieldLabel {
+      color: #e2e8f0 !important;
+    }
+
+    .cl-formFieldInput {
+      background: #2d3748 !important;
+      border-color: #4a5568 !important;
+      color: #e2e8f0 !important;
+    }
+
+    .cl-formButtonPrimary {
+      background: #64ffda !important;
+      color: #0f0f23 !important;
+      font-weight: 600 !important;
+    }
+
+    .cl-formButtonPrimary:hover {
+      background: #4fd1c5 !important;
+    }
+
+    .cl-footerActionLink {
+      color: #64ffda !important;
+    }
+
+    .cl-socialButtonsBlockButton {
+      background: #2d3748 !important;
+      border-color: #4a5568 !important;
+      color: #e2e8f0 !important;
+    }
+
+    .cl-socialButtonsBlockButton:hover {
+      background: #3d4a5c !important;
+    }
+
+    .cl-internal-b3fm6y {
+      color: #a0aec0 !important;
+    }
+
+    .cl-footerAction {
+      color: #a0aec0 !important;
+    }
+
+    /* Footer social link visibility */
+    .social-link {
+      color: #ffffff !important;
+      font-size: 1.1rem;
+    }
+
+    .social-link:hover {
+      color: #0f0f23 !important;
+      background: #64ffda !important;
+    }
+
+    .social-link .fa-github {
+      color: #ffffff;
     }
 
     /* Mobile adjustments */
     @media (max-width: 480px) {
-    .container {
-        padding: 2rem 1.5rem;
-        margin: 1rem;
-    }
-
-    .container h2 {
-        font-size: 1.6rem;
-    }
+      .auth-page-wrapper {
+        padding: 0 0.5rem;
+      }
+      .auth-title {
+        font-size: 1.5rem;
+      }
     }
       #redirect{
         display: flex;
@@ -306,7 +344,8 @@
 
 <div class="cursor-trail-container" id="cursor-trail"></div>
 
-<script>
+<!-- Cursor trail disabled on auth pages to prevent JS errors -->
+<!--<script>
 (function() {
   // Hide default cursor
   document.body.style.cursor = 'none';
@@ -459,7 +498,7 @@
   // Start animation
   animateTrail();
 })();
-</script>
+</script>-->
 
 
   <!-- Header -->
@@ -471,10 +510,6 @@
           <span>ExpenseFlow</span>
         </div>
         <div class="nav-menu" id="nav-menu">
-          <a href="#dashboard" class="nav-link active">Dashboard</a>
-          <a href="#analytics" class="nav-link">Analytics</a>
-          <a href="#goals" class="nav-link">Goals</a>
-          <a href="#settings" class="nav-link">Settings</a>
         </div>
         <div class="nav-toggle" id="nav-toggle">
           <span class="bar"></span>
@@ -482,13 +517,6 @@
           <span class="bar"></span>
         </div>
         <div class="user-profile">
-          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
-            <i class="fas fa-coins"></i>
-            <span id="current-currency">INR</span>
-          </button>
-          <div id="redirect">
-                <a href="signup.html">Sign up</a>
-            </div>
             <div id="redirect">
                 <a href="login.html">Login</a>
             </div>
@@ -499,43 +527,12 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <div class="container">
-        <div style="text-align:center; font-size:2rem; margin-bottom:0.5rem;">
-            <i class="fas fa-lock"></i>
-        </div>
-        <h2>Register</h2>
-    <form id="registerForm">
-        <div class="form-group">
-                <label for="name" >Name:</label>
-               <input type="text" id="name" placeholder="Name" required>
-            </div>  
-            <div class="form-group">
-                <label for="email" >Email:</label>
-                <input type="email" id="email" placeholder="Email" required>
-            </div>
-            <div class="form-group">
-                <label for="password" >Password:</label>
-
-                <div style="position: relative;">
-                  <input type="password" id="password" placeholder="Password" required>
-                  <i class="far fa-eye" id="togglePassword"></i>
-                </div>
-               
-               <div id="passwordHint" class="password-hint">
-                <strong>Password must include:</strong>
-                <ul>
-                  <li id="rule-length">At least 12 characters</li>
-                  <li id="rule-upper">One uppercase letter</li>
-                  <li id="rule-lower">One lowercase letter</li>
-                  <li id="rule-number">One number</li>
-                  <li id="rule-special">One special character</li>
-                </ul>
-              </div>
-            </div>
-        <button type="submit" class="btn" id="registerBtn" disabled>Register</button>
-         <p>Already have an account? <a href="login.html">Login here</a></p>
-        </form>
-
+    <div class="auth-page-wrapper">
+      <div class="auth-icon">
+      </div>
+      <h2 class="auth-title"></h2>
+      <!-- Clerk Sign Up Component will mount here -->
+      <div id="clerk-sign-up"></div>
     </div>
   </main>
 
@@ -603,6 +600,72 @@
         </div>
     </footer>
     <div id="toast" class="toast"></div>
-    <script src="auth.js"></script>
+    
+    <script>
+      // Clerk Sign Up
+      window.addEventListener('load', async function() {
+        try {
+          if (!window.Clerk) {
+            document.getElementById('clerk-sign-up').innerHTML = `
+              <div style="text-align: center; padding: 2rem; color: #e74c3c;">
+                <h3>Error</h3>
+                <p>Failed to load authentication. Please refresh the page.</p>
+              </div>
+            `;
+            return;
+          }
+
+          await window.Clerk.load();
+
+          // If already signed in, redirect to dashboard
+          if (window.Clerk.user) {
+            window.location.href = '/index.html';
+            return;
+          }
+
+          // Mount Clerk sign-up component
+          window.Clerk.mountSignUp(document.getElementById('clerk-sign-up'), {
+            afterSignUpUrl: '/index.html',
+            signInUrl: '/login.html',
+            appearance: {
+              elements: {
+                formButtonPrimary: {
+                  backgroundColor: '#64ffda',
+                  color: '#0f0f23',
+                  '&:hover': { backgroundColor: '#4fd1c5' }
+                },
+                card: {
+                  backgroundColor: '#1a1a2e',
+                  boxShadow: '0 8px 32px rgba(100, 255, 218, 0.1)',
+                  padding: '2rem'
+                },
+                headerTitle: { color: '#64ffda', fontSize: '1.5rem' },
+                headerSubtitle: { color: '#a0aec0' },
+                formFieldLabel: { color: '#e2e8f0' },
+                formFieldInput: {
+                  backgroundColor: '#2d3748',
+                  borderColor: '#4a5568',
+                  color: '#e2e8f0'
+                },
+                footerActionLink: { color: '#64ffda' },
+                socialButtonsBlockButton: {
+                  backgroundColor: '#2d3748',
+                  borderColor: '#4a5568',
+                  color: '#e2e8f0'
+                }
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Error loading Clerk:', error);
+          document.getElementById('clerk-sign-up').innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: #e74c3c;">
+              <h3>Error</h3>
+              <p>Failed to load sign up. Please refresh the page.</p>
+            </div>
+          `;
+        }
+      });
+    </script>
 </body>
 </html>

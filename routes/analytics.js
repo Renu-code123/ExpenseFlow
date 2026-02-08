@@ -15,6 +15,7 @@ const CustomDashboard = require('../models/CustomDashboard');
 const FinancialHealthScore = require('../models/FinancialHealthScore');
 const ResponseFactory = require('../utils/ResponseFactory');
 const { asyncHandler } = require('../middleware/errorMiddleware');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 // ========================
 // SUBSCRIPTION DETECTION & RUNWAY ROUTES (Issue #444)
@@ -24,7 +25,7 @@ const { asyncHandler } = require('../middleware/errorMiddleware');
  * GET /api/analytics/subscriptions/discover
  * Scan past transactions to detect subscription patterns
  */
-router.get('/subscriptions/discover', auth, async (req, res) => {
+router.get('/subscriptions/discover', requireAuth, async (req, res) => {
   try {
     const discoveries = await discoveryService.discoverSubscriptions(req.user.id);
 
@@ -45,7 +46,7 @@ router.get('/subscriptions/discover', auth, async (req, res) => {
  * POST /api/analytics/subscriptions/confirm
  * Confirm detected subscription and add to recurring expenses
  */
-router.post('/subscriptions/confirm', auth, [
+router.post('/subscriptions/confirm', requireAuth, [
   body('merchantKey').notEmpty().isString()
 ], async (req, res) => {
   try {
@@ -85,7 +86,7 @@ router.post('/subscriptions/confirm', auth, [
  * POST /api/analytics/subscriptions/confirm-multiple
  * Confirm multiple detected subscriptions at once
  */
-router.post('/subscriptions/confirm-multiple', auth, [
+router.post('/subscriptions/confirm-multiple', requireAuth, [
   body('merchantKeys').isArray({ min: 1 }),
   body('merchantKeys.*').isString()
 ], async (req, res) => {
@@ -120,7 +121,7 @@ router.post('/subscriptions/confirm-multiple', auth, [
  * GET /api/analytics/subscriptions/burn-rate
  * Get subscription burn rate calculation
  */
-router.get('/subscriptions/burn-rate', auth, async (req, res) => {
+router.get('/subscriptions/burn-rate', requireAuth, async (req, res) => {
   try {
     const burnRate = await discoveryService.calculateBurnRate(req.user.id);
 
@@ -141,7 +142,7 @@ router.get('/subscriptions/burn-rate', auth, async (req, res) => {
  * GET /api/analytics/subscriptions/upcoming
  * Get upcoming subscription charges
  */
-router.get('/subscriptions/upcoming', auth, [
+router.get('/subscriptions/upcoming', requireAuth, [
   query('days').optional().isInt({ min: 1, max: 90 })
 ], async (req, res) => {
   try {
@@ -170,7 +171,7 @@ router.get('/subscriptions/upcoming', auth, [
  * GET /api/analytics/runway
  * Get financial runway calculation
  */
-router.get('/runway', auth, async (req, res) => {
+router.get('/runway', requireAuth, async (req, res) => {
   try {
     const runway = await forecastingService.calculateRunway(req.user.id);
 
@@ -191,7 +192,7 @@ router.get('/runway', auth, async (req, res) => {
  * GET /api/analytics/runway/summary
  * Get runway summary for dashboard
  */
-router.get('/runway/summary', auth, async (req, res) => {
+router.get('/runway/summary', requireAuth, async (req, res) => {
   try {
     const summary = await forecastingService.getRunwaySummary(req.user.id);
 
@@ -216,7 +217,7 @@ router.get('/runway/summary', auth, async (req, res) => {
  * GET /api/analytics/gamification/health-score
  * Calculate and return complete Financial Health Score
  */
-router.get('/gamification/health-score', auth, [
+router.get('/gamification/health-score', requireAuth, [
   query('workspaceId').optional().isMongoId()
 ], async (req, res) => {
   try {
@@ -247,7 +248,7 @@ router.get('/gamification/health-score', auth, [
  * GET /api/analytics/gamification/profile
  * Get user's gamification profile (level, XP, badges)
  */
-router.get('/gamification/profile', auth, async (req, res) => {
+router.get('/gamification/profile', requireAuth, async (req, res) => {
   try {
     const profile = await gamificationService.getUserGamificationProfile(req.user.id);
 
@@ -268,7 +269,7 @@ router.get('/gamification/profile', auth, async (req, res) => {
  * GET /api/analytics/gamification/badges
  * Get all available badges with user's progress
  */
-router.get('/gamification/badges', auth, async (req, res) => {
+router.get('/gamification/badges', requireAuth, async (req, res) => {
   try {
     const badges = await gamificationService.getAllBadges(req.user.id);
 
@@ -289,7 +290,7 @@ router.get('/gamification/badges', auth, async (req, res) => {
  * GET /api/analytics/gamification/leaderboard
  * Get community leaderboard
  */
-router.get('/gamification/leaderboard', auth, [
+router.get('/gamification/leaderboard', requireAuth, [
   query('limit').optional().isInt({ min: 5, max: 50 }),
   query('type').optional().isIn(['points', 'health'])
 ], async (req, res) => {
@@ -321,7 +322,7 @@ router.get('/gamification/leaderboard', auth, [
  * PUT /api/analytics/gamification/financial-profile
  * Update user's financial profile for score calculation
  */
-router.put('/gamification/financial-profile', auth, [
+router.put('/gamification/financial-profile', requireAuth, [
   body('monthlyIncome').optional().isFloat({ min: 0 }),
   body('monthlyDebtPayment').optional().isFloat({ min: 0 }),
   body('emergencyFundTarget').optional().isFloat({ min: 0 }),
@@ -353,7 +354,7 @@ router.put('/gamification/financial-profile', auth, [
  * POST /api/analytics/gamification/recalculate
  * Force recalculation of health score
  */
-router.post('/gamification/recalculate', auth, [
+router.post('/gamification/recalculate', requireAuth, [
   body('workspaceId').optional().isMongoId()
 ], async (req, res) => {
   try {
@@ -381,7 +382,7 @@ router.post('/gamification/recalculate', auth, [
 // ========================
 
 // Get data warehouse analytics
-router.get('/warehouse', auth, [
+router.get('/warehouse', requireAuth, [
   query('workspaceId').optional().isMongoId(),
   query('granularity').optional().isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly']),
   query('startDate').optional().isISO8601(),
@@ -435,7 +436,7 @@ router.get('/warehouse', auth, [
 });
 
 // Get spending trends
-router.get('/trends', auth, async (req, res) => {
+router.get('/trends', requireAuth, async (req, res) => {
   try {
     const { period = 'daily', timeRange = 30 } = req.query;
     const userId = req.user.id;
@@ -473,7 +474,7 @@ router.get('/trends', auth, async (req, res) => {
 });
 
 // Get category breakdown
-router.get('/categories', auth, async (req, res) => {
+router.get('/categories', requireAuth, async (req, res) => {
   try {
     const { timeRange = 30 } = req.query;
     const userId = req.user.id;
@@ -517,7 +518,7 @@ router.get('/categories', auth, async (req, res) => {
 });
 
 // Get top merchants
-router.get('/merchants', auth, async (req, res) => {
+router.get('/merchants', requireAuth, async (req, res) => {
   try {
     const { timeRange = 30, limit = 10 } = req.query;
     const userId = req.user.id;
@@ -556,7 +557,7 @@ router.get('/merchants', auth, async (req, res) => {
 });
 
 // Get income vs expenses comparison
-router.get('/income-expense', auth, async (req, res) => {
+router.get('/income-expense', requireAuth, async (req, res) => {
   try {
     const { months = 6 } = req.query;
     const userId = req.user.id;
@@ -599,7 +600,7 @@ router.get('/income-expense', auth, async (req, res) => {
 });
 
 // Generate detailed report
-router.get('/report/:type', auth, async (req, res) => {
+router.get('/report/:type', requireAuth, async (req, res) => {
   try {
     const { type } = req.params;
     const { timeRange = 30 } = req.query;
@@ -680,7 +681,7 @@ router.get('/report/:type', auth, async (req, res) => {
 });
 
 // Get financial insights
-router.get('/insights', auth, async (req, res) => {
+router.get('/insights', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
     const insights = [];
@@ -766,7 +767,7 @@ router.get('/insights', auth, async (req, res) => {
 // ============================================
 
 // Get Z-Score based anomaly analysis
-router.get('/intelligence/anomalies', auth, [
+router.get('/intelligence/anomalies', requireAuth, [
   query('months').optional().isInt({ min: 1, max: 12 }),
   query('threshold').optional().isFloat({ min: 1, max: 4 })
 ], async (req, res) => {
@@ -797,7 +798,7 @@ router.get('/intelligence/anomalies', auth, [
 });
 
 // Get spending volatility analysis
-router.get('/intelligence/volatility', auth, [
+router.get('/intelligence/volatility', requireAuth, [
   query('months').optional().isInt({ min: 1, max: 12 })
 ], async (req, res) => {
   try {
@@ -821,7 +822,7 @@ router.get('/intelligence/volatility', auth, [
 });
 
 // Get comprehensive intelligence dashboard
-router.get('/intelligence/dashboard', auth, async (req, res) => {
+router.get('/intelligence/dashboard', requireAuth, async (req, res) => {
   try {
     const dashboard = await budgetIntelligenceService.getIntelligenceDashboard(req.user.id);
 
@@ -839,7 +840,7 @@ router.get('/intelligence/dashboard', auth, async (req, res) => {
 });
 
 // Update budget intelligence statistics
-router.post('/intelligence/update', auth, async (req, res) => {
+router.post('/intelligence/update', requireAuth, async (req, res) => {
   try {
     // Sync spending history first
     await budgetIntelligenceService.syncSpendingHistory(req.user.id);
@@ -861,7 +862,7 @@ router.post('/intelligence/update', auth, async (req, res) => {
 });
 
 // Analyze a specific transaction for anomaly
-router.post('/intelligence/analyze-transaction', auth, [
+router.post('/intelligence/analyze-transaction', requireAuth, [
   body('amount').isFloat({ min: 0.01 }),
   body('category').notEmpty().isString(),
   body('description').optional().isString()
@@ -894,7 +895,7 @@ router.post('/intelligence/analyze-transaction', auth, [
 });
 
 // Get reallocation suggestions
-router.get('/intelligence/reallocations', auth, async (req, res) => {
+router.get('/intelligence/reallocations', requireAuth, async (req, res) => {
   try {
     const budgets = await budgetRepository.findAll({
       user: req.user.id,
@@ -936,7 +937,7 @@ router.get('/intelligence/reallocations', auth, async (req, res) => {
 });
 
 // Generate reallocation suggestions for a specific deficit
-router.post('/intelligence/reallocations/generate', auth, [
+router.post('/intelligence/reallocations/generate', requireAuth, [
   body('category').notEmpty().isString(),
   body('deficitAmount').isFloat({ min: 0.01 })
 ], async (req, res) => {
@@ -968,7 +969,7 @@ router.post('/intelligence/reallocations/generate', auth, [
 });
 
 // Apply a reallocation (move funds between budgets)
-router.post('/intelligence/reallocations/apply', auth, [
+router.post('/intelligence/reallocations/apply', requireAuth, [
   body('fromBudgetId').isMongoId(),
   body('toBudgetId').isMongoId(),
   body('amount').isFloat({ min: 0.01 })
@@ -1003,7 +1004,7 @@ router.post('/intelligence/reallocations/apply', auth, [
 });
 
 // Reject a reallocation suggestion
-router.post('/intelligence/reallocations/reject', auth, [
+router.post('/intelligence/reallocations/reject', requireAuth, [
   body('budgetId').isMongoId(),
   body('toCategory').notEmpty().isString()
 ], async (req, res) => {
@@ -1050,7 +1051,7 @@ router.post('/intelligence/reallocations/reject', auth, [
 });
 
 // Batch analyze recent transactions for anomalies
-router.post('/intelligence/batch-analyze', auth, [
+router.post('/intelligence/batch-analyze', requireAuth, [
   body('since').optional().isISO8601()
 ], async (req, res) => {
   try {
@@ -1075,7 +1076,7 @@ router.post('/intelligence/batch-analyze', auth, [
 });
 
 // Get budgets with intelligence data
-router.get('/intelligence/budgets', auth, async (req, res) => {
+router.get('/intelligence/budgets', requireAuth, async (req, res) => {
   try {
     const budgets = await budgetService.getBudgetsWithIntelligence(req.user.id);
 
@@ -1093,7 +1094,7 @@ router.get('/intelligence/budgets', auth, async (req, res) => {
 });
 
 // Get budget alerts including AI-driven alerts
-router.get('/intelligence/alerts', auth, async (req, res) => {
+router.get('/intelligence/alerts', requireAuth, async (req, res) => {
   try {
     const alerts = await budgetService.checkBudgetAlerts(req.user.id);
 
@@ -1111,7 +1112,7 @@ router.get('/intelligence/alerts', auth, async (req, res) => {
 });
 
 // Recalculate all budgets and update intelligence
-router.post('/intelligence/recalculate', auth, async (req, res) => {
+router.post('/intelligence/recalculate', requireAuth, async (req, res) => {
   try {
     const result = await budgetService.recalculateBudgets(req.user.id);
 
@@ -1136,7 +1137,7 @@ router.post('/intelligence/recalculate', auth, async (req, res) => {
  * GET /api/analytics/burn-rate
  * Calculate daily/weekly spending velocity (burn rate)
  */
-router.get('/burn-rate', auth, async (req, res) => {
+router.get('/burn-rate', requireAuth, async (req, res) => {
   try {
     const { categoryId, workspaceId, startDate, endDate } = req.query;
 
@@ -1164,7 +1165,7 @@ router.get('/burn-rate', auth, async (req, res) => {
  * GET /api/analytics/forecast
  * Predict future expenses using linear regression
  */
-router.get('/forecast', auth, async (req, res) => {
+router.get('/forecast', requireAuth, async (req, res) => {
   try {
     const { categoryId, workspaceId, daysToPredict } = req.query;
 
@@ -1191,7 +1192,7 @@ router.get('/forecast', auth, async (req, res) => {
  * GET /api/analytics/forecast/moving-average
  * Calculate weighted moving average for smoother predictions
  */
-router.get('/forecast/moving-average', auth, async (req, res) => {
+router.get('/forecast/moving-average', requireAuth, async (req, res) => {
   try {
     const { categoryId, workspaceId, period } = req.query;
 
@@ -1218,7 +1219,7 @@ router.get('/forecast/moving-average', auth, async (req, res) => {
  * GET /api/analytics/budget/:budgetId/exhaustion
  * Predict when a budget will be exhausted based on burn rate
  */
-router.get('/budget/:budgetId/exhaustion', auth, async (req, res) => {
+router.get('/budget/:budgetId/exhaustion', requireAuth, async (req, res) => {
   try {
     const { budgetId } = req.params;
 
@@ -1241,7 +1242,7 @@ router.get('/budget/:budgetId/exhaustion', auth, async (req, res) => {
  * GET /api/analytics/category-patterns
  * Analyze spending patterns by category with predictions
  */
-router.get('/category-patterns', auth, async (req, res) => {
+router.get('/category-patterns', requireAuth, async (req, res) => {
   try {
     const { workspaceId, daysToAnalyze } = req.query;
 
@@ -1267,7 +1268,7 @@ router.get('/category-patterns', auth, async (req, res) => {
  * GET /api/analytics/insights
  * Generate intelligent insights and recommendations
  */
-router.get('/insights', auth, async (req, res) => {
+router.get('/insights', requireAuth, async (req, res) => {
   try {
     const insights = await intelligenceService.generateInsights(req.user.id);
 
@@ -1288,7 +1289,7 @@ router.get('/insights', auth, async (req, res) => {
  * GET /api/analytics/forecast/complete
  * Get complete forecast data including predictions, burn rate, and category analysis
  */
-router.get('/forecast/complete', auth, async (req, res) => {
+router.get('/forecast/complete', requireAuth, async (req, res) => {
   try {
     const { categoryId, workspaceId } = req.query;
 
@@ -1331,7 +1332,7 @@ const Insight = require('../models/Insight');
  * GET /api/analytics/wellness/health-score
  * Get comprehensive financial health score
  */
-router.get('/wellness/health-score', auth, async (req, res) => {
+router.get('/wellness/health-score', requireAuth, async (req, res) => {
   try {
     const timeWindow = parseInt(req.query.timeWindow) || 30;
     const healthScore = await wellnessService.calculateHealthScore(req.user.id, { timeWindow });
@@ -1353,7 +1354,7 @@ router.get('/wellness/health-score', auth, async (req, res) => {
  * GET /api/analytics/wellness/insights
  * Get active financial insights and recommendations
  */
-router.get('/wellness/insights', auth, async (req, res) => {
+router.get('/wellness/insights', requireAuth, async (req, res) => {
   try {
     const priority = req.query.priority;
     const type = req.query.type;
@@ -1388,7 +1389,7 @@ router.get('/wellness/insights', auth, async (req, res) => {
  * POST /api/analytics/wellness/analyze
  * Run comprehensive financial analysis
  */
-router.post('/wellness/analyze', auth, async (req, res) => {
+router.post('/wellness/analyze', requireAuth, async (req, res) => {
   try {
     const analysis = await analysisEngine.runComprehensiveAnalysis(req.user.id);
 
@@ -1409,7 +1410,7 @@ router.post('/wellness/analyze', auth, async (req, res) => {
  * POST /api/analytics/wellness/insights/:id/acknowledge
  * Acknowledge an insight
  */
-router.post('/wellness/insights/:id/acknowledge', auth, async (req, res) => {
+router.post('/wellness/insights/:id/acknowledge', requireAuth, async (req, res) => {
   try {
     const insight = await Insight.findOne({
       _id: req.params.id,
@@ -1443,7 +1444,7 @@ router.post('/wellness/insights/:id/acknowledge', auth, async (req, res) => {
  * POST /api/analytics/wellness/insights/:id/dismiss
  * Dismiss an insight
  */
-router.post('/wellness/insights/:id/dismiss', auth, async (req, res) => {
+router.post('/wellness/insights/:id/dismiss', requireAuth, async (req, res) => {
   try {
     const insight = await Insight.findOne({
       _id: req.params.id,
@@ -1477,7 +1478,7 @@ router.post('/wellness/insights/:id/dismiss', auth, async (req, res) => {
  * GET /api/analytics/wellness/velocity/:category
  * Get spending velocity analysis for specific category
  */
-router.get('/wellness/velocity/:category', auth, async (req, res) => {
+router.get('/wellness/velocity/:category', requireAuth, async (req, res) => {
   try {
     const timeWindow = parseInt(req.query.timeWindow) || 7;
     const velocity = await analysisEngine.analyzeSpendingVelocity(req.user.id, {

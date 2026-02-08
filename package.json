@@ -8,6 +8,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "aws-sdk": "^2.1564.0",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
@@ -39,6 +40,7 @@
     "simple-statistics": "^7.8.3",
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
+    "tesseract.js": "^7.0.0",
     "twilio": "^5.12.0",
     "web-push": "^3.6.7",
     "xero-node": "^13.3.1",
