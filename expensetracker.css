@@ -4356,3 +4356,34 @@ body {
   }
 }
 
+/* =========================
+   FOOTER UX & ACCESSIBILITY
+   (Issue #549 – Scoped Fix)
+========================= */
+
+.footer-links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.25s ease, text-decoration-color 0.25s ease;
+}
+
+.footer-links a:hover,
+.footer-links a:focus-visible {
+  color: #64ffda;
+  text-decoration: underline;
+  outline: none;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.social-link:hover,
+.social-link:focus-visible {
+  transform: scale(1.15);
+  color: #64ffda;
+  outline: none;
+}

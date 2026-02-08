@@ -220,7 +220,7 @@
             <a href="#health" class="nav-link" id="health-tab">Health</a>
             <a href="#goals" class="nav-link">Goals</a>
             <a href="#settings" class="nav-link">Settings</a>
-            <a href="login-signup.html" class="nav-link">Login-Signup</a>
+            <a href="javascript:void(0)" class="nav-link" onclick="openLoginModal()">Login</a>
           </div>
           
           <div class="nav-actions">
@@ -734,9 +734,62 @@
           </form>
         </div>
       </div>
-    </div>
     </div> <!-- End #protectedContent -->
-  </main>
+      </main>
+
+
+     <!-- Footer -->
+ <footer class="footer" role="contentinfo">
+  <div class="footer-container">
+
+    <div class="footer-section">
+      <div class="footer-logo">
+        <i class="fas fa-wallet"></i>
+        <span>ExpenseFlow</span>
+      </div>
+
+      <p class="footer-description">
+        Smart money management made simple. Track, analyze, and optimize your financial habits.
+      </p>
+
+      <div class="social-links">
+        <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
+          <i class="fab fa-x-twitter"></i>
+        </a>
+        <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="mailto:renu89857@gmail.com" class="social-link" aria-label="Email">
+          <i class="far fa-envelope"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="footer-section">
+      <h4>Company</h4>
+      <ul class="footer-links">
+        <li><a href="index.html" class="public">Dashboard</a></li>
+        <li><a href="public/PrivacyPolicy.html" class="public-link">Privacy Policy</a></li>
+        <li><a href="public/terms_service.html" class="public-link">Terms of Service</a></li>
+        <li><a href="mailto:renu89857@gmail.com" class="public">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-container">
+      <p>&copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for better financial management.</p>
+      <div class="footer-stats">
+        <span>🏆 Trusted by 10,000+ users</span>
+        <span>💰 ₹50M+ tracked</span>
+        <span>📊 99.9% uptime</span>
+      </div>
+    </div>
+  </div>
+</footer>
 
   <!-- Currency Settings Modal -->
   <div id="currency-modal" class="modal">
@@ -767,86 +820,7 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-  <div class="footer-container">
-
-    <div class="footer-section">
-  <div class="footer-logo">
-    <i class="fas fa-wallet"></i>
-    <span>ExpenseFlow</span>
-  </div>
-
-  <p class="footer-description">
-    Smart money management made simple. Track, analyze, and optimize your financial habits.
-  </p>
-
-  <div class="social-links">
-    <a
-      href="https://x.com/9504_renu"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="X (Twitter)"
-    >
-      <i class="fab fa-x-twitter"></i>
-    </a>
-
-    <a
-      href="https://github.com/Renu-code123/ExpenseFlow"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Github"
-    >
-      <i class="fab fa-github"></i>
-    </a>
-
-    <a
-      href="mailto:renu89857@gmail.com"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Email"
-    >
-      <i class="far fa-envelope"></i>
-    </a>
-
-    <a
-      href="https://www.linkedin.com/in/renu-kumari-prajapati"
-      class="social-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="LinkedIn"
-    >
-      <i class="fab fa-linkedin-in"></i>
-    </a>
-  </div>
-</div>
-
-
-    <div class="footer-section">
-      <h4>Company</h4>
-      <ul class="footer-links">
-        <li><a href="AboutUs.html">About Us</a></li>
-        <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
-        <li><a href="terms_service.html">Terms of Service</a></li>
-        <li><a href="#">Contact</a></li>
-      </ul>
-    </div>
-  </div>
-
-<div class="footer-bottom">
-  <div class="footer-container">
-    <p>&copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for better financial management.</p>
-    <div class="footer-stats">
-      <span>🏆 Trusted by 10,000+ users</span>
-      <span>💰 ₹50M+ tracked</span>
-      <span>📊 99.9% uptime</span>
-    </div>
-  </div>
-</div>
-</footer>
+ 
   <!-- Authentication working properly now -->
   <!-- All required scripts will be inline -->
 
@@ -956,6 +930,7 @@ window.addEventListener("DOMContentLoaded", () => {
       <button id="chatbot-toggle" class="chatbot-toggle-btn" title="Chat with Assistant">
         <i class="fas fa-comments"></i>
       </button>
+    </div> <!-- End #chatbot-container -->
 
     <!-- Authentication Prompt for Unauthenticated Users (Premium) -->
     <div id="authPrompt" class="auth-prompt">
@@ -1308,33 +1283,6 @@ window.addEventListener("DOMContentLoaded", () => {
       // Authentication System Initialization
       function initializeAuthSystem() {
         console.log('Initializing authentication system...');
-        
-        // Check if elements exist
-        const loginModal = document.getElementById('loginModal');
-        const authPrompt = document.getElementById('authPrompt');
-        const authButtons = document.getElementById('authButtons');
-        
-        console.log('Auth elements found:', {
-          loginModal: !!loginModal,
-          authPrompt: !!authPrompt,
-          authButtons: !!authButtons
-        });
-        
-        // Clear any existing auth state on page load
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        
-        // Always start in unauthenticated state for demo
-        updateAuthState(false);
-        
-        // Force show auth prompt immediately
-        if (authPrompt) {
-          authPrompt.classList.add('show');
-          console.log('Auth prompt shown');
-        } else {
-          console.error('Auth prompt element not found!');
-        }
-        
         checkAuthState();
       }
       
@@ -1353,8 +1301,7 @@ window.addEventListener("DOMContentLoaded", () => {
           }
         } else {
           updateAuthState(false);
-          // Show login prompt for unauthenticated users
-          showAuthPrompt();
+          // Do NOT force auth prompt on load
         }
       }
 
@@ -1362,7 +1309,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const authButtons = document.getElementById('authButtons');
         const userInfo = document.getElementById('userInfo');
         const protectedElements = document.querySelectorAll('.protected-content');
-        const navLinks = document.querySelectorAll('.nav-link:not(.public)');
+        const navLinks = document.querySelectorAll('.nav-link');
         
         if (isLoggedIn && user) {
           // Show user info, hide auth buttons
@@ -1390,22 +1337,29 @@ window.addEventListener("DOMContentLoaded", () => {
           // Hide auth prompt
           hideAuthPrompt();
         } else {
-          // Show auth buttons, hide user info
           if (authButtons) authButtons.style.display = 'flex';
           if (userInfo) userInfo.style.display = 'none';
-          
-          // Disable protected content
-          protectedElements.forEach(element => {
-            element.style.display = 'none';
-          });
-          
-          // Disable navigation links
-          navLinks.forEach(link => {
-            link.style.pointerEvents = 'none';
-            link.style.opacity = '0.5';
-            link.addEventListener('click', handleUnauthorizedClick);
-          });
-        }
+
+          // Hide protected content only
+          // Visually lock protected content instead of removing it
+        protectedElements.forEach(element => {
+          element.style.pointerEvents = 'none';
+          element.style.opacity = '0.35';
+          element.style.filter = 'blur(1px)';
+        });
+
+        // Disable ONLY non-public nav links
+        navLinks.forEach(link => {
+          if (link.classList.contains('public')) {
+            link.style.pointerEvents = 'auto';
+            link.style.opacity = '1';
+          } else {
+            link.style.pointerEvents = 'auto';
+            link.style.opacity = '0.6';
+        link.removeEventListener('click', handleUnauthorizedClick);
+        link.addEventListener('click', handleUnauthorizedClick);
+          }
+        });
       }
 
       function logout() {
@@ -1455,13 +1409,23 @@ window.addEventListener("DOMContentLoaded", () => {
       
       // Handle unauthorized access attempts
       function handleUnauthorizedClick(e) {
+        const link = e.currentTarget;
+      
+        // Allow public links (footer/legal)
+        if (
+          link.classList.contains("public") ||
+          link.classList.contains("public-link") ||
+          link.closest("footer")
+        ) {
+          return;
+        }
+      
         e.preventDefault();
         e.stopPropagation();
-        showNotification('Please login to access this feature', 'warning');
-        setTimeout(() => openLoginModal(), 500);
-        return false;
+        showNotification("Please login to access this feature", "warning");
+        openLoginModal();
       }
-      
+
       // Show authentication prompt
       function showAuthPrompt() {
         const authPrompt = document.getElementById('authPrompt');
