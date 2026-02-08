@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client');
 const Invoice = require('../models/Invoice');
-const { authenticateToken } = require('../middleware/auth');
+const auth = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
 
 // Validation middleware
@@ -15,7 +15,7 @@ const validateClient = [
 ];
 
 // GET /api/clients - Get all clients for user
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
         const { status, search, sort = 'name' } = req.query;
         
@@ -39,7 +39,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET /api/clients/top - Get top clients by revenue
-router.get('/top', authenticateToken, async (req, res) => {
+router.get('/top', auth, async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
         
@@ -59,7 +59,7 @@ router.get('/top', authenticateToken, async (req, res) => {
 });
 
 // GET /api/clients/outstanding - Get clients with outstanding balance
-router.get('/outstanding', authenticateToken, async (req, res) => {
+router.get('/outstanding', auth, async (req, res) => {
     try {
         const clients = await Client.getClientsWithOutstandingBalance(req.user.userId);
         
@@ -77,7 +77,7 @@ router.get('/outstanding', authenticateToken, async (req, res) => {
 });
 
 // GET /api/clients/:id - Get single client
-router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.get('/:id', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -121,7 +121,7 @@ router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // POST /api/clients - Create new client
-router.post('/', authenticateToken, validateClient, async (req, res) => {
+router.post('/', auth, validateClient, async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -155,7 +155,7 @@ router.post('/', authenticateToken, validateClient, async (req, res) => {
 });
 
 // PUT /api/clients/:id - Update client
-router.put('/:id', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.put('/:id', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -191,7 +191,7 @@ router.put('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // DELETE /api/clients/:id - Delete client
-router.delete('/:id', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.delete('/:id', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -238,7 +238,7 @@ router.delete('/:id', authenticateToken, param('id').isMongoId(), async (req, re
 });
 
 // GET /api/clients/:id/invoices - Get all invoices for a client
-router.get('/:id/invoices', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.get('/:id/invoices', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -284,7 +284,7 @@ router.get('/:id/invoices', authenticateToken, param('id').isMongoId(), async (r
 });
 
 // GET /api/clients/:id/stats - Get client statistics
-router.get('/:id/stats', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.get('/:id/stats', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
