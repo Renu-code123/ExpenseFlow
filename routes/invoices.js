@@ -4,7 +4,7 @@ const Invoice = require('../models/Invoice');
 const InvoiceService = require('../services/invoiceService');
 const PDFService = require('../services/pdfService');
 const ReminderService = require('../services/reminderService');
-const { authenticateToken } = require('../middleware/auth');
+const auth = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
 
 // Validation middleware
@@ -17,7 +17,7 @@ const validateInvoice = [
 ];
 
 // GET /api/invoices - Get all invoices for user
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
         const { status, client, page = 1, limit = 50, sort = '-invoice_date' } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -64,7 +64,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET /api/invoices/overdue - Get overdue invoices
-router.get('/overdue', authenticateToken, async (req, res) => {
+router.get('/overdue', auth, async (req, res) => {
     try {
         const overdueInvoices = await Invoice.getOverdueInvoices(req.user.userId);
         
@@ -82,7 +82,7 @@ router.get('/overdue', authenticateToken, async (req, res) => {
 });
 
 // GET /api/invoices/upcoming - Get upcoming invoices
-router.get('/upcoming', authenticateToken, async (req, res) => {
+router.get('/upcoming', auth, async (req, res) => {
     try {
         const days = parseInt(req.query.days) || 7;
         const upcomingInvoices = await Invoice.getUpcomingInvoices(req.user.userId, days);
