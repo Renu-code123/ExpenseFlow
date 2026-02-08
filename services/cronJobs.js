@@ -326,6 +326,12 @@ class CronJobs {
       await this.updateForecastAccuracy();
     });
 
+    // Retrain ML categorization models - Daily at 2 AM
+    cron.schedule('0 2 * * *', async () => {
+      console.log('[CronJobs] Retraining ML categorization models...');
+      await this.retrainCategorizationModels();
+    });
+
     console.log('Cron jobs initialized successfully');
   }
 
