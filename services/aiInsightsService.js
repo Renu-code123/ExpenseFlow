@@ -6,6 +6,7 @@ const AnalyticsCache = require('../models/AnalyticsCache');
 const notificationService = require('./notificationService');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const tf = require('@tensorflow/tfjs-node');
 
 /**
  * Smart Budget Forecasting & AI Financial Insights Service

@@ -919,68 +919,136 @@
         </div>
       </section>
 
-      <!-- Analytics Dashboard Section -->
-      <section id="analytics" class="analytics-section">
+      <!-- AI-Powered Financial Insights Dashboard -->
+      <section id="ai-insights" class="ai-insights-section">
         <div class="section-header">
-          <h3><i class="fas fa-chart-bar"></i> Financial Analytics & Forecasting</h3>
-          <div class="analytics-actions">
-            <select id="trends-period" class="period-select">
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-            <button id="refresh-analytics" class="refresh-btn">
-              <i class="fas fa-sync-alt"></i> Refresh
+          <h3><i class="fas fa-brain"></i> AI-Powered Financial Insights</h3>
+          <div class="insights-actions">
+            <button id="refresh-insights" class="refresh-btn">
+              <i class="fas fa-sync-alt"></i> Refresh AI Insights
             </button>
+            <span class="ai-status">
+              <i class="fas fa-robot"></i> AI Active
+            </span>
           </div>
         </div>
 
-        <div id="analytics-dashboard" class="analytics-grid">
-          <!-- Top Row: Velocity and Forecast -->
-          <div class="analytics-row top-row">
-            <div id="velocity-widget" class="analytics-card velocity-card">
-              <div class="widget-loading">
+        <!-- Financial Health Score -->
+        <div class="health-score-card">
+          <div class="health-score-header">
+            <h4><i class="fas fa-heartbeat"></i> Financial Health Score</h4>
+            <div id="health-score-display" class="health-score-display">
+              <div class="score-loading">
                 <i class="fas fa-spinner fa-spin"></i>
-                <span>Calculating velocity...</span>
+                <span>Analyzing your finances...</span>
               </div>
             </div>
-            <div id="forecast-widget" class="analytics-card forecast-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Generating forecast...</span>
+          </div>
+          <div id="health-factors" class="health-factors">
+            <!-- Health factors will be loaded here -->
+          </div>
+        </div>
+
+        <!-- AI Insights Grid -->
+        <div id="ai-insights-dashboard" class="ai-insights-grid">
+          <!-- Top Row: Forecast and Anomalies -->
+          <div class="insights-row top-row">
+            <div id="ai-forecast-widget" class="insights-card forecast-card">
+              <div class="card-header">
+                <h4><i class="fas fa-chart-line"></i> AI Spending Forecast</h4>
+                <span class="ai-badge">ML-Powered</span>
+              </div>
+              <div class="card-content">
+                <div class="forecast-loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Training AI model...</span>
+                </div>
+              </div>
+            </div>
+            <div id="ai-anomalies-widget" class="insights-card anomalies-card">
+              <div class="card-header">
+                <h4><i class="fas fa-exclamation-triangle"></i> Spending Anomalies</h4>
+                <span class="ai-badge">AI Detected</span>
+              </div>
+              <div class="card-content">
+                <div class="anomalies-loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Scanning for anomalies...</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Middle Row: Trends and Category Breakdown -->
-          <div class="analytics-row main-charts">
-            <div id="trends-chart" class="analytics-card trends-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading trends...</span>
+          <!-- Middle Row: Recommendations and Trends -->
+          <div class="insights-row main-row">
+            <div id="ai-recommendations-widget" class="insights-card recommendations-card">
+              <div class="card-header">
+                <h4><i class="fas fa-lightbulb"></i> Smart Recommendations</h4>
+                <span class="ai-badge">Personalized</span>
+              </div>
+              <div class="card-content">
+                <div class="recommendations-loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Generating recommendations...</span>
+                </div>
               </div>
             </div>
-            <div id="category-chart" class="analytics-card category-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading distribution...</span>
+            <div id="ai-trends-widget" class="insights-card trends-card">
+              <div class="card-header">
+                <h4><i class="fas fa-chart-bar"></i> Spending Trends</h4>
+                <span class="ai-badge">Pattern Analysis</span>
+              </div>
+              <div class="card-content">
+                <div class="trends-loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Analyzing trends...</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Bottom Row: Insights and Predictions -->
-          <div class="analytics-row details-row">
-            <div id="insights-container" class="analytics-card insights-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Gathering insights...</span>
+          <!-- Bottom Row: Budget Optimization and Alerts -->
+          <div class="insights-row bottom-row">
+            <div id="ai-budget-widget" class="insights-card budget-card">
+              <div class="card-header">
+                <h4><i class="fas fa-piggy-bank"></i> Budget Optimization</h4>
+                <span class="ai-badge">Smart Allocation</span>
+              </div>
+              <div class="card-content">
+                <div class="budget-loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Optimizing budgets...</span>
+                </div>
               </div>
             </div>
-            <div id="predictions-widget" class="analytics-card predictions-card">
-              <div class="widget-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Predicting spending...</span>
+            <div id="ai-alerts-widget" class="insights-card alerts-card">
+              <div class="card-header">
+                <h4><i class="fas fa-bell"></i> Smart Alerts</h4>
+                <span class="ai-badge">Proactive</span>
               </div>
+              <div class="card-content">
+                <div class="alerts-loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Monitoring spending...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Insights Summary -->
+        <div class="ai-summary-card">
+          <div class="summary-header">
+            <h4><i class="fas fa-robot"></i> AI Analysis Summary</h4>
+            <div id="ai-confidence" class="ai-confidence">
+              <span class="confidence-label">AI Confidence:</span>
+              <span class="confidence-score">--</span>
+            </div>
+          </div>
+          <div id="ai-summary-content" class="summary-content">
+            <div class="summary-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Generating AI summary...</span>
             </div>
           </div>
         </div>
