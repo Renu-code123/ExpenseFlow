@@ -11,7 +11,7 @@ const { asyncHandler } = require('../middleware/errorMiddleware');
 const { ExpenseSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const { expenseLimiter, exportLimiter } = require('../middleware/rateLimiter');
 const { NotFoundError } = require('../utils/AppError');
-const {requireAuth,getUserId}=require('../middleware/clerkAuth');
+const { requireAuth, getUserId } = require('../middleware/clerkAuth');
 
 
 const router = express.Router();
@@ -296,5 +296,8 @@ router.post('/report/preview', requireAuth, asyncHandler(async (req, res) => {
 
   return ResponseFactory.success(res, previewData);
 }));
+
+// Import transactions
+router.post('/import', requireAuth, require('../middleware/uploadMiddleware').upload, require('../controllers/importController').importTransactions);
 
 module.exports = router;

@@ -34,6 +34,10 @@
             <div class="header-content">
                 <h1>💳 Transaction History</h1>
                 <div class="header-actions">
+                    <button class="import-btn" onclick="openImportModal()"
+                        style="background-color: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-right: 0.5rem;">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
                     <button class="add-btn" onclick="openAddModal()">
                         <i class="fas fa-plus"></i> Add Transaction
                     </button>
@@ -327,9 +331,43 @@
                 </div>
             </div>
         </div>
-    </div>
-    <script src="protect.js"></script>
-    <script src="transactions.js"></script>
+        <!-- Import Modal -->
+        <div id="importModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Import Transactions</h3>
+                    <button class="modal-close" onclick="closeImportModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="import-body">
+                    <p>Upload a CSV or JSON file to import transactions.</p>
+                    <div class="file-upload-container" onclick="document.getElementById('importFile').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload or drag and drop</p>
+                        <input type="file" id="importFile"
+                            accept=".csv,.json,application/json,text/csv,application/vnd.ms-excel"
+                            style="display: none;" onchange="handleImportFileSelect(event)">
+                    </div>
+                    <div id="filePreview" class="file-preview" style="display: none;"></div>
+                    <div id="importError" class="error-message" style="display: none;"></div>
+                    <div id="importSuccess" class="success-message" style="display: none;"></div>
+                    <div class="template-download">
+                        <small>Need a template? <a href="/templates/transactions.csv" download>Download CSV
+                                Template</a></small>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeImportModal()">Cancel</button>
+                    <button id="btnImportSubmit" class="btn-submit" onclick="submitImport()">
+                        <i class="fas fa-file-import"></i> Import Transactions
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script src="js/import-modal.js"></script>
+        <script src="protect.js"></script>
+        <script src="transactions.js"></script>
 </body>
 
 </html>
