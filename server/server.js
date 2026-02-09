@@ -160,8 +160,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files
-app.use(express.static('public'));
-app.use(express.static('.'));
+// Static files served by Nginx in production/docker
+// app.use(express.static('public'));
+// app.use(express.static('.'));
 
 // Security logging middleware
 app.use((req, res, next) => {
@@ -303,9 +304,10 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Root route to serve the UI
-app.get('/', (req, res) => {
-  res.sendFile(require('path').join(__dirname, 'public', 'index.html'));
-});
+// Root route served by Nginx
+// app.get('/', (req, res) => {
+//   res.sendFile(require('path').join(__dirname, 'public', 'index.html'));
+// });
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

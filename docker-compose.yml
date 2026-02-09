@@ -1,9 +1,48 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  expenseflow:
-    build: .
-    image: expenseflow:latest
+  client:
+    build: ./client
     ports:
-      - "8080:80"
-    restart: unless-stopped
+      - "3000:80"
+    depends_on:
+      - server
+    networks:
+      - mern-network
+
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://db:27017/expenseflow
+      - FRONTEND_URL=http://localhost:3000
+      # Use the .env file for other variables, but override DB URI for docker network
+    env_file:
+      - ./server/.env.example # Fallback if .env doesn't exist, user should copy .env.example to .env
+    depends_on:
+      - db
+    volumes:
+      - server-data:/app/data
+      - server-backups:/app/backups
+    networks:
+      - mern-network
+
+  db:
+    image: mongo:latest
+    ports:
+      - "27017:27017" # Optional: Expose 27017 to host if you want to connect with Compass
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mern-network
+
+networks:
+  mern-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  server-data:
+  server-backups:
