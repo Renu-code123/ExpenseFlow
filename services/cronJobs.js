@@ -378,6 +378,35 @@ class CronJobs {
       }
     });
 
+    // Daily FX revaluation - Every day at 6 AM UTC
+    cron.schedule('0 6 * * *', async () => {
+      try {
+        console.log('[CronJobs] Running automated FX revaluation...');
+        const revaluationEngine = require('./revaluationEngine');
+        const User = require('../models/User');
+
+        // Get all users with foreign currency accounts
+        const users = await User.find({ isActive: true });
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const user of users) {
+          try {
+            await revaluationEngine.runRevaluation(user._id, 'INR', 'automated');
+            successCount++;
+          } catch (err) {
+            console.error(`[CronJobs] Failed to run revaluation for user ${user._id}:`, err.message);
+            failCount++;
+          }
+        }
+
+        console.log(`[CronJobs] FX revaluation completed: ${successCount} success, ${failCount} failed`);
+      } catch (err) {
+        console.error('[CronJobs] Error in FX revaluation:', err);
+      }
+    });
+
     console.log('Cron jobs initialized successfully');
   }
 
