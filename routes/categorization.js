@@ -217,7 +217,7 @@ router.delete('/patterns', auth, async (req, res) => {
 router.get('/stats', auth, async (req, res) => {
     try {
         const stats = await categorizationService.getUserStats(req.user._id);
-        
+
         res.json({
             success: true,
             data: stats
@@ -227,6 +227,64 @@ router.get('/stats', auth, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching statistics',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * @route   GET /api/categorization/analytics
+ * @desc    Get user's categorization analytics
+ * @access  Private
+ */
+router.get('/analytics', auth, async (req, res) => {
+    try {
+        const { days = 30 } = req.query;
+        const CategoryAnalytics = require('../models/CategoryAnalytics');
+
+        const analytics = await CategoryAnalytics.getUserAnalytics(req.user._id, parseInt(days));
+
+        res.json({
+            success: true,
+            data: analytics
+        });
+    } catch (error) {
+        console.error('Get analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching analytics',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * @route   POST /api/categorization/record-prediction
+ * @desc    Record a prediction result for analytics
+ * @access  Private
+ */
+router.post('/record-prediction', auth, async (req, res) => {
+    try {
+        const { prediction, actualCategory, confidence } = req.body;
+        const CategoryAnalytics = require('../models/CategoryAnalytics');
+
+        const analytics = await CategoryAnalytics.recordPrediction(
+            req.user._id,
+            prediction,
+            actualCategory,
+            confidence
+        );
+
+        res.json({
+            success: true,
+            message: 'Prediction recorded',
+            data: analytics
+        });
+    } catch (error) {
+        console.error('Record prediction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error recording prediction',
             error: error.message
         });
     }
