@@ -37,9 +37,30 @@ class TransactionService {
                 finalData.convertedAmount = conversion.convertedAmount;
                 finalData.convertedCurrency = user.preferredCurrency;
                 finalData.exchangeRate = conversion.exchangeRate;
+
+                // Historical metadata initialization
+                finalData.forexMetadata = {
+                    rateAtTransaction: conversion.exchangeRate,
+                    rateSource: 'automated',
+                    lastRevaluedAt: new Date(),
+                    isHistoricallyAccurate: true // Base accuracy at creation time
+                };
             } catch (err) {
                 console.error('Conversion error in TransactionService:', err);
+                // Fallback metadata if conversion fails
+                finalData.forexMetadata = {
+                    rateAtTransaction: 0,
+                    rateSource: 'failed_conversion',
+                    isHistoricallyAccurate: false
+                };
             }
+        } else {
+            // Same currency - set metadata with rate 1
+            finalData.forexMetadata = {
+                rateAtTransaction: 1,
+                rateSource: 'native',
+                isHistoricallyAccurate: true
+            };
         }
 
         // 4. Save Transaction

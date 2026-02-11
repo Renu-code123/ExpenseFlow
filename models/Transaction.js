@@ -106,7 +106,24 @@ const transactionSchema = new mongoose.Schema({
         billedAt: Date,
         invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectInvoice' },
         markupOverride: Number
-    }
+    },
+    // New fields for Historical Currency Revaluation Engine Overhaul
+    forexMetadata: {
+        rateAtTransaction: { type: Number },
+        rateSource: { type: String, default: 'manual' },
+        lastRevaluedAt: { type: Date },
+        isHistoricallyAccurate: { type: Boolean, default: false },
+        historicalProvider: { type: String }
+    },
+    revaluationHistory: [{
+        revaluedAt: { type: Date, default: Date.now },
+        oldRate: Number,
+        newRate: Number,
+        oldConvertedAmount: Number,
+        newConvertedAmount: Number,
+        baseCurrency: String,
+        reason: String
+    }]
 }, {
     timestamps: true
 });

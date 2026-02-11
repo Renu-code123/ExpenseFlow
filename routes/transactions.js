@@ -8,6 +8,8 @@ const currencyService = require('../services/currencyService'); // Added for cur
 const aiService = require('../services/aiService');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const revaluationService = require('../services/revaluationService');
+const batchProcessor = require('../services/batchProcessor');
 const router = express.Router();
 
 const transactionSchema = Joi.object({
@@ -177,6 +179,55 @@ router.delete('/:id', auth, async (req, res) => {
         }
 
         res.json({ message: 'Transaction deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Trigger retroactive revaluation for user's transactions
+router.post('/revalue', auth, async (req, res) => {
+    try {
+        const { startDate, currencies, dryRun, reason } = req.body;
+
+        const job = await batchProcessor.startRevaluationJob(req.user._id, {
+            startDate: startDate ? new Date(startDate) : null,
+            currencies,
+            dryRun: !!dryRun,
+            reason: reason || 'Manual user-triggered revaluation'
+        });
+
+        res.json({
+            success: true,
+            message: 'Revaluation job started in background',
+            job
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get status of a revaluation job
+router.get('/revalue/status/:jobId', auth, async (req, res) => {
+    const status = batchProcessor.getJobStatus(req.params.jobId);
+    if (status.userId && status.userId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ error: 'Access denied' });
+    }
+    res.json(status);
+});
+
+// Get revaluation history for a specific transaction
+router.get('/:id/revaluation-history', auth, async (req, res) => {
+    try {
+        const transaction = await Transaction.findOne({ _id: req.params.id, user: req.user._id });
+        if (!transaction) {
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+        res.json({
+            success: true,
+            currentRate: transaction.exchangeRate,
+            history: transaction.revaluationHistory,
+            metadata: transaction.forexMetadata
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

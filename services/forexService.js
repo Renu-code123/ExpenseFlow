@@ -6,12 +6,17 @@
 
 const currencyService = require('./currencyService');
 const CurrencyRate = require('../models/CurrencyRate');
+const CurrencyMath = require('../utils/currencyMath');
 
 class ForexService {
     constructor() {
         // In-memory cache for real-time rates (simulating Redis)
         this.rateCache = new Map();
         this.cacheExpiry = new Map();
+
+        // New historical rate cache for revaluation engine
+        this.historicalCache = new Map();
+
         this.CACHE_TTL = 300000; // 5 minutes in milliseconds
     }
 
@@ -103,23 +108,43 @@ class ForexService {
     }
 
     /**
-     * Get historical rate for a specific date
+     * Get historical rate for a specific date with caching
      * @param {String} from 
      * @param {String} to 
-     * @param {Date} date 
+     * @param {Date|String} date 
      */
     async getHistoricalRate(from, to, date) {
+        const normalizedDate = new Date(date);
+        normalizedDate.setHours(0, 0, 0, 0);
+        const dateStr = normalizedDate.toISOString().split('T')[0];
+        const cacheKey = `${from}_${to}_${dateStr}`;
+
+        // Check historical cache
+        if (this.historicalCache.has(cacheKey)) {
+            return {
+                rate: this.historicalCache.get(cacheKey),
+                from,
+                to,
+                date: normalizedDate,
+                source: 'historical_cache'
+            };
+        }
+
         try {
-            const rate = await currencyService.getHistoricalRate(from, to, date);
+            const rate = await currencyService.getHistoricalRate(from, to, normalizedDate);
+
+            // Update historical cache
+            this.historicalCache.set(cacheKey, rate);
+
             return {
                 rate,
                 from,
                 to,
-                date,
+                date: normalizedDate,
                 source: 'historical_db'
             };
         } catch (error) {
-            console.error(`[ForexService] Error fetching historical rate:`, error);
+            console.error(`[ForexService] Error fetching historical rate for ${dateStr}:`, error);
 
             // Fallback to current rate if historical data unavailable
             const currentRate = await this.getRealTimeRate(from, to);
@@ -127,11 +152,48 @@ class ForexService {
                 rate: currentRate.rate,
                 from,
                 to,
-                date,
+                date: normalizedDate,
                 source: 'current_rate_fallback',
                 warning: 'Historical rate unavailable, using current rate'
             };
         }
+    }
+
+    /**
+     * Synchronize a batch of historical rates
+     * @param {String} from 
+     * @param {String} to 
+     * @param {Array} dates 
+     */
+    async syncHistoricalRates(from, to, dates) {
+        const results = {
+            synced: 0,
+            alreadyInCache: 0,
+            failed: 0,
+            errors: []
+        };
+
+        for (const date of dates) {
+            const normalizedDate = new Date(date);
+            normalizedDate.setHours(0, 0, 0, 0);
+            const dateStr = normalizedDate.toISOString().split('T')[0];
+            const cacheKey = `${from}_${to}_${dateStr}`;
+
+            if (this.historicalCache.has(cacheKey)) {
+                results.alreadyInCache++;
+                continue;
+            }
+
+            try {
+                await this.getHistoricalRate(from, to, normalizedDate);
+                results.synced++;
+            } catch (error) {
+                results.failed++;
+                results.errors.push({ date: dateStr, error: error.message });
+            }
+        }
+
+        return results;
     }
 
     /**
