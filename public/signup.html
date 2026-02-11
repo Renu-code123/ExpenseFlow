@@ -604,72 +604,7 @@
         </div>
     </footer>
     <div id="toast" class="toast"></div>
+    <script src="auth.js"></script>
     
-    <script>
-      // Clerk Sign Up
-      window.addEventListener('load', async function() {
-        try {
-          if (!window.Clerk) {
-            document.getElementById('clerk-sign-up').innerHTML = `
-              <div style="text-align: center; padding: 2rem; color: #e74c3c;">
-                <h3>Error</h3>
-                <p>Failed to load authentication. Please refresh the page.</p>
-              </div>
-            `;
-            return;
-          }
-
-          await window.Clerk.load();
-
-          // If already signed in, redirect to dashboard
-          if (window.Clerk.user) {
-            window.location.href = '/index.html';
-            return;
-          }
-
-          // Mount Clerk sign-up component
-          window.Clerk.mountSignUp(document.getElementById('clerk-sign-up'), {
-            afterSignUpUrl: '/index.html',
-            signInUrl: '/login.html',
-            appearance: {
-              elements: {
-                formButtonPrimary: {
-                  backgroundColor: '#64ffda',
-                  color: '#0f0f23',
-                  '&:hover': { backgroundColor: '#4fd1c5' }
-                },
-                card: {
-                  backgroundColor: '#1a1a2e',
-                  boxShadow: '0 8px 32px rgba(100, 255, 218, 0.1)',
-                  padding: '2rem'
-                },
-                headerTitle: { color: '#64ffda', fontSize: '1.5rem' },
-                headerSubtitle: { color: '#a0aec0' },
-                formFieldLabel: { color: '#e2e8f0' },
-                formFieldInput: {
-                  backgroundColor: '#2d3748',
-                  borderColor: '#4a5568',
-                  color: '#e2e8f0'
-                },
-                footerActionLink: { color: '#64ffda' },
-                socialButtonsBlockButton: {
-                  backgroundColor: '#2d3748',
-                  borderColor: '#4a5568',
-                  color: '#e2e8f0'
-                }
-              }
-            }
-          });
-        } catch (error) {
-          console.error('Error loading Clerk:', error);
-          document.getElementById('clerk-sign-up').innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #e74c3c;">
-              <h3>Error</h3>
-              <p>Failed to load sign up. Please refresh the page.</p>
-            </div>
-          `;
-        }
-      });
-    </script>
 </body>
 </html>

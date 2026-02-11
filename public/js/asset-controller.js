@@ -1,203 +1,206 @@
 /**
- * Asset Lifecycle & Procurement Controller
+ * Asset Controller
+ * Handles Asset Lifecycle UI and Analytics
  */
 
+let categoryChart = null;
+let projectionChart = null;
+let currentAssetId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
-    loadDashboard();
-    loadOrders();
-    setupPRForm();
+    initAssetBox();
 });
 
-async function loadDashboard() {
+async function initAssetBox() {
+    await fetchAssetSummary();
+    await loadAssets();
+}
+
+async function fetchAssetSummary() {
     try {
-        const res = await fetch('/api/procurement/assets/dashboard', {
+        const response = await fetch('/api/assets/summary', {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
-        const { data } = await res.json();
+        const summary = await response.json();
 
-        updateStats(data.stats);
-        renderAssets(data.assets);
-        initCharts(data.stats);
+        document.getElementById('total-asset-count').textContent = summary.totalCount;
+        document.getElementById('total-book-value').textContent = `₹${summary.totalBookValue.toLocaleString()}`;
+        document.getElementById('total-accumulated-dep').textContent = `₹${summary.totalAccumulatedDep.toLocaleString()}`;
+
+        renderCategoryChart(summary.byCategory);
     } catch (err) {
-        console.error('Failed to load asset dashboard:', err);
+        console.error('Error fetching summary:', err);
     }
 }
 
-function updateStats(stats) {
-    document.getElementById('total-book-value').textContent = `₹${stats.totalBookValue.toLocaleString()}`;
-    document.getElementById('accumulated-depreciation').textContent = `₹${stats.totalDepreciation.toLocaleString()}`;
-}
+function renderCategoryChart(data) {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    if (categoryChart) categoryChart.destroy();
 
-function renderAssets(assets) {
-    const grid = document.getElementById('assets-grid');
-    if (!assets || assets.length === 0) {
-        grid.innerHTML = '<div class="empty-state">No active assets found. Assets are auto-created when procurement items are received.</div>';
-        return;
-    }
-
-    grid.innerHTML = assets.map(asset => `
-        <div class="asset-card glass-card">
-            <div class="asset-icon ${asset.category}">
-                <i class="fas ${getCategoryIcon(asset.category)}"></i>
-            </div>
-            <div class="asset-info">
-                <h3>${asset.name}</h3>
-                <span class="asset-serial">${asset.serialNumber || 'No Serial'}</span>
-                <div class="asset-value">
-                    <label>Book Value</label>
-                    <div class="value">₹${asset.currentBookValue.toLocaleString()}</div>
-                </div>
-                <div class="asset-life">
-                    <div class="progress-bar">
-                        <div class="progress" style="width: ${calculateLifeUsed(asset)}%"></div>
-                    </div>
-                    <small>${asset.usefulLifeYears}Y Useful Life</small>
-                </div>
-            </div>
-            <div class="asset-footer">
-                <span class="status-pill ${asset.status}">${asset.status}</span>
-                <button class="btn-icon" onclick="viewDepreciation('${asset._id}')"><i class="fas fa-history"></i></button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function getCategoryIcon(cat) {
-    const icons = {
-        'electronics': 'fa-laptop',
-        'furniture': 'fa-couch',
-        'machinery': 'fa-tools',
-        'vehicles': 'fa-car',
-        'real_estate': 'fa-building'
-    };
-    return icons[cat] || 'fa-box';
-}
-
-function calculateLifeUsed(asset) {
-    const purchase = new Date(asset.purchaseDate);
-    const monthsOwned = (new Date() - purchase) / (1000 * 60 * 60 * 24 * 30);
-    const totalMonths = asset.usefulLifeYears * 12;
-    return Math.min(100, (monthsOwned / totalMonths) * 100);
-}
-
-async function loadOrders() {
-    try {
-        const res = await fetch('/api/procurement/orders', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const { data } = await res.json();
-
-        const list = document.getElementById('orders-list');
-        list.innerHTML = data.map(order => `
-            <tr>
-                <td><strong>${order.orderNumber}</strong></td>
-                <td>${order.title}</td>
-                <td><span class="os-pill ${order.status}">${order.status.replace('_', ' ')}</span></td>
-                <td>₹${order.totalAmount.toLocaleString()}</td>
-                <td>
-                    ${order.status === 'ordered' ? `<button class="btn-sm" onclick="receiveOrder('${order._id}')">Receive</button>` : ''}
-                    ${order.status === 'draft' ? `<button class="btn-sm" onclick="submitOrder('${order._id}')">Submit</button>` : ''}
-                </td>
-            </tr>
-        `).join('');
-
-        document.getElementById('pending-pr-count').textContent = data.filter(o => o.status === 'pending_approval').length;
-    } catch (err) {
-        console.error('Failed to load orders:', err);
-    }
-}
-
-function switchSection(sec) {
-    document.querySelectorAll('.inventory-content section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`${sec}-section`).classList.remove('hidden');
-
-    document.querySelectorAll('.side-nav .nav-btn').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-}
-
-function initCharts(stats) {
-    const ctx = document.getElementById('assetCategoryChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
+    categoryChart = new Chart(ctx, {
+        type: 'pie',
         data: {
-            labels: Object.keys(stats.categoryDistribution),
+            labels: Object.keys(data),
             datasets: [{
-                data: Object.values(stats.categoryDistribution),
-                backgroundColor: ['#64ffda', '#48dbfb', '#ff9f43', '#ff6b6b', '#54a0ff'],
-                borderWidth: 0
+                data: Object.values(data),
+                backgroundColor: ['#48dbfb', '#64ffda', '#ff9f43', '#ff6b6b', '#8892b0']
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { position: 'bottom', labels: { color: '#8892b0' } } }
         }
     });
 }
 
-function openPRModal() {
-    document.getElementById('pr-modal').classList.remove('hidden');
-}
+async function loadAssets() {
+    const status = document.getElementById('status-filter').value;
+    try {
+        const url = status === 'All' ? '/api/assets' : `/api/assets?status=${status}`;
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const assets = await response.json();
 
-function closePRModal() {
-    document.getElementById('pr-modal').classList.add('hidden');
-}
+        const tbody = document.getElementById('assets-table-body');
+        tbody.innerHTML = '';
 
-function addPRItemRow() {
-    const div = document.createElement('div');
-    div.className = 'item-row';
-    div.innerHTML = `
-        <input type="text" placeholder="Item name" class="item-name">
-        <input type="number" placeholder="Qty" class="item-qty" value="1">
-        <input type="number" placeholder="Unit Price" class="item-price">
-        <button type="button" class="remove-item"><i class="fas fa-trash"></i></button>
-    `;
-    document.getElementById('pr-items-list').appendChild(div);
-}
+        assets.forEach(a => {
+            const age = Math.floor((new Date() - new Date(a.purchaseDate)) / (1000 * 60 * 60 * 24 * 365));
+            const lifeRemaining = Math.max(0, a.usefulLife - age);
 
-async function runDepreciation() {
-    if (!confirm('This will calculate and record depreciation for the current month. Proceed?')) return;
-
-    const res = await fetch('/api/procurement/admin/run-depreciation', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-    const result = await res.json();
-    if (result.success) {
-        alert(`Successfully processed ${result.processed} assets.`);
-        loadDashboard();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${a.name}</strong><br><small>${a.assetCode}</small></td>
+                <td>${a.category}</td>
+                <td>₹${a.purchasePrice.toLocaleString()}</td>
+                <td>${lifeRemaining} Years</td>
+                <td>₹${a.currentBookValue.toLocaleString()}</td>
+                <td>
+                    <button class="btn-sm btn-secondary" onclick="viewAssetDetails('${a._id}')">Details</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error('Error loading assets:', err);
     }
 }
 
-function setupPRForm() {
-    const form = document.getElementById('pr-form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+async function viewAssetDetails(id) {
+    currentAssetId = id;
+    try {
+        const response = await fetch(`/api/assets/${id}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const { asset, schedule, projections } = await response.json();
 
-        const items = Array.from(document.querySelectorAll('.item-row')).map(row => ({
-            name: row.querySelector('.item-name').value,
-            quantity: parseInt(row.querySelector('.item-qty').value),
-            unitPrice: parseFloat(row.querySelector('.item-price').value),
-            totalPrice: parseInt(row.querySelector('.item-qty').value) * parseFloat(row.querySelector('.item-price').value),
-            category: 'IT' // Default for now
-        }));
+        document.getElementById('detail-asset-name').textContent = asset.name;
+        document.getElementById('asset-detail-container').classList.remove('hidden');
 
-        const prData = {
-            title: document.getElementById('pr-title').value,
-            department: document.getElementById('pr-dept').value,
-            items
-        };
+        renderHistoryTable(schedule);
+        renderProjectionChart(projections);
 
-        const res = await fetch('/api/procurement/requisition', {
+        window.scrollTo({ top: document.getElementById('asset-detail-container').offsetTop - 50, behavior: 'smooth' });
+    } catch (err) {
+        console.error('Error viewing details:', err);
+    }
+}
+
+function renderHistoryTable(schedule) {
+    const tbody = document.getElementById('history-table-body');
+    tbody.innerHTML = schedule.map(s => `
+        <tr>
+            <td>${s.period.month}/${s.period.year}</td>
+            <td>${s.methodUsed}</td>
+            <td>₹${s.depreciationAmount.toFixed(0)}</td>
+            <td>₹${s.closingBookValue.toFixed(0)}</td>
+        </tr>
+    `).join('');
+}
+
+function renderProjectionChart(projections) {
+    const ctx = document.getElementById('projectionChart').getContext('2d');
+    if (projectionChart) projectionChart.destroy();
+
+    projectionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: projections.filter((_, i) => i % 12 === 0).map(p => `Year ${p.month / 12}`),
+            datasets: [{
+                label: 'Projected Book Value',
+                data: projections.filter((_, i) => i % 12 === 0).map(p => p.remainingValue),
+                borderColor: '#48dbfb',
+                backgroundColor: 'rgba(72, 219, 251, 0.1)',
+                fill: true
+            }]
+        },
+        options: {
+            scales: {
+                y: { ticks: { color: '#8892b0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#8892b0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+        }
+    });
+}
+
+async function runDepreciationCycle() {
+    if (!confirm('Run batch depreciation for all active assets for the current month?')) return;
+
+    const now = new Date();
+    try {
+        const response = await fetch('/api/assets/run-depreciation', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify(prData)
+            body: JSON.stringify({ year: now.getFullYear(), month: now.getMonth() + 1 })
         });
 
-        if (res.ok) {
-            closePRModal();
-            loadOrders();
+        if (response.ok) {
+            alert('Monthly depreciation cycle completed successfully.');
+            initAssetBox();
+            if (currentAssetId) viewAssetDetails(currentAssetId);
         }
-    });
+    } catch (err) {
+        console.error('Error running dep cycle:', err);
+    }
 }
+
+function openAssetModal() { document.getElementById('asset-modal').style.display = 'block'; }
+function closeAssetModal() { document.getElementById('asset-modal').style.display = 'none'; }
+function closeDetails() { document.getElementById('asset-detail-container').classList.add('hidden'); }
+
+document.getElementById('asset-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const assetData = {
+        name: document.getElementById('a-name').value,
+        assetCode: document.getElementById('a-code').value,
+        category: document.getElementById('a-cat').value,
+        purchaseDate: document.getElementById('a-date').value,
+        purchasePrice: Number(document.getElementById('a-price').value),
+        salvageValue: Number(document.getElementById('a-salvage').value || 0),
+        usefulLife: Number(document.getElementById('a-life').value),
+        depreciationMethod: document.getElementById('a-method').value
+    };
+
+    try {
+        const response = await fetch('/api/assets', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(assetData)
+        });
+
+        if (response.ok) {
+            closeAssetModal();
+            initAssetBox();
+        }
+    } catch (err) {
+        console.error('Error registering asset:', err);
+    }
+});

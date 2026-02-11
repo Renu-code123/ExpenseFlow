@@ -8,6 +8,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { InvoiceSchemas, validateRequest, validateQuery, validateParams } = require('../middleware/inputValidator');
 const { invoiceLimiter, invoicePaymentLimiter, exportLimiter, reportLimiter } = require('../middleware/rateLimiter');
 const { body, param, query, validationResult } = require('express-validator');
+const auth = require('../middleware/auth');
 
 // GET /api/invoices - Get all invoices for user
 router.get('/', auth, async (req, res) => {
@@ -94,7 +95,7 @@ router.get('/upcoming', auth, async (req, res) => {
 });
 
 // GET /api/invoices/stats - Get invoice statistics
-router.get('/stats', authenticateToken, async (req, res) => {
+router.get('/stats', auth, async (req, res) => {
     try {
         const { start_date, end_date } = req.query;
         
@@ -120,7 +121,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
 });
 
 // GET /api/invoices/:id - Get single invoice
-router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.get('/:id', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -158,7 +159,7 @@ router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // POST /api/invoices - Create new invoice
-router.post('/', authenticateToken, invoiceLimiter, validateRequest(InvoiceSchemas.create), async (req, res) => {
+router.post('/', auth, invoiceLimiter, validateRequest(InvoiceSchemas.create), async (req, res) => {
     try {
         const invoice = await InvoiceService.createInvoice(req.user.userId, req.body);
         
@@ -175,7 +176,7 @@ router.post('/', authenticateToken, invoiceLimiter, validateRequest(InvoiceSchem
 });
 
 // POST /api/invoices/from-time-entries - Create invoice from time entries
-router.post('/from-time-entries', authenticateToken, async (req, res) => {
+router.post('/from-time-entries', auth, async (req, res) => {
     try {
         const { client, time_entry_ids, ...invoiceData } = req.body;
         
@@ -206,7 +207,7 @@ router.post('/from-time-entries', authenticateToken, async (req, res) => {
 });
 
 // POST /api/invoices/from-expenses - Create invoice from expenses
-router.post('/from-expenses', authenticateToken, async (req, res) => {
+router.post('/from-expenses', auth, async (req, res) => {
     try {
         const { client, expense_ids, ...invoiceData } = req.body;
         
@@ -237,7 +238,7 @@ router.post('/from-expenses', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/invoices/:id - Update invoice
-router.put('/:id', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.put('/:id', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -263,7 +264,7 @@ router.put('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // DELETE /api/invoices/:id - Delete invoice (drafts only)
-router.delete('/:id', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.delete('/:id', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -285,7 +286,7 @@ router.delete('/:id', authenticateToken, param('id').isMongoId(), async (req, re
 });
 
 // POST /api/invoices/:id/send - Send invoice via email
-router.post('/:id/send', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.post('/:id/send', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -307,7 +308,7 @@ router.post('/:id/send', authenticateToken, param('id').isMongoId(), async (req,
 });
 
 // POST /api/invoices/:id/payment - Record payment
-router.post('/:id/payment', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.post('/:id/payment', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -343,7 +344,7 @@ router.post('/:id/payment', authenticateToken, param('id').isMongoId(), async (r
 });
 
 // POST /api/invoices/:id/cancel - Cancel invoice
-router.post('/:id/cancel', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.post('/:id/cancel', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -377,7 +378,7 @@ router.post('/:id/cancel', authenticateToken, param('id').isMongoId(), async (re
 });
 
 // GET /api/invoices/:id/pdf - Generate and download PDF
-router.get('/:id/pdf', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.get('/:id/pdf', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -396,7 +397,7 @@ router.get('/:id/pdf', authenticateToken, param('id').isMongoId(), async (req, r
 });
 
 // POST /api/invoices/:id/apply-late-fee - Apply late fee to invoice
-router.post('/:id/apply-late-fee', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.post('/:id/apply-late-fee', auth, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -430,7 +431,7 @@ router.post('/:id/apply-late-fee', authenticateToken, param('id').isMongoId(), a
 });
 
 // POST /api/invoices/apply-late-fees - Apply late fees to all overdue invoices
-router.post('/apply-late-fees', authenticateToken, async (req, res) => {
+router.post('/apply-late-fees', auth, async (req, res) => {
     try {
         const result = await InvoiceService.applyLateFees(req.user.userId);
         

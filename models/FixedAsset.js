@@ -4,71 +4,82 @@ const fixedAssetSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: true,
+        index: true
+    },
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    assetCode: {
+        type: String,
+        unique: true,
         required: true
     },
-    name: { type: String, required: true },
-    description: String,
     category: {
         type: String,
-        enum: ['furniture', 'electronics', 'machinery', 'vehicles', 'real_estate', 'software', 'other'],
+        enum: ['IT Equipment', 'Furniture', 'Machinery', 'Buildings', 'Vehicles', 'Others'],
+        required: true,
+        index: true
+    },
+    description: String,
+    purchaseDate: {
+        type: Date,
         required: true
     },
-    serialNumber: { type: String, unique: true, sparse: true },
-    modelNumber: String,
-    manufacturer: String,
-
-    // Financials
-    purchaseDate: { type: Date, required: true },
-    purchasePrice: { type: Number, required: true },
-    currency: { type: String, default: 'INR' },
-    salvageValue: { type: Number, default: 0 },
-    usefulLifeYears: { type: Number, required: true },
-
-    // Depreciation Config
+    purchasePrice: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    currency: {
+        type: String,
+        default: 'INR'
+    },
+    salvageValue: {
+        type: Number,
+        default: 0
+    },
+    usefulLife: {
+        type: Number, // in years
+        required: true
+    },
     depreciationMethod: {
         type: String,
-        enum: ['SLM', 'DBM'], // SLM: Straight Line, DBM: Declining Balance
-        default: 'SLM'
+        enum: ['Straight Line', 'Written Down Value'],
+        default: 'Straight Line'
     },
-    depreciationRate: { type: Number, default: 0 }, // For DBM
-
-    // Status
+    depreciationRate: {
+        type: Number, // for WDV primarily
+        default: 0
+    },
     status: {
         type: String,
-        enum: ['active', 'disposed', 'maintenance', 'written_off'],
-        default: 'active'
+        enum: ['Active', 'Disposed', 'Transferred', 'Written Off'],
+        default: 'Active'
     },
     location: String,
     department: String,
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-
-    // Links
-    procurementOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProcurementOrder' },
-
-    // Current Values
-    currentBookValue: { type: Number },
-    lastDepreciationDate: Date,
-
-    notes: String,
-    maintenanceHistory: [{
-        date: { type: Date, default: Date.now },
-        type: { type: String, enum: ['routine', 'repair', 'upgrade'] },
-        description: String,
-        cost: { type: Number, default: 0 },
-        performedBy: String,
-        nextServiceDate: Date
-    }],
-    isDeleted: { type: Boolean, default: false }
+    currentBookValue: {
+        type: Number,
+        required: true
+    },
+    accumulatedDepreciation: {
+        type: Number,
+        default: 0
+    },
+    disposalDetails: {
+        date: Date,
+        price: Number,
+        gainLoss: Number,
+        reason: String
+    }
 }, {
     timestamps: true
 });
 
-// Calculate initial book value before saving
-fixedAssetSchema.pre('save', function (next) {
-    if (this.isNew) {
-        this.currentBookValue = this.purchasePrice;
-    }
-    next();
-});
+fixedAssetSchema.index({ assetCode: 1 });
+fixedAssetSchema.index({ userId: 1, status: 1 });
 
 module.exports = mongoose.model('FixedAsset', fixedAssetSchema);

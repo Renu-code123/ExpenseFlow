@@ -100,6 +100,495 @@ html, body {
   </style>
 </head>
 
+<style>
+  
+/* Header Styles */
+.header {
+  position: relative;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  backdrop-filter: blur(20px);
+  background: rgba(15, 15, 35, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom:2rem;
+}
+
+.navbar {
+  padding: 1rem 0;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-logo:hover {
+  transform: scale(1.05);
+}
+
+.nav-logo i {
+  font-size: 2rem;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.nav-logo span {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-menu {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  align-items: center;
+  margin-right: 15px;
+  margin-left: 15px;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--accent-primary);
+  background: rgba(100, 255, 218, 0.1);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Workspace Selector */
+.workspace-selector {
+  position: relative;
+  margin-right: 1rem;
+}
+
+.workspace-current {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  color: var(--accent-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.workspace-current:hover {
+  background: rgba(100, 255, 218, 0.2);
+  transform: translateY(-2px);
+}
+
+.workspace-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-primary);
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.workspace-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.workspace-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.dropdown-arrow {
+  transition: transform 0.3s ease;
+}
+
+.workspace-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.workspace-dropdown.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.workspace-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.workspace-item:hover,
+.workspace-item.active {
+  background: rgba(100, 255, 218, 0.1);
+}
+
+.workspace-item:last-child {
+  border-bottom: none;
+}
+
+.workspace-avatar-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-primary);
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.owner-badge {
+  margin-left: auto;
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.workspace-divider {
+  padding: 0.5rem 1rem;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.workspace-footer {
+  padding: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.add-workspace-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.add-workspace-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 255, 218, 0.3);
+}
+
+.currency-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  color: var(--accent-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.currency-btn:hover {
+  background: rgba(100, 255, 218, 0.2);
+  transform: translateY(-2px);
+}
+
+.currency-btn i {
+  font-size: 1rem;
+}
+
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-primary);
+}
+
+.username {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.bar {
+  width: 25px;
+  height: 3px;
+  background: var(--accent-primary);
+  margin: 3px 0;
+  transition: 0.3s;
+  border-radius: 5px;
+}
+
+/* Dropdown Menu */
+.nav-item.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 180px;
+  background: rgba(15, 15, 35, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(100, 255, 218, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 0.5rem 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: all 0.25s ease;
+  z-index: 1100;
+  margin-top: 0.5rem;
+}
+
+.nav-item.dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-link {
+  display: block;
+  padding: 0.6rem 1.2rem;
+  color: #a0a0c0;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dropdown-link:hover,
+.dropdown-link.active {
+  color: #64ffda;
+  background: rgba(100, 255, 218, 0.08);
+}
+
+/* Language Select */
+.language-select {
+  padding: 0.4rem 0.6rem;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  color: #64ffda;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  appearance: auto;
+}
+
+.language-select:hover {
+  background: rgba(100, 255, 218, 0.2);
+}
+
+.language-select option {
+  background: #0f0f23;
+  color: #e0e0e0;
+}
+
+/* Logout Link */
+#redirect a {
+  color: #a0a0c0;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+#redirect a:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+}
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0 1rem;
+  }
+
+  .nav-menu {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+    gap: 0.75rem;
+    display: none;
+  }
+
+  .nav-menu.active {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  .nav-link {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+  }
+
+  .dropdown-menu {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    background: rgba(100, 255, 218, 0.05);
+    border-radius: 8px;
+    margin-top: 0.25rem;
+  }
+
+  .user-profile {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero-section {
+    padding: 4rem 1.5rem 2rem;
+    text-align: left;
+  }
+
+  .hero-title {
+    font-size: 2.4rem;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-cta .cta-primary,
+  .hero-cta .cta-secondary {
+    width: 100%;
+  }
+
+  .hero-section + .container {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  #budget-goals-dashboard {
+    margin: 4.5rem 1rem;
+    padding: 1.75rem;
+  }
+
+  .dashboard-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .dashboard-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+
+  .alerts-section {
+    order: 3;
+  }
+
+  .items-list {
+    max-height: 360px;
+  }
+}
+</style>
 <body>
 
   <!-- Smooth Cursor Trail -->
@@ -316,7 +805,56 @@ html, body {
       animateTrail();
     })();
   </script>
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="dashboard.html" class="nav-link ">Dashboard</a>
+          <a href="accounts.html" class="nav-link">Accounts</a>
+          <a href="analytics.html" class="nav-link ">Analytics</a>
+          <a href="goals.html" class="nav-link ">Goals</a>
 
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle">More</a>
+            <div class="dropdown-menu">
+              <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
+              <a href="settings.html" class="dropdown-link active">Overview</a>
+              <a href="./contributor.html" class="dropdown-link ">Contributors</a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="user-profile">
+          <div id="workspace-selector" class="workspace-selector"></div>
+          <select id="language-switcher" class="language-select" aria-label="Language">
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="fr">FR</option>
+          </select>
+          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
+          </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username" id="navUsername"></span>
+          <div id="redirect">
+            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
 
   <div class="settings-container">
     <header class="settings-header">
@@ -360,6 +898,7 @@ html, body {
                 <button class="avatar-edit-btn" id="change-avatar-btn">
                   <i class="fas fa-camera"></i>
                 </button>
+                <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
               </div>
               <div class="profile-info">
                 <h2 id="profile-name">John Doe</h2>
@@ -721,8 +1260,73 @@ html, body {
             </div>
           </div>
         </div>
+
+    
       </div>
+    
     </main>
+        <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
+
+                <p class="footer-description">
+                    Smart money management made simple. Track, analyze, and optimize
+                    your financial habits.
+                </p>
+
+                <div class="social-links">
+                    <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="X (Twitter)">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
+
+                    <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="Github">
+                        <i class="fab fa-github"></i>
+                    </a>
+
+                    <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="Email">
+                        <i class="far fa-envelope"></i>
+                    </a>
+
+                    <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="AboutUs.html">About Us</a></li>
+                    <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
+                    <li><a href="terms_service.html">Terms of Service</a></li>
+                    <li><a href="Help-Center.html">Help Center</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-container">
+                <p>
+                    &copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for
+                    better financial management.
+                </p>
+                <div class="footer-stats">
+                    <span>🏆 Trusted by 10,000+ users</span>
+                    <span>💰 ₹50M+ tracked</span>
+                    <span>📊 99.9% uptime</span>
+                </div>
+            </div>
+        </div>
+    </footer>
     <script>
       // Tab switching functionality
       function switchTab(tabName) {
