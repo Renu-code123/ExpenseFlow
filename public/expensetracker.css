@@ -10210,3 +10210,72 @@ input:checked + .toggle-slider::before {
 .summary-row span.loss {
     color: #ff6b6b;
 }
+/* Project Costing & ROI Dashboard Styles */
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.stat-card.highlight {
+    background: linear-gradient(135deg, rgba(72, 219, 251, 0.2), rgba(100, 255, 218, 0.2));
+    border: 1px solid rgba(72, 219, 251, 0.3);
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.progress-bar-container {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    height: 8px;
+    position: relative;
+    margin-top: 5px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #48dbfb;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge.active { background: rgba(100, 255, 218, 0.2); color: #64ffda; }
+.badge.completed { background: rgba(72, 219, 251, 0.2); color: #48dbfb; }
+.badge.on_hold { background: rgba(255, 159, 67, 0.2); color: #ff9f43; }
+.badge.planning { background: rgba(136, 146, 176, 0.2); color: #8892b0; }
+
+.text-red { color: #ff6b6b; }
+.text-green { color: #64ffda; }
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: #8892b0;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.btn-icon:hover { color: #48dbfb; }
+
+.changes-pre {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    color: #ffd700;
+    max-height: 200px;
+    overflow-y: auto;
+}

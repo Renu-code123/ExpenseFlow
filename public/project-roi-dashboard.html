@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Costing & ROI Tracker - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <div class="logo">
+                <i class="fas fa-project-diagram"></i>
+                <span>ExpenseFlow Projects</span>
+            </div>
+            <div class="nav-links">
+                <a href="dashboard-clean.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="#" class="active"><i class="fas fa-chart-line"></i> ROI Tracker</a>
+            </div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <header class="page-header">
+            <div class="header-text">
+                <h1>Enterprise Project Costing</h1>
+                <p>Tracking profitability, burn rates, and ROI across all projects.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openProjectModal()">
+                    <i class="fas fa-plus"></i> New Project
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+                <div class="stat-info">
+                    <span class="label">Active Projects</span>
+                    <h2 id="active-projects-count">-</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+                <div class="stat-info">
+                    <span class="label">Total Budget</span>
+                    <h2 id="total-budget-sum">-</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card highlight">
+                <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                <div class="stat-info">
+                    <span class="label">Average ROI</span>
+                    <h2 id="avg-roi-val">-%</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                <div class="stat-info">
+                    <span class="label">Monthly Burn</span>
+                    <h2 id="total-burn-rate">-</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- ROI Matrix Chart -->
+            <div class="grid-item glass-card col-span-2">
+                <div class="card-header">
+                    <h3>Project Profitability Matrix</h3>
+                    <div class="card-actions">
+                        <select id="roi-sort" onchange="loadROIMatrix()">
+                            <option value="roi">Sort by ROI</option>
+                            <option value="revenue">Sort by Revenue</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="roiMatrixChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Expense Breakdown -->
+            <div class="grid-item glass-card">
+                <div class="card-header">
+                    <h3>Cost Structure</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="costStructureChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Active Projects List -->
+            <div class="grid-item glass-card col-span-3">
+                <div class="card-header">
+                    <h3>Real-Time Project Analysis</h3>
+                    <div class="search-box">
+                        <input type="text" placeholder="Filter projects..." onkeyup="filterProjects(this.value)">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Status</th>
+                                <th>Budget Utilized</th>
+                                <th>Revenue (Billed)</th>
+                                <th>Net Margin</th>
+                                <th>ROI</th>
+                                <th>Forecasting</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-table-body">
+                            <!-- Rows loaded by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="project-modal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close" onclick="closeProjectModal()">&times;</span>
+            <h2 id="modal-title">Create New Project</h2>
+            <form id="project-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Project Name</label>
+                        <input type="text" id="p-name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Project Code</label>
+                        <input type="text" id="p-code" placeholder="PRJ-001">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Description</label>
+                    <textarea id="p-desc"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Total Budget</label>
+                        <input type="number" id="p-budget" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Billing Type</label>
+                        <select id="p-billing">
+                            <option value="fixed_price">Fixed Price</option>
+                            <option value="time_and_materials">Time & Materials</option>
+                            <option value="non_billable">Non-Billable</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Start Date</label>
+                        <input type="date" id="p-start" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Target End Date</label>
+                        <input type="date" id="p-end">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Initialize Project</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/project-controller.js"></script>
+</body>
+
+</html>
