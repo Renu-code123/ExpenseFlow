@@ -9,40 +9,59 @@ const projectSchema = new mongoose.Schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
+    },
+    description: String,
+    code: {
+        type: String,
+        unique: true,
+        sparse: true
     },
     client: {
         name: String,
         email: String,
-        address: String
+        company: String
     },
     status: {
         type: String,
-        enum: ['active', 'on_hold', 'completed', 'cancelled'],
-        default: 'active'
+        enum: ['planning', 'active', 'on_hold', 'completed', 'cancelled'],
+        default: 'planning',
+        index: true
     },
-    budget: {
-        total: { type: Number, required: true },
-        currency: { type: String, default: 'INR' },
-        allocatedExpenses: { type: Number, default: 0 }
+    priority: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'critical'],
+        default: 'medium'
     },
     timeline: {
-        start: Date,
-        end: Date
+        startDate: { type: Date, required: true },
+        endDate: Date,
+        completedDate: Date
     },
-    markupPercentage: {
-        type: Number,
-        default: 15 // Default 15% markup on expenses
+    budget: {
+        total: { type: Number, required: true, default: 0 },
+        currency: { type: String, default: 'INR' },
+        allocatedLabor: { type: Number, default: 0 },
+        allocatedExpenses: { type: Number, default: 0 }
     },
-    billingFrequency: {
-        type: String,
-        enum: ['milestone', 'monthly', 'on_completion'],
-        default: 'monthly'
+    billing: {
+        type: { type: String, enum: ['fixed_price', 'time_and_materials', 'non_billable'], default: 'fixed_price' },
+        rate: { type: Number, default: 0 }, // Hourly rate if T&M
+        value: { type: Number, default: 0 } // Contract value
     },
     tags: [String],
-    notes: String
+    metadata: {
+        type: Map,
+        of: String
+    }
 }, {
     timestamps: true
 });
+
+// Indexes for performance
+projectSchema.index({ name: 'text', description: 'text' });
+projectSchema.index({ 'timeline.startDate': 1 });
+projectSchema.index({ status: 1, userId: 1 });
 
 module.exports = mongoose.model('Project', projectSchema);
