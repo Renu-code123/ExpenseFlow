@@ -13,6 +13,9 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const expenseRoutes = require('./routes/expenses');
+const expenseCreationRoutes = require('./routes/expenseCreation');
+const expenseUpdateRoutes = require('./routes/expenseUpdate');
+const expenseExportRoutes = require('./routes/expenseExport');
 const syncRoutes = require('./routes/sync');
 const splitsRoutes = require('./routes/splits');
 const groupsRoutes = require('./routes/groups');
@@ -156,6 +159,9 @@ io.on('connection', (socket) => {
 // Routes
 app.use('/api/auth', require('./middleware/rateLimiter').authLimiter, authRoutes);
 app.use('/api/expenses', require('./middleware/rateLimiter').expenseLimiter, expenseRoutes);
+app.use('/api/expenses', require('./middleware/rateLimiter').expenseLimiter, expenseCreationRoutes);
+app.use('/api/expenses', require('./middleware/rateLimiter').expenseLimiter, expenseUpdateRoutes);
+app.use('/api/expenses', require('./middleware/rateLimiter').expenseLimiter, expenseExportRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/receipts', require('./middleware/rateLimiter').uploadLimiter, require('./routes/receipts'));
