@@ -135,7 +135,32 @@ const transactionSchema = new mongoose.Schema({
         timestamp: { type: Date, default: Date.now },
         message: String,
         details: mongoose.Schema.Types.Mixed
-    }]
+    }],
+    // New fields for Smart Location Intelligence
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            default: [0, 0]
+        }
+    },
+    formattedAddress: {
+        type: String,
+        trim: true
+    },
+    locationSource: {
+        type: String,
+        enum: ['manual', 'geocoded', 'inferred', 'none'],
+        default: 'none'
+    },
+    place: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Place'
+    }
 }, {
     timestamps: true
 });
@@ -167,6 +192,7 @@ transactionSchema.index({ workspace: 1, date: -1 });
 transactionSchema.index({ user: 1, amount: 1 }); // Range queries optimization
 transactionSchema.index({ user: 1, category: 1, date: -1 });
 transactionSchema.index({ workspace: 1, category: 1, date: -1 });
+transactionSchema.index({ location: '2dsphere' });
 transactionSchema.index({ receiptId: 1 });
 transactionSchema.index({ source: 1, user: 1 });
 
