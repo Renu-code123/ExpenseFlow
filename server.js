@@ -302,6 +302,7 @@ app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
 app.use('/api/treasury', require('./routes/treasury'));
 app.use('/api/search', require('./routes/search'));
 app.use('/api/maps', require('./routes/maps'));
+app.use('/api/notifications', require('./middleware/notificationHydrator'), require('./routes/notifications'));
 
 // Import error handling middleware
 const { errorHandler, notFoundHandler } = require('./middleware/errorMiddleware');
