@@ -1,108 +1,71 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Expense = require('../models/Expense');
-const {requireAuth,getUserId}=require('../middleware/clerkAuth');
+const syncManager = require('../services/syncManager');
 
 /**
- * @route   POST /api/sync/delta
- * @desc    Sync offline changes with server
- * @access  Private
+ * @route   GET /api/sync/delta
+ * @desc    Fetch differential updates since a specific version
  */
-router.post('/delta', requireAuth, async (req, res) => {
-  const { changes } = req.body; // Array of { id, version, data, action: 'create'|'update'|'delete' }
-  const userId = req.user._id;
-  const results = {
-    success: [],
-    conflicts: [],
-    errors: []
-  };
+router.get('/delta', auth, async (req, res) => {
+  try {
+    const lastVersion = parseInt(req.query.v) || 0;
+    const changes = await syncManager.getDifferentialUpdates(req.user._id, lastVersion);
 
-  if (!Array.isArray(changes)) {
-    return res.status(400).json({ error: 'Invalid changes format' });
+    const latestVersion = changes.length > 0 ? changes[changes.length - 1].version : lastVersion;
+
+    res.json({
+      success: true,
+      v: latestVersion,
+      count: changes.length,
+      changes
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
-
-  for (const change of changes) {
-    try {
-      const { id, version, data, action, localId } = change;
-
-      if (action === 'create') {
-        const newExpense = new Expense({
-          ...data,
-          user: userId,
-          version: 1,
-          lastSyncedAt: Date.now()
-        });
-        await newExpense.save();
-        results.success.push({ localId, serverId: newExpense._id, version: newExpense.version });
-        continue;
-      }
-
-      const existing = await Expense.findOne({ _id: id, user: userId });
-
-      if (!existing) {
-        results.errors.push({ id, message: 'Expense not found' });
-        continue;
-      }
-
-      if (action === 'delete') {
-        await existing.remove();
-        results.success.push({ id, action: 'delete' });
-        continue;
-      }
-
-      // Conflict Detection
-      if (existing.version > version) {
-        // Server has a newer version
-        results.conflicts.push({
-          id,
-          serverVersion: existing.version,
-          serverData: existing,
-          message: 'Conflict detected: Server has a newer version'
-        });
-        continue;
-      }
-
-      // Update existing
-      Object.assign(existing, data);
-      existing.version = version + 1; // Increment version
-      existing.lastSyncedAt = Date.now();
-      await existing.save();
-
-      results.success.push({ id, version: existing.version });
-
-    } catch (error) {
-      console.error('[Sync] Error processing change:', error);
-      results.errors.push({ id: change.id, message: error.message });
-    }
-  }
-
-  res.json(results);
 });
 
 /**
- * @route   GET /api/sync/pull
- * @desc    Pull changes from server since last sync
- * @access  Private
+ * @route   POST /api/sync/push
+ * @desc    Push local changes from a client with conflict resolution
  */
-router.get('/pull', requireAuth, async (req, res) => {
-  const { lastSyncTime } = req.query;
-  const userId = req.user._id;
-
+router.post('/push', auth, async (req, res) => {
   try {
-    const query = { user: userId };
-    if (lastSyncTime) {
-      query.lastSyncedAt = { $gt: new Date(lastSyncTime) };
+    const deviceId = req.headers['x-device-id'] || 'web-default';
+    const { entityType, data } = req.body;
+
+    if (!entityType || !data) {
+      return res.status(400).json({ success: false, error: 'Missing sync payload' });
     }
 
-    const changes = await Expense.find(query);
+    const result = await syncManager.applyIncomingUpdate(req.user._id, deviceId, entityType, data);
+
     res.json({
       success: true,
-      changes,
-      serverTime: new Date()
+      action: result.action,
+      entity: result.entity,
+      logs: result.logs
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to pull changes' });
+    console.error('[SyncRoute] Push failed:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route   POST /api/sync/delete
+ * @desc    Propagate a hard/soft delete across devices
+ */
+router.post('/delete', auth, async (req, res) => {
+  try {
+    const deviceId = req.headers['x-device-id'] || 'web-default';
+    const { entityType, entityId } = req.body;
+
+    await syncManager.softDelete(req.user._id, deviceId, entityType, entityId);
+
+    res.json({ success: true, message: 'Delete captured and synced' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

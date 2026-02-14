@@ -160,6 +160,22 @@ const transactionSchema = new mongoose.Schema({
     place: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Place'
+    },
+    // New fields for Differential Data Synchronization
+    vectorClock: {
+        type: Map,
+        of: Number,
+        default: {}
+    },
+    syncMetadata: {
+        lastDeviceId: String,
+        isDeleted: { type: Boolean, default: false },
+        deletedAt: Date,
+        conflicts: [{
+            deviceId: String,
+            timestamp: Date,
+            data: mongoose.Schema.Types.Mixed
+        }]
     }
 }, {
     timestamps: true
