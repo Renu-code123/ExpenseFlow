@@ -161,25 +161,21 @@ const transactionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Place'
     },
-    // New fields for Intelligent Financial Anomaly Detection
-    riskScore: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 100
+    // New fields for Differential Data Synchronization
+    vectorClock: {
+        type: Map,
+        of: Number,
+        default: {}
     },
-    riskDetails: [{
-        factor: String,
-        impact: Number,
-        description: String
-    }],
-    isAnomaly: {
-        type: Boolean,
-        default: false
-    },
-    anomalyConfidence: {
-        type: Number,
-        default: 0
+    syncMetadata: {
+        lastDeviceId: String,
+        isDeleted: { type: Boolean, default: false },
+        deletedAt: Date,
+        conflicts: [{
+            deviceId: String,
+            timestamp: Date,
+            data: mongoose.Schema.Types.Mixed
+        }]
     }
 }, {
     timestamps: true
