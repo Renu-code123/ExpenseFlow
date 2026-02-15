@@ -177,3 +177,58 @@
             transform: translate(-50%, -50%) scale(1.3);
             background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
         }
+        /* =========================
+   DARK LIGHT MODE TOGGLE
+========================= */
+
+.theme-toggle {
+    margin-left: 20px;
+    font-size: 18px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #6366f1, #64ffda);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: rotate(15deg) scale(1.1);
+}
+
+/* =========================
+   LIGHT MODE STYLES
+========================= */
+
+body.light-mode {
+    background: #f8fafc;
+    color: #111827;
+}
+
+body.light-mode .header,
+body.light-mode .footer {
+    background: #ffffff;
+}
+
+body.light-mode .contact-form-card,
+body.light-mode .info-card {
+    background: #ffffff;
+    color: #111827;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+body.light-mode input,
+body.light-mode textarea {
+    background: #f1f5f9;
+    color: #111827;
+    border: 1px solid #d1d5db;
+}
+
+body.light-mode .submit-btn {
+    background: linear-gradient(135deg, #6366f1, #64ffda);
+    color: #fff;
+}

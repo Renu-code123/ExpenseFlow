@@ -222,3 +222,32 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
         submitBtn.querySelector("span").textContent = "Send Message";
     }
 });
+/* =========================
+   DARK / LIGHT MODE LOGIC
+========================= */
+
+const toggleBtn = document.getElementById("themeToggle");
+const body = document.body;
+const icon = toggleBtn.querySelector("i");
+
+// Load saved theme
+if (localStorage.getItem("theme") === "light") {
+    body.classList.add("light-mode");
+    icon.classList.remove("fa-moon");
+    icon.classList.add("fa-sun");
+}
+
+toggleBtn.addEventListener("click", () => {
+    body.classList.toggle("light-mode");
+
+    if (body.classList.contains("light-mode")) {
+        localStorage.setItem("theme", "light");
+        icon.classList.remove("fa-moon");
+        icon.classList.add("fa-sun");
+    } else {
+        localStorage.setItem("theme", "dark");
+        icon.classList.remove("fa-sun");
+        icon.classList.add("fa-moon");
+    }
+});
+
