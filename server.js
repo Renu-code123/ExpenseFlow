@@ -89,6 +89,8 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/workspaces', require('./routes/workspaces'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/export', require('./routes/export'));
+
 
 /* ================================
    STATIC FILES (ONLY DEV)
