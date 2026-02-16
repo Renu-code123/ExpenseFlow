@@ -1,10 +1,12 @@
-// Simple file upload service without cloudinary
+// Simple file upload service (Vercel safe version)
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 class FileUploadService {
   constructor() {
-    this.uploadDir = path.join(__dirname, '../uploads');
+    // Use temporary directory (ONLY writable location in Vercel)
+    this.uploadDir = path.join(os.tmpdir(), 'uploads');
     this.ensureUploadDir();
   }
 
@@ -16,6 +18,8 @@ class FileUploadService {
 
   async uploadFile(file) {
     try {
+      this.validateFile(file);
+
       const filename = `${Date.now()}-${file.originalname}`;
       const filepath = path.join(this.uploadDir, filename);
 
@@ -23,7 +27,8 @@ class FileUploadService {
 
       return {
         success: true,
-        url: `/uploads/${filename}`,
+        // Note: Files stored in /tmp are temporary (serverless limitation)
+        url: `/tmp/uploads/${filename}`,
         filename,
         size: file.size
       };
@@ -38,15 +43,18 @@ class FileUploadService {
   async deleteFile(filename) {
     try {
       const filepath = path.join(this.uploadDir, filename);
+
       if (fs.existsSync(filepath)) {
         fs.unlinkSync(filepath);
         return { success: true };
       }
+
       return { success: false, error: 'File not found' };
     } catch (error) {
       return { success: false, error: error.message };
     }
   }
+
   validateFile(file) {
     const allowedTypes = [
       'image/jpeg',
@@ -59,10 +67,13 @@ class FileUploadService {
     ];
 
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new Error(`Invalid file type: ${file.mimetype}. Allowed types: Images, PDF, CSV, JSON.`);
+      throw new Error(
+        `Invalid file type: ${file.mimetype}. Allowed types: Images, PDF, CSV, JSON.`
+      );
     }
 
     const maxSize = 10 * 1024 * 1024; // 10MB
+
     if (file.size > maxSize) {
       throw new Error('File size too large. Maximum size is 10MB.');
     }
