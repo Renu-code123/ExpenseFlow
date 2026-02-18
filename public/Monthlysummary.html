@@ -1,326 +1,200 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Reports | ExpenseFlow</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Reports | ExpenseFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- Fonts & Icons -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-<!-- SAME CSS -->
-<link rel="stylesheet" href="expensetracker.css">
+  <!-- SAME CSS -->
+  <link rel="stylesheet" href="expensetracker.css" />
+  <link rel="stylesheet" href="Monthlysummary.css" />
+  <link rel="stylesheet" href="index.css" />
+  <!-- Export libs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Export libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-.fade-in{animation:fadeIn .8s ease forwards}
-.slide-up{animation:slideUp .8s ease forwards}
-.scale-in{animation:scaleIn .6s ease forwards}
-
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scaleIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-
-.stats-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:1.2rem;
-margin-top:1.2rem;
-}
-.stat-card{text-align:center}
-
-/* Footer alignment */
-.footer,.footer-container,.footer-bottom{text-align:center}
-.footer-container{
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-align-items:center;
-gap:2rem;
-}
-.footer-links{padding:0;margin:0}
-.footer-links li{list-style:none}
-.footer-bottom p{margin:0;padding:.8rem 0}
-#summaryChart {
-  max-height: 250px; /* limits height */
-  width: 100% !important; /* full width inside card */
-  object-fit: contain;   /* scale nicely */
-}
-
-</style>
 </head>
 
 <body>
 
-<header class="header">
-<nav class="navbar">
-<div class="nav-container">
-<div class="nav-logo">
-<i class="fas fa-wallet"></i>
-<span>ExpenseFlow</span>
-</div>
-<div class="nav-menu">
-<a href="login.html" class="nav-link">Dashboard</a>
-<a href="#analytics.html" class="nav-link">Analytics</a>
-<a href="Monthlysummary.html" class="nav-link active">Finance Summary</a>
-<a href="finance-tips.html" class="nav-link">Finance Tips</a>
-<a href="#settings.html" class="nav-link">Settings</a>
-</div>
-</div>
-</nav>
-</header>
+  <div class="cursor-trail-container" id="cursor-trail"></div>
 
-<main class="main-content">
 
-<section class="hero-section fade-in">
-<h1 class="hero-title" style="text-align:center">Monthly / Yearly Summary</h1>
-<p class="hero-subtitle" style="text-align:center">Visual insights into your money habits 📊</p>
-</section>
 
-<div class="container">
+   <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="dashboard.html" class="nav-link ">Dashboard</a>
+          <a href="accounts.html" class="nav-link">Accounts</a>
+          <a href="analytics.html" class="nav-link ">Analytics</a>
+          <a href="goals.html" class="nav-link ">Goals</a>
 
-<div class="balance-card slide-up">
-<div class="balance-header" style="justify-content:center">
-<i class="fas fa-calendar"></i>
-<h4>Select Period</h4>
-</div>
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle">More</a>
+            <div class="dropdown-menu">
+              <a href="Monthlysummary.html" class="dropdown-link active">Summary</a>
+              <a href="settings.html" class="dropdown-link">Overview</a>
+              <a href="./contributor.html" class="dropdown-link">Contributors</a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="user-profile">
+          <div id="workspace-selector" class="workspace-selector"></div>
+          <select id="language-switcher" class="language-select" aria-label="Language">
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="fr">FR</option>
+          </select>
+          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
+          </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username" id="navUsername"></span>
+          <div id="redirect">
+            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-<div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
-<select id="type" class="filter-btn">
-<option value="month">Monthly</option>
-<option value="year">Yearly</option>
-</select>
+  <main class="main-content">
+    <section class="hero-section fade-in">
+      <h1 class="hero-title" style="text-align: center">
+        Monthly / Yearly Summary
+      </h1>
+      <p class="hero-subtitle" style="text-align: center">
+        Visual insights into your money habits 📊
+      </p>
+    </section>
 
-<select id="period" class="filter-btn"></select>
+    <div class="container">
+      <div class="balance-card slide-up">
+        <div class="balance-header" style="justify-content: center">
+          <i class="fas fa-calendar"></i>
+          <h4>Select Period</h4>
+        </div>
 
-<button class="btn-submit" onclick="generateReport()">Generate Report</button>
-</div>
+        <div style="
+              display: flex;
+              gap: 1rem;
+              flex-wrap: wrap;
+              justify-content: center;
+            ">
+          <select id="type" class="filter-btn">
+            <option value="month">Monthly</option>
+            <option value="year">Yearly</option>
+          </select>
 
-<div id="report" class="balance-card scale-in" style="display:none">
-<div class="balance-header" style="justify-content:center">
-<i class="fas fa-chart-line"></i>
-<h4 id="reportTitle"></h4>
-</div>
+          <select id="period" class="filter-btn"></select>
 
-<p id="summaryText" class="hero-subtitle" style="text-align:center;margin-top:.8rem"></p>
+          <button class="btn-submit" onclick="generateReport()">
+            Generate Report
+          </button>
+        </div>
 
-<div class="stats-grid">
-<div class="stat-card balance-card">
-<p>Total Income</p>
-<h2 id="income">₹0</h2>
-</div>
+        <div id="report" class="balance-card scale-in" style="display: none">
+          <div class="balance-header" style="justify-content: center">
+            <i class="fas fa-chart-line"></i>
+            <h4 id="reportTitle"></h4>
+          </div>
 
-<div class="stat-card balance-card">
-<p>Total Expenses</p>
-<h2 id="expense">₹0</h2>
-</div>
+          <p id="summaryText" class="hero-subtitle" style="text-align: center; margin-top: 0.8rem"></p>
 
-<div class="stat-card balance-card">
-<p>Top Category</p>
-<h2 id="category">-</h2>
-</div>
+          <div class="stats-grid">
+            <div class="stat-card balance-card">
+              <p>Total Income</p>
+              <h2 id="income">₹0</h2>
+            </div>
 
-<div class="stat-card balance-card">
-<p>Savings</p>
-<h2 id="savings">0%</h2>
-</div>
-</div>
+            <div class="stat-card balance-card">
+              <p>Total Expenses</p>
+              <h2 id="expense">₹0</h2>
+            </div>
 
-<div style="margin-top:1.5rem">
-<canvas id="summaryChart" height="120"></canvas>
-</div>
+            <div class="stat-card balance-card">
+              <p>Top Category</p>
+              <h2 id="category">-</h2>
+            </div>
 
-<div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
-<button class="filter-btn" onclick="downloadImage()"><i class="fas fa-image"></i> Download Image</button>
-<button class="filter-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
-</div>
-</div>
-</div>
-</div>
-</main>
+            <div class="stat-card balance-card">
+              <p>Savings</p>
+              <h2 id="savings">0%</h2>
+            </div>
+          </div>
 
-<footer class="footer fade-in">
-<div class="footer-container">
-<div class="footer-section">
-<div class="footer-logo">
-<i class="fas fa-wallet"></i>
-<span>ExpenseFlow</span>
-</div>
-<p>Smart money management made simple.</p>
-</div>
+          <div style="margin-top: 1.5rem">
+            <canvas id="summaryChart" height="120"></canvas>
+          </div>
 
-<div class="footer-section">
-<h4>Resources</h4>
-<ul class="footer-links">
-<li><a href="finance-tips.html">Finance Tips</a></li>
-<li><a href="Help-Center.html">Help Center</a></li>
-<li><a href="community.html">Community</a></li>
-</ul>
-</div>
-</div>
+          <div style="
+                margin-top: 1.5rem;
+                display: flex;
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+              ">
+            <button class="filter-btn" onclick="downloadImage()">
+              <i class="fas fa-image"></i> Download Image
+            </button>
+            <button class="filter-btn" onclick="downloadPDF()">
+              <i class="fas fa-file-pdf"></i> Download PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
-<div class="footer-bottom">
-<p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
-</div>
-</footer>
+  <footer class="footer fade-in">
+    <div class="footer-container">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <p>Smart money management made simple.</p>
+      </div>
 
-<script>
-/* ========= ELEMENT REFERENCES ========= */
-const incomeEl = document.getElementById("income");
-const expenseEl = document.getElementById("expense");
-const categoryEl = document.getElementById("category");
-const savingsEl = document.getElementById("savings");
-const report = document.getElementById("report");
-const reportTitle = document.getElementById("reportTitle");
-const summaryText = document.getElementById("summaryText");
-const typeSelect = document.getElementById("type");
-const periodSelect = document.getElementById("period");
-const chartCanvas = document.getElementById("summaryChart");
+      <div class="footer-section">
+        <h4>Resources</h4>
+        <ul class="footer-links">
+          <li><a href="finance-tips.html">Finance Tips</a></li>
+          <li><a href="Help-Center.html">Help Center</a></li>
+          <li><a href="community.html">Community</a></li>
+        </ul>
+      </div>
+    </div>
 
-let chartInstance = null;
-
-/* ========= DUMMY DATA ========= */
-const dummyExpenses = [
-  {amount:45000,type:"income",category:"Salary",date:"2026-01-05"},
-  {amount:12000,type:"expense",category:"Food",date:"2026-01-10"},
-  {amount:8000,type:"expense",category:"Rent",date:"2026-01-01"},
-  {amount:4000,type:"expense",category:"Travel",date:"2026-01-18"},
-  {amount:45000,type:"income",category:"Salary",date:"2026-02-05"},
-  {amount:10000,type:"expense",category:"Food",date:"2026-02-12"},
-  {amount:9000,type:"expense",category:"Rent",date:"2026-02-02"},
-  {amount:5000,type:"expense",category:"Shopping",date:"2026-02-20"}
-];
-
-let expenses = JSON.parse(localStorage.getItem("expenses"));
-if(!expenses || !expenses.length){
-  expenses = dummyExpenses;
-  localStorage.setItem("expenses", JSON.stringify(expenses));
-}
-
-/* ========= LOAD PERIODS ========= */
-function loadPeriods(){
-  periodSelect.innerHTML = "";
-  const y = new Date().getFullYear();
-
-  if(typeSelect.value === "month"){
-    for(let m=1; m<=12; m++){
-      const opt = document.createElement("option");
-      opt.value = `${y}-${m}`;
-      opt.text = `${y} - ${new Date(y, m-1).toLocaleString("default",{month:"long"})}`;
-      periodSelect.appendChild(opt);
-    }
-  } else {
-    for(let i=y-2; i<=y+1; i++){
-      const opt = document.createElement("option");
-      opt.value = i;
-      opt.text = i;
-      periodSelect.appendChild(opt);
-    }
-  }
-}
-
-/* ========= GENERATE REPORT ========= */
-function generateReport(){
-  let income = 0, expense = 0, categories = {};
-
-  expenses.forEach(e=>{
-    const d = new Date(e.date);
-    let match = false;
-
-    if(typeSelect.value === "month"){
-      match = `${d.getFullYear()}-${d.getMonth()+1}` === periodSelect.value;
-    } else {
-      match = d.getFullYear() == periodSelect.value;
-    }
-
-    if(match){
-      if(e.type === "income") income += e.amount;
-      else{
-        expense += e.amount;
-        categories[e.category] = (categories[e.category] || 0) + e.amount;
-      }
-    }
-  });
-
-  const topCategory = Object.keys(categories).length
-    ? Object.keys(categories).sort((a,b)=>categories[b]-categories[a])[0]
-    : "-";
-
-  const savingsPct = income
-    ? (((income-expense)/income)*100).toFixed(1)
-    : 0;
-
-  incomeEl.innerText = `₹${income.toLocaleString()}`;
-  expenseEl.innerText = `₹${expense.toLocaleString()}`;
-  categoryEl.innerText = topCategory;
-  savingsEl.innerText = `${savingsPct}%`;
-
-  reportTitle.innerText =
-    `Report: ${periodSelect.options[periodSelect.selectedIndex].text}`;
-
-  summaryText.innerHTML = income
-    ? `You earned <b>₹${income.toLocaleString()}</b> and spent <b>₹${expense.toLocaleString()}</b>.
-       Highest spending was on <b>${topCategory}</b>.
-       Savings rate is <b>${savingsPct}%</b>.`
-    : `No data available for the selected period.`;
-
-  /* ========= CHART ========= */
-  if(chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(chartCanvas, {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(categories),
-      datasets: [{
-        data: Object.values(categories),
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          labels: { color: "#b4b4b4" }
-        }
-      }
-    }
-  });
-
-  report.style.display = "block";
-}
-
-/* ========= DOWNLOAD IMAGE ========= */
-function downloadImage(){
-  html2canvas(report).then(canvas=>{
-    const link = document.createElement("a");
-    link.download = "ExpenseFlow_Report.png";
-    link.href = canvas.toDataURL();
-    link.click();
-  });
-}
-
-/* ========= DOWNLOAD PDF ========= */
-function downloadPDF(){
-  html2canvas(report).then(canvas=>{
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jspdf.jsPDF("p","mm","a4");
-    const w = pdf.internal.pageSize.getWidth();
-    const h = canvas.height * w / canvas.width;
-    pdf.addImage(imgData,"PNG",0,10,w,h);
-    pdf.save("ExpenseFlow_Report.pdf");
-  });
-}
-
-/* ========= INIT ========= */
-typeSelect.onchange = loadPeriods;
-loadPeriods();
-</script>
+    <div class="footer-bottom">
+      <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
+    </div>
+  </footer>
+  <script src="protect.js"></script>
+  <script src="Monthlysummary.js"></script>
 
 </body>
+
 </html>

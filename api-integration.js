@@ -71,7 +71,7 @@ const formatAppCurrency = (value, { showPlus = false, absolute = false } = {}) =
   const numericValue = Number(absolute ? Math.abs(value) : value) || 0;
   const formatted = typeof formatter === 'function'
     ? formatter(numericValue)
-    : (function(){ const sym = window.i18n?.getCurrencySymbol?.(window.i18n?.getCurrency?.() || '') || ''; return `${sym}${numericValue.toFixed(2)}`; })();
+    : (function () { const sym = window.i18n?.getCurrencySymbol?.(window.i18n?.getCurrency?.() || '') || ''; return `${sym}${numericValue.toFixed(2)}`; })();
   if (showPlus && numericValue > 0 && !formatted.startsWith('+') && !formatted.startsWith('-')) {
     return `+${formatted}`;
   }
@@ -83,15 +83,22 @@ const formatAppCurrency = (value, { showPlus = false, absolute = false } = {}) =
 // ========================
 
 function getAuthToken() {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('token');
 }
 
-async function fetchExpenses(page = 1, limit = 50, workspaceId = null) {
+async function fetchTransactions(page = 1, limit = 50) {
   try {
+    // 1. Try to get from local DB first (Offline-First)
+    const localExpenses = await dbManager.getAll('expenses');
+    if (localExpenses.length > 0) {
+      return localExpenses;
+    }
+
+    // 2. Fallback to server if local is empty or we want to refresh
     const token = getAuthToken();
     if (!token) return [];
 
-    let url = `${API_BASE_URL}/expenses?page=${page}&limit=${limit}`;
+    let url = `${API_BASE_URL}/transactions?page=${page}&limit=${limit}`;
     const activeWs = localStorage.getItem('activeWorkspaceId');
     if (activeWs && activeWs !== 'personal') {
       url += `&workspaceId=${activeWs}`;
@@ -102,52 +109,48 @@ async function fetchExpenses(page = 1, limit = 50, workspaceId = null) {
     });
     if (!response.ok) throw new Error('Failed to fetch expenses');
     const result = await response.json();
-    return result.success ? result.data : result;
-  } catch (error) {
-    console.error('Error fetching expenses:', error);
-    showNotification('Failed to load expenses', 'error');
-    return [];
-  }
-}
 
-async function saveExpense(expense, workspaceId = null) {
-  try {
-    const payload = { ...expense };
-    const activeWs = workspaceId || localStorage.getItem('activeWorkspaceId');
-    if (activeWs && activeWs !== 'personal') {
-      payload.workspaceId = activeWs;
+    // Handle standardized response format: { success: true, data: [...], meta: {...} }
+    const data = result.data || result;
+
+    // Save to local DB for future offline use
+    for (const expense of data) {
+      await dbManager.saveExpense(expense);
     }
 
-    const response = await fetch(`${API_BASE_URL}/expenses`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`
-      },
-      body: JSON.stringify(payload)
-    });
-    if (!response.ok) throw new Error('Failed to save expense');
-    return await response.json();
+    return data;
   } catch (error) {
-    console.error('Error saving expense:', error);
-    showNotification('Failed to save expense', 'error');
-    throw error;
+    console.error('Error fetching expenses:', error);
+    // If network fails, we already tried local, but maybe try again
+    return await dbManager.getAll('expenses');
   }
 }
 
-async function deleteExpense(id) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-    });
-    if (!response.ok) throw new Error('Failed to delete expense');
-    return await response.json();
-  } catch (error) {
-    console.error('Error deleting expense:', error);
-    showNotification('Failed to delete expense', 'error');
-    throw error;
+async function saveTransaction(transaction, workspaceId = null) {
+  if (window.ExpenseSync) {
+    return await window.ExpenseSync.saveExpense(transaction);
   }
+  // Fallback for safety (though ExpenseSync should be loaded)
+  const response = await fetch(`${API_BASE_URL}/transactions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getAuthToken()}`
+    },
+    body: JSON.stringify(expense)
+  });
+  return await response.json();
+}
+
+async function deleteTransaction(id) {
+  if (window.ExpenseSync) {
+    return await window.ExpenseSync.deleteExpense(id);
+  }
+  const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+  });
+  return await response.json();
 }
 
 async function fetchCategorySuggestions(description) {
@@ -164,6 +167,108 @@ async function fetchCategorySuggestions(description) {
     console.error('Error fetching suggestions:', error);
   }
   return null;
+}
+
+// Auto-categorize all uncategorized expenses
+async function autoCategorizeAllUncategorized(workspaceId = null) {
+  try {
+    const payload = {};
+    const activeWs = workspaceId || localStorage.getItem('activeWorkspaceId');
+    if (activeWs && activeWs !== 'personal') {
+      payload.workspaceId = activeWs;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/expenses/auto-categorize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error('Failed to auto-categorize');
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error auto-categorizing:', error);
+    showNotification('Failed to auto-categorize expenses', 'error');
+    throw error;
+  }
+}
+
+// Apply a category suggestion to an expense
+async function applyCategorySuggestion(expenseId, category, isCorrection = false, originalSuggestion = null) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/expenses/${expenseId}/apply-suggestion`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ category, isCorrection, originalSuggestion })
+    });
+
+    if (!response.ok) throw new Error('Failed to apply suggestion');
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error applying suggestion:', error);
+    showNotification('Failed to apply category', 'error');
+    throw error;
+  }
+}
+
+// Train the categorization system with a correction
+async function trainCategorization(description, suggestedCategory, actualCategory) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/categorization/train`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ description, suggestedCategory, actualCategory })
+    });
+
+    if (!response.ok) throw new Error('Failed to train');
+    return await response.json();
+  } catch (error) {
+    console.error('Error training categorization:', error);
+  }
+}
+
+// Get user's learned patterns
+async function fetchUserPatterns(category = null) {
+  try {
+    let url = `${API_BASE_URL}/categorization/patterns`;
+    if (category) url += `?category=${category}`;
+
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch patterns');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching patterns:', error);
+    return null;
+  }
+}
+
+// Get categorization statistics
+async function fetchCategorizationStats() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/categorization/stats`, {
+      headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching categorization stats:', error);
+    return null;
+  }
 }
 
 // ========================
@@ -199,16 +304,17 @@ async function addTransaction(e) {
   };
 
   try {
-    const savedExpense = await saveExpense(expense);
+    const savedExpense = await window.ExpenseSync.saveExpense(expense);
 
     // Convert to local format for state
     const transaction = {
-      id: savedExpense.data ? savedExpense.data._id : savedExpense._id,
-      text: savedExpense.data ? savedExpense.data.description : savedExpense.description,
+      id: savedExpense.id, // Now uses the ID from saveExpense (local or server)
+      text: savedExpense.description,
       amount: transactionAmount,
       category: category.value,
       type: type.value,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      offline: savedExpense.status === 'pending'
     };
 
     transactions.push(transaction);
@@ -224,26 +330,25 @@ async function addTransaction(e) {
     selectedSuggestion = null;
     hideSuggestions();
 
-    showNotification(`${type.value.charAt(0).toUpperCase() + type.value.slice(1)} added successfully!`, 'success');
+    const msg = transaction.offline ? 'Saved offline. Will sync when online.' : `${type.value.charAt(0).toUpperCase() + type.value.slice(1)} added successfully!`;
+    showNotification(msg, transaction.offline ? 'warning' : 'success');
   } catch (error) {
-    console.error('Failed to add transaction:', error);
-    showNotification('Failed to add transaction. Please check your connection.', 'error');
+    console.error('Add transaction error:', error);
+    showNotification('Failed to add transaction', 'error');
   }
 }
 
 async function removeTransaction(id) {
-  const transactionToRemove = transactions.find(t => t.id === id);
-  if (!transactionToRemove) return;
-
   try {
-    await deleteExpense(id);
+    await window.ExpenseSync.deleteExpense(id);
+
     transactions = transactions.filter(transaction => transaction.id !== id);
     displayTransactions();
     updateValues();
     showNotification('Transaction deleted successfully', 'success');
   } catch (error) {
-    console.error('Failed to delete transaction:', error);
-    showNotification('Failed to delete transaction. Please check your connection.', 'error');
+    console.error('Delete transaction error:', error);
+    showNotification('Failed to delete transaction', 'error');
   }
 }
 
@@ -330,16 +435,30 @@ function showSuggestions(suggestions) {
   header.innerHTML = `<i class="fas fa-brain"></i><span>AI Suggestions</span>`;
   categorySuggestions.appendChild(header);
 
+  // Show auto-apply threshold info
+  const thresholdInfo = document.createElement('div');
+  thresholdInfo.className = 'suggestions-threshold-info';
+  const autoApplyThreshold = suggestions.autoApplyThreshold || 0.85;
+  thresholdInfo.innerHTML = `<small><i class="fas fa-info-circle"></i> Auto-applies at ${(autoApplyThreshold * 100).toFixed(0)}%+ confidence</small>`;
+  categorySuggestions.appendChild(thresholdInfo);
+
   suggestions.suggestions.forEach((suggestion, index) => {
     const item = document.createElement('div');
-    item.className = `suggestion-item ${index === 0 ? 'primary' : ''}`;
-    const confidenceLevel = suggestion.confidence > 0.75 ? 'high' : suggestion.confidence > 0.5 ? 'medium' : 'low';
+    const isHighConfidence = suggestion.confidence >= (suggestions.autoApplyThreshold || 0.85);
+    item.className = `suggestion-item ${index === 0 ? 'primary' : ''} ${isHighConfidence ? 'high-confidence' : ''}`;
+    const confidenceLevel = suggestion.confidence >= 0.85 ? 'high' : suggestion.confidence >= 0.6 ? 'medium' : 'low';
+
+    // Add "Suggested" badge for lower confidence suggestions
+    const badgeHTML = isHighConfidence
+      ? '<span class="auto-apply-badge"><i class="fas fa-check-circle"></i> Auto-apply</span>'
+      : '<span class="suggested-badge"><i class="fas fa-lightbulb"></i> Suggested</span>';
 
     item.innerHTML = `
       <div class="suggestion-content">
         <div class="suggestion-category">
           <span class="suggestion-category-icon">${categoryEmojis[suggestion.category] || '📋'}</span>
           <span>${categoryLabels[suggestion.category] || suggestion.category}</span>
+          ${badgeHTML}
         </div>
         <div class="suggestion-reason"><i class="fas fa-info-circle"></i><span>${suggestion.reason}</span></div>
       </div>
@@ -459,6 +578,11 @@ window.addEventListener('online', syncOfflineTransactions);
 // Global Exposure
 window.removeTransaction = removeTransaction;
 window.updateAllData = initApp;
+window.autoCategorizeAllUncategorized = autoCategorizeAllUncategorized;
+window.applyCategorySuggestion = applyCategorySuggestion;
+window.trainCategorization = trainCategorization;
+window.fetchUserPatterns = fetchUserPatterns;
+window.fetchCategorizationStats = fetchCategorizationStats;
 
 // Start the app
 document.addEventListener('DOMContentLoaded', initApp);

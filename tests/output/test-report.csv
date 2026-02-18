@@ -1,0 +1,5 @@
+Date,Description,Category,Amount,Currency,Type,Payment Method
+2024-01-01,"Office Rent",Rent,1500,USD,expense,Bank Transfer
+2024-01-05,"Client Payment",Consulting,5000,USD,income,Wire
+2024-01-10,"Team Lunch",Food,200,USD,expense,Card
+2024-01-15,"Software Licenses",Software,300,USD,expense,Card

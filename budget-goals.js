@@ -2,7 +2,7 @@
 class BudgetGoalsManager {
   constructor() {
     this.apiUrl = '/api';
-    this.authToken = localStorage.getItem('authToken');
+    this.authToken = localStorage.getItem('token');
     this.initializeDashboard();
   }
   
@@ -199,7 +199,7 @@ class BudgetGoalsManager {
 
   // Load dashboard data
   async loadDashboardData() {
-    this.authToken = localStorage.getItem('authToken');
+    this.authToken = localStorage.getItem('token');
     if (!this.authToken) return;
 
     try {

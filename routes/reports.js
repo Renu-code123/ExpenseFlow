@@ -280,4 +280,229 @@ router.get('/types/available', auth, (req, res) => {
   });
 });
 
+/**
+ * @route   GET /api/reports/preview
+ * @desc    Preview report data with charts (for frontend display)
+ * @access  Private
+ */
+router.get('/preview', auth, async (req, res) => {
+  try {
+    const {
+      startDate,
+      endDate,
+      reportType = 'comprehensive',
+      currency = 'USD'
+    } = req.query;
+
+    const options = {
+      startDate: startDate ? new Date(startDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      endDate: endDate ? new Date(endDate) : new Date(),
+      reportType,
+      currency,
+      includeCharts: true
+    };
+
+    const previewData = await reportService.generatePreview(req.user.id, options);
+
+    res.json({
+      success: true,
+      data: previewData
+    });
+  } catch (error) {
+    console.error('Report preview error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate report preview'
+    });
+  }
+});
+
+/**
+ * @route   GET /api/reports/pdf/download
+ * @desc    Download comprehensive PDF report
+ * @access  Private
+ */
+router.get('/pdf/download', auth, rateLimit({ windowMs: 60000, max: 10 }), async (req, res) => {
+  try {
+    const {
+      startDate,
+      endDate,
+      reportType = 'comprehensive',
+      includeCharts = 'true',
+      includeTransactions = 'true',
+      currency = 'USD',
+      title
+    } = req.query;
+
+    const options = {
+      startDate: startDate ? new Date(startDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      endDate: endDate ? new Date(endDate) : new Date(),
+      reportType,
+      includeCharts: includeCharts === 'true',
+      includeTransactions: includeTransactions === 'true',
+      currency,
+      title: title || `Financial Report - ${new Date().toLocaleDateString()}`
+    };
+
+    const pdfBuffer = await reportService.generatePDF(req.user.id, options);
+    
+    const filename = `ExpenseFlow_Report_${options.startDate.toISOString().split('T')[0]}_to_${options.endDate.toISOString().split('T')[0]}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('PDF download error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate PDF report'
+    });
+  }
+});
+
+/**
+ * @route   GET /api/reports/excel/download
+ * @desc    Download comprehensive Excel report
+ * @access  Private
+ */
+router.get('/excel/download', auth, rateLimit({ windowMs: 60000, max: 10 }), async (req, res) => {
+  try {
+    const {
+      startDate,
+      endDate,
+      reportType = 'comprehensive',
+      includeAllTransactions = 'true',
+      currency = 'USD'
+    } = req.query;
+
+    const options = {
+      startDate: startDate ? new Date(startDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      endDate: endDate ? new Date(endDate) : new Date(),
+      reportType,
+      includeAllTransactions: includeAllTransactions === 'true',
+      currency
+    };
+
+    const excelBuffer = await reportService.generateExcel(req.user.id, options);
+    
+    const filename = `ExpenseFlow_Report_${options.startDate.toISOString().split('T')[0]}_to_${options.endDate.toISOString().split('T')[0]}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', excelBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error('Excel download error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate Excel report'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/reports/schedule
+ * @desc    Schedule recurring report generation
+ * @access  Private
+ */
+router.post('/schedule', auth, async (req, res) => {
+  try {
+    const {
+      reportType,
+      frequency,
+      dayOfWeek,
+      dayOfMonth,
+      format,
+      emailDelivery,
+      options
+    } = req.body;
+
+    // Validate frequency
+    const validFrequencies = ['daily', 'weekly', 'monthly', 'quarterly'];
+    if (!validFrequencies.includes(frequency)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid frequency. Use: daily, weekly, monthly, quarterly'
+      });
+    }
+
+    const schedule = await reportService.scheduleReport(req.user.id, {
+      reportType: reportType || 'comprehensive',
+      frequency,
+      dayOfWeek: frequency === 'weekly' ? dayOfWeek : undefined,
+      dayOfMonth: ['monthly', 'quarterly'].includes(frequency) ? dayOfMonth : undefined,
+      format: format || 'pdf',
+      emailDelivery: emailDelivery !== false,
+      options: options || {}
+    });
+
+    res.status(201).json({
+      success: true,
+      data: schedule,
+      message: 'Report scheduled successfully'
+    });
+  } catch (error) {
+    console.error('Report scheduling error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to schedule report'
+    });
+  }
+});
+
+/**
+ * @route   GET /api/reports/templates
+ * @desc    Get available report templates
+ * @access  Private
+ */
+router.get('/templates', auth, (req, res) => {
+  const templates = [
+    {
+      id: 'executive_summary',
+      name: 'Executive Summary',
+      description: 'High-level financial overview with key metrics and insights',
+      sections: ['summary', 'charts', 'insights'],
+      formats: ['pdf', 'excel']
+    },
+    {
+      id: 'detailed_analysis',
+      name: 'Detailed Financial Analysis',
+      description: 'Comprehensive breakdown with all transactions and categories',
+      sections: ['summary', 'categories', 'transactions', 'trends', 'charts'],
+      formats: ['pdf', 'excel']
+    },
+    {
+      id: 'tax_preparation',
+      name: 'Tax Preparation Report',
+      description: 'Organized for tax filing with deductible expenses highlighted',
+      sections: ['income', 'deductions', 'categories', 'summary'],
+      formats: ['pdf', 'excel']
+    },
+    {
+      id: 'budget_review',
+      name: 'Budget Review Report',
+      description: 'Budget vs actual spending analysis with variance tracking',
+      sections: ['budget_comparison', 'variance', 'recommendations'],
+      formats: ['pdf', 'excel']
+    },
+    {
+      id: 'monthly_statement',
+      name: 'Monthly Statement',
+      description: 'Bank statement style monthly transaction summary',
+      sections: ['balance', 'transactions', 'summary'],
+      formats: ['pdf']
+    }
+  ];
+
+  res.json({
+    success: true,
+    data: templates
+  });
+});
+
 module.exports = router;

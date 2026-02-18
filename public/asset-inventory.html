@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Inventory & Procurement - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Asset Management</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <div class="header-main">
+                <h1>Enterprise Assets</h1>
+                <p>Tracking lifecycle, depreciation, and procurement orders</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openPRModal()"><i class="fas fa-plus"></i> New Requisition</button>
+                <button class="btn-secondary" onclick="runDepreciation()"><i class="fas fa-calculator"></i> Run
+                    Depreciation</button>
+            </div>
+        </div>
+
+        <!-- Macro Stats -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <label>Total Book Value</label>
+                <h2 id="total-book-value">₹0</h2>
+                <div class="stat-delta positive"><i class="fas fa-trend-up"></i> Active Inventory</div>
+            </div>
+            <div class="stat-card glass-card">
+                <label>Accumulated Depreciation</label>
+                <h2 id="accumulated-depreciation">₹0</h2>
+                <div class="stat-delta negative">Asset Value Loss</div>
+            </div>
+            <div class="stat-card glass-card">
+                <label>Pending PRs</label>
+                <h2 id="pending-pr-count">0</h2>
+                <div class="stat-delta neutral">In Approval Pipeline</div>
+            </div>
+        </div>
+
+        <div class="inventory-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="inventory-sidebar glass-card">
+                <div class="side-nav">
+                    <button class="nav-btn active" onclick="switchSection('inventory')"><i class="fas fa-boxes"></i>
+                        Inventory</button>
+                    <button class="nav-btn" onclick="switchSection('procurement')"><i class="fas fa-shuttle-van"></i>
+                        Procurement</button>
+                    <button class="nav-btn" onclick="switchSection('analytics')"><i class="fas fa-chart-pie"></i>
+                        Analytics</button>
+                </div>
+            </aside>
+
+            <!-- Main Inventory List -->
+            <main class="inventory-content">
+                <section id="inventory-section" class="active-section">
+                    <div class="section-header">
+                        <h2>Fixed Assets</h2>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search by serial or name..."
+                                onkeyup="filterAssets(this.value)">
+                        </div>
+                    </div>
+                    <div id="assets-grid" class="assets-grid">
+                        <div class="loading-state">Syncing inventory...</div>
+                    </div>
+                </section>
+
+                <section id="procurement-section" class="hidden">
+                    <div class="section-header">
+                        <h2>Recent Orders</h2>
+                    </div>
+                    <div class="orders-table-container glass-card">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-list">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="analytics-section" class="hidden">
+                    <div class="charts-grid">
+                        <div class="chart-container glass-card">
+                            <h3>Asset Value Distribution</h3>
+                            <canvas id="assetCategoryChart"></canvas>
+                        </div>
+                        <div class="chart-container glass-card">
+                            <h3>Depreciation Projection</h3>
+                            <canvas id="depreciationTrendChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- PR Modal -->
+    <div id="pr-modal" class="modal hidden">
+        <div class="modal-content glass-card large">
+            <div class="modal-header">
+                <h3>New Purchase Requisition</h3>
+                <span class="close-modal" onclick="closePRModal()">&times;</span>
+            </div>
+            <form id="pr-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Requisition Title</label>
+                        <input type="text" id="pr-title" required placeholder="e.g. Workstation Upgrade - Q1">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="pr-dept">
+                            <option value="IT">IT Infrastructure</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Sales">Sales & Marketing</option>
+                            <option value="Admin">Administration</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="items-editor">
+                    <label>Items</label>
+                    <div id="pr-items-list">
+                        <div class="item-row">
+                            <input type="text" placeholder="Item name" class="item-name">
+                            <input type="number" placeholder="Qty" class="item-qty" value="1">
+                            <input type="number" placeholder="Unit Price" class="item-price">
+                            <button type="button" class="remove-item"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-text" onclick="addPRItemRow()"><i class="fas fa-plus"></i> Add Line
+                        Item</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closePRModal()">Discard</button>
+                    <button type="submit" class="btn-primary">Generate PR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/asset-controller.js"></script>
+</body>
+
+</html>

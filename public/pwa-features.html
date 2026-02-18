@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <title>PWA Features - ExpenseFlow</title>
+
+    <!-- Critical CSS Inline -->
+    <style>body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(135deg,#0f0f23 0%,#1a1a2e 50%,#16213e 100%);color:#e0e0e0;min-height:100vh}.nav-bar{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);position:sticky;top:0;z-index:100}.nav-content{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;max-width:1200px;margin:0 auto}.nav-back{color:#e0e0e0;text-decoration:none;display:flex;align-items:center;gap:.5rem;font-weight:500}.nav-title{display:flex;align-items:center;gap:.5rem;font-size:1.25rem;font-weight:600}.nav-actions{display:flex;gap:1rem}.nav-link{color:#e0e0e0;text-decoration:none;padding:.5rem 1rem;border-radius:8px;transition:all .3s}.nav-link:hover{background:rgba(255,255,255,.1)}.container{max-width:1200px;margin:0 auto;padding:2rem}.page-header{margin-bottom:2rem}.header-content{display:flex;align-items:center;justify-content:space-between}h1{font-size:2rem;margin:0}.pwa-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin:2rem 0}.feature-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.5rem}.feature-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}.feature-icon{font-size:2rem}.feature-title{font-size:1.25rem;font-weight:600}.feature-status{margin-left:auto;padding:.25rem .75rem;border-radius:20px;font-size:.8rem;font-weight:500}.status-enabled{background:#4caf50;color:#fff}.status-disabled{background:#f44336;color:#fff}.status-partial{background:#ff9800;color:#fff}.feature-content{color:#a0a0a0}.feature-metric{font-size:1.5rem;font-weight:700;color:#667eea;margin:.5rem 0}.pwa-storage{background:rgba(255,255,255,.05);border-radius:12px;padding:1.5rem;margin:2rem 0}.storage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}.storage-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:1rem;text-align:center}.storage-label{color:#a0a0a0;font-size:.9rem}.storage-value{font-size:1.25rem;font-weight:600;color:#667eea}.pwa-notifications{background:rgba(255,255,255,.05);border-radius:12px;padding:1.5rem;margin:2rem 0}.notification-list{space-y:1rem}.notification-item{display:flex;align-items:center;gap:1rem;padding:1rem;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:1rem}.notification-icon{font-size:1.5rem}.notification-content{flex:1}.notification-title{font-weight:600}.notification-desc{color:#a0a0a0;font-size:.9rem}.notification-toggle{margin-left:auto}.toggle-switch{position:relative;display:inline-block;width:50px;height:24px}.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:24px;transition:.4s}.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.4s}.toggle-switch input{display:none}.toggle-switch input:checked+.toggle-slider{background:#667eea}.toggle-switch input:checked+.toggle-slider:before{transform:translateX(26px)}.pwa-cache{background:rgba(255,255,255,.05);border-radius:12px;padding:1.5rem;margin:2rem 0}.cache-table{width:100%;border-collapse:collapse}.cache-table th,.cache-table td{padding:1rem;border-bottom:1px solid rgba(255,255,255,.05);text-align:left}.cache-table th{font-weight:600;color:#e0e0e0}.cache-table td{color:#a0a0a0}.cache-size{color:#667eea;font-weight:600}.pwa-actions{background:rgba(255,255,255,.05);border-radius:12px;padding:1.5rem;margin:2rem 0}.actions-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}.action-btn{background:#667eea;border:none;border-radius:8px;padding:1rem;color:#fff;font-weight:600;cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:.5rem;text-decoration:none}.action-btn:hover{background:#5a67d8}.action-btn.secondary{background:#4a5568}.action-btn.secondary:hover{background:#374151}.action-btn.danger{background:#f44336}.action-btn.danger:hover{background:#d32f2f}.loading-skeleton{background:linear-gradient(90deg,#333 25%,#444 50%,#333 75%);background-size:200% 100%;animation:loading 1.5s infinite;border-radius:8px}@keyframes loading{0%{background-position:200% 0}100%{background-position:-200% 0}}</style>
+
+    <!-- Preload resources -->
+    <link rel="preload" href="pwa-min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="nav-title">
+                <i class="fas fa-mobile-alt"></i> PWA Features
+            </div>
+            <div class="nav-actions">
+                <a href="performance.html" class="nav-link">Performance</a>
+                <a href="reports.html" class="nav-link">Reports</a>
+                <a href="settings.html" class="nav-link">Settings</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1>📱 Progressive Web App Features</h1>
+                <div class="header-actions">
+                    <button class="action-btn" onclick="checkPWAStatus()">
+                        <i class="fas fa-sync"></i> Check Status
+                    </button>
+                    <button class="action-btn secondary" onclick="updatePWA()">
+                        <i class="fas fa-download"></i> Update PWA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PWA Features Grid -->
+        <div class="pwa-features">
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">🔧</div>
+                    <div class="feature-title">Service Worker</div>
+                    <div class="feature-status status-enabled" id="sw-status">Enabled</div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-metric" id="sw-version">v1.2.3</div>
+                    <p>Handles caching, offline functionality, and background sync</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">📶</div>
+                    <div class="feature-title">Offline Mode</div>
+                    <div class="feature-status status-enabled" id="offline-status">Online</div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-metric" id="offline-cache">247 MB</div>
+                    <p>App works offline with cached data and resources</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">🔔</div>
+                    <div class="feature-title">Push Notifications</div>
+                    <div class="feature-status status-partial" id="notification-status">Partial</div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-metric" id="notification-count">12</div>
+                    <p>Receive expense alerts and budget reminders</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Installable</div>
+                    <div class="feature-status status-enabled" id="install-status">Ready</div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-metric" id="install-prompt">Available</div>
+                    <p>Add to home screen for native app experience</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">🔄</div>
+                    <div class="feature-title">Background Sync</div>
+                    <div class="feature-status status-enabled" id="sync-status">Active</div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-metric" id="sync-queue">3</div>
+                    <p>Syncs data when connection is restored</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">💾</div>
+                    <div class="feature-title">Storage Quota</div>
+                    <div class="feature-status status-enabled" id="storage-status">Healthy</div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-metric" id="storage-used">1.2 GB</div>
+                    <p>Local storage usage and available space</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Details -->
+        <div class="pwa-storage">
+            <h2>💾 Storage Management</h2>
+            <div class="storage-grid">
+                <div class="storage-item">
+                    <div class="storage-label">Cache Storage</div>
+                    <div class="storage-value" id="cache-storage">247 MB</div>
+                </div>
+                <div class="storage-item">
+                    <div class="storage-label">IndexedDB</div>
+                    <div class="storage-value" id="indexeddb-storage">856 MB</div>
+                </div>
+                <div class="storage-item">
+                    <div class="storage-label">Local Storage</div>
+                    <div class="storage-value" id="local-storage">2.3 KB</div>
+                </div>
+                <div class="storage-item">
+                    <div class="storage-label">Available Space</div>
+                    <div class="storage-value" id="available-space">4.1 GB</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Push Notifications -->
+        <div class="pwa-notifications">
+            <h2>🔔 Push Notifications</h2>
+            <div class="notification-list">
+                <div class="notification-item">
+                    <div class="notification-icon">💰</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Expense Alert</div>
+                        <div class="notification-desc">Large transaction detected: $500+ spent today</div>
+                    </div>
+                    <label class="notification-toggle">
+                        <input type="checkbox" checked>
+                        <span class="toggle-switch">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon">🎯</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Budget Warning</div>
+                        <div class="notification-desc">You've reached 80% of your monthly budget</div>
+                    </div>
+                    <label class="notification-toggle">
+                        <input type="checkbox" checked>
+                        <span class="toggle-switch">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon">📊</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Weekly Report</div>
+                        <div class="notification-desc">Your expense summary for this week is ready</div>
+                    </div>
+                    <label class="notification-toggle">
+                        <input type="checkbox">
+                        <span class="toggle-switch">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon">🔄</div>
+                    <div class="notification-content">
+                        <div class="notification-title">Sync Complete</div>
+                        <div class="notification-desc">All your data has been synchronized</div>
+                    </div>
+                    <label class="notification-toggle">
+                        <input type="checkbox" checked>
+                        <span class="toggle-switch">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Management -->
+        <div class="pwa-cache">
+            <h2>🗂️ Cache Management</h2>
+            <table class="cache-table">
+                <thead>
+                    <tr>
+                        <th>Cache Name</th>
+                        <th>Items</th>
+                        <th>Size</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="cache-table-body">
+                    <tr>
+                        <td>expenseflow-v1</td>
+                        <td>156</td>
+                        <td class="cache-size">247 MB</td>
+                        <td>2 hours ago</td>
+                        <td><button class="action-btn danger" onclick="clearCache('expenseflow-v1')">Clear</button></td>
+                    </tr>
+                    <tr>
+                        <td>images-v1</td>
+                        <td>89</td>
+                        <td class="cache-size">145 MB</td>
+                        <td>1 day ago</td>
+                        <td><button class="action-btn danger" onclick="clearCache('images-v1')">Clear</button></td>
+                    </tr>
+                    <tr>
+                        <td>api-v1</td>
+                        <td>23</td>
+                        <td class="cache-size">12 MB</td>
+                        <td>30 min ago</td>
+                        <td><button class="action-btn danger" onclick="clearCache('api-v1')">Clear</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PWA Actions -->
+        <div class="pwa-actions">
+            <h2>⚡ PWA Actions</h2>
+            <div class="actions-grid">
+                <button class="action-btn" onclick="testOfflineMode()">
+                    <i class="fas fa-wifi-slash"></i> Test Offline Mode
+                </button>
+                <button class="action-btn" onclick="sendTestNotification()">
+                    <i class="fas fa-bell"></i> Send Test Notification
+                </button>
+                <button class="action-btn secondary" onclick="exportPWALogs()">
+                    <i class="fas fa-file-export"></i> Export PWA Logs
+                </button>
+                <button class="action-btn danger" onclick="resetPWA()">
+                    <i class="fas fa-trash"></i> Reset PWA
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="protect.js"></script>
+    <!-- PWA JavaScript -->
+    <script src="pwa-features.js"></script>
+    <script>
+        // Initialize PWA features monitoring
+        const pwaMonitor = new PWAMonitor();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            pwaMonitor.init();
+        });
+
+        // Global functions for buttons
+        async function checkPWAStatus() {
+            const btn = document.querySelector('button[onclick="checkPWAStatus()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+            btn.disabled = true;
+
+            try {
+                await pwaMonitor.checkStatus();
+                alert('PWA status check completed!');
+            } catch (error) {
+                console.error('PWA status check failed:', error);
+                alert('PWA status check failed. Check console for details.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function updatePWA() {
+            const btn = document.querySelector('button[onclick="updatePWA()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            btn.disabled = true;
+
+            try {
+                await pwaMonitor.updatePWA();
+                alert('PWA updated successfully!');
+            } catch (error) {
+                console.error('PWA update failed:', error);
+                alert('PWA update failed. Check console for details.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function clearCache(cacheName) {
+            if (confirm(`Clear cache "${cacheName}"?`)) {
+                try {
+                    await pwaMonitor.clearSpecificCache(cacheName);
+                    alert(`Cache "${cacheName}" cleared successfully!`);
+                    location.reload();
+                } catch (error) {
+                    console.error('Cache clear failed:', error);
+                    alert('Cache clear failed. Check console for details.');
+                }
+            }
+        }
+
+        async function testOfflineMode() {
+            alert('Testing offline mode... (This would simulate offline conditions)');
+            // In a real implementation, this would disable network and test offline functionality
+        }
+
+        async function sendTestNotification() {
+            try {
+                await pwaMonitor.sendTestNotification();
+                alert('Test notification sent!');
+            } catch (error) {
+                console.error('Test notification failed:', error);
+                alert('Test notification failed. Check console for details.');
+            }
+        }
+
+        async function exportPWALogs() {
+            try {
+                const logs = await pwaMonitor.exportLogs();
+                const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'pwa-logs.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Export logs failed:', error);
+                alert('Export logs failed. Check console for details.');
+            }
+        }
+
+        async function resetPWA() {
+            if (confirm('Reset PWA? This will clear all caches and data.')) {
+                try {
+                    await pwaMonitor.resetPWA();
+                    alert('PWA reset successfully! Page will reload.');
+                    location.reload();
+                } catch (error) {
+                    console.error('PWA reset failed:', error);
+                    alert('PWA reset failed. Check console for details.');
+                }
+            }
+        }
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/reports-sw.js').catch(console.error);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            pwaMonitor.destroy();
+        });
+    </script>
+
+    <!-- Non-critical CSS -->
+    <noscript><link rel="stylesheet" href="pwa-min.css"></noscript>
+</body>
+</html>

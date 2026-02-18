@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Feedback • ExpenseFlow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Fonts & Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="expensetracker.css" />
+    <link rel="stylesheet" href="feedback.css" />
+    <link rel="stylesheet" href="index.css" />
+
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-logo">
+            <i class="fas fa-wallet"></i>
+            <span>ExpenseFlow</span>
+          </div>
+          <div class="nav-menu" id="nav-menu">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="accounts.html" class="nav-link">Accounts</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="feedback.html" class="nav-link active">Feedback</a>
+            <a href="goals.html" class="nav-link">Goals</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+            <!-- <a href="Monthlysummary.html" class="nav-link">Monthly/Yearly Summary</a> -->
+            <a href="./contributor.html" class="nav-link">Contributors</a>
+          </div>
+          <div class="nav-toggle" id="nav-toggle">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+          <div class="user-profile">
+            <div id="workspace-selector" class="workspace-selector"></div>
+            <select
+              id="language-switcher"
+              class="language-select"
+              aria-label="Language"
+            >
+              <option value="en">EN</option>
+              <option value="es">ES</option>
+              <option value="fr">FR</option>
+            </select>
+            <button
+              class="currency-btn"
+              onclick="openCurrencyModal()"
+              title="Currency Settings"
+            >
+              <i class="fas fa-coins"></i>
+              <span id="current-currency">INR</span>
+            </button>
+            <img
+              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+              alt="User"
+              class="profile-img"
+            />
+            <span class="username" id="navUsername"></span>
+            <div id="redirect">
+              <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <section class="hero">
+        <h1>Your Feedback Matters</h1>
+        <p>Help us improve ExpenseFlow 💙</p>
+      </section>
+
+      <div class="container">
+        <div class="feedback-card">
+          <h3>Share Your Experience</h3>
+
+          <form class="feedback-form" onsubmit="submitFeedback(event)">
+            <input type="text" placeholder="Your Name" required />
+            <input type="email" placeholder="Email Address" required />
+
+            <select required>
+              <option value="">Select Feedback Type</option>
+              <option>Bug Report</option>
+              <option>Feature Request</option>
+              <option>General Feedback</option>
+            </select>
+
+            <div class="rating">
+              <span>★</span><span>★</span><span>★</span><span>★</span
+              ><span>★</span>
+            </div>
+
+            <textarea
+              placeholder="Write your feedback here..."
+              required
+            ></textarea>
+
+            <button class="submit-btn">Submit Feedback</button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <!-- < !--FOOTER -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <div class="footer-logo">
+            <i class="fas fa-wallet"></i>
+            <span>ExpenseFlow</span>
+          </div>
+
+          <p class="footer-description">
+            Smart money management made simple. Track, analyze, and optimize
+            your financial habits.
+          </p>
+
+          <div class="social-links">
+            <a
+              href="https://x.com/9504_renu"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="X (Twitter)"
+            >
+              <i class="fab fa-x-twitter"></i>
+            </a>
+
+            <a
+              href="https://github.com/Renu-code123/ExpenseFlow"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Github"
+            >
+              <i class="fab fa-github"></i>
+            </a>
+
+            <a
+              href="mailto:renu89857@gmail.com"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Email"
+            >
+              <i class="far fa-envelope"></i>
+            </a>
+
+            <a
+              href="https://www.linkedin.com/in/renu-kumari-prajapati"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+            >
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h4>Company</h4>
+          <ul class="footer-links">
+            <li><a href="AboutUs.html">About Us</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-container">
+          <p id="copyright" style="text-align: center"></p>
+          <script>
+            document.getElementById("copyright").innerHTML =
+              `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+          </script>
+          <div class="footer-stats">
+            <span>🏆 Trusted by 10,000+ users</span>
+            <span>💰 ₹50M+ tracked</span>
+            <span>📊 99.9% uptime</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script src="protect.js"></script>
+    <script src="feedback.js"></script>
+  </body>
+</html>

@@ -1,3 +1,5 @@
+// Auth check handled by protect.js (Clerk-based)
+
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =====================
@@ -19,6 +21,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const navMenu = document.getElementById("nav-menu");
 
   /* =====================
+     BULK DOM ELEMENTS
+  ====================== */
+  const selectAllCheckbox = document.getElementById("select-all");
+  const bulkActionBar = document.getElementById("bulk-action-bar");
+  const selectedCountSpan = document.getElementById("selected-count");
+  const bulkEditBtn = document.getElementById("bulk-edit-btn");
+  const bulkDeleteBtn = document.getElementById("bulk-delete-btn");
+  const bulkEditModal = document.getElementById("bulk-edit-modal");
+  const closeBulkModalBtn = document.getElementById("close-bulk-modal");
+  const cancelBulkEditBtn = document.getElementById("cancel-bulk-edit");
+  const bulkEditForm = document.getElementById("bulk-edit-form");
+  const bulkCategorySelect = document.getElementById("bulk-category");
+  const bulkTypeSelect = document.getElementById("bulk-type");
+
+  /* =====================
      STATE
   ====================== */
   let transactions = [];
@@ -28,23 +45,45 @@ document.addEventListener("DOMContentLoaded", () => {
   let socket = null;
   let isOnline = navigator.onLine;
   let currentFilter = 'all';
+  let selectedTransactions = new Set(); // Stores IDs of selected transactions
 
   /* =====================
      API CONFIGURATION
   ====================== */
   const API_BASE_URL = 'http://localhost:3000/api';
 
-  // Get auth headers
+  // Get auth headers using Clerk session token
+  async function getClerkToken() {
+    try {
+      if (window.Clerk && window.Clerk.session) {
+        return await window.Clerk.session.getToken();
+      }
+    } catch (e) {
+      console.error('Failed to get Clerk token:', e);
+    }
+    return null;
+  }
+
   function getAuthHeaders() {
-    const token = localStorage.getItem('token');
+    // For sync calls, try localStorage fallback
+    const token = localStorage.getItem('clerkToken');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  async function getAuthHeadersAsync() {
+    const token = await getClerkToken();
+    if (token) {
+      localStorage.setItem('clerkToken', token);
+      return { 'Authorization': `Bearer ${token}` };
+    }
+    return getAuthHeaders();
   }
 
   /* =====================
      REAL-TIME SYNC
   ====================== */
   function initializeSocket() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('clerkToken');
     if (!token) return;
 
     socket = io('http://localhost:3000', {
@@ -55,22 +94,22 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('Connected to real-time sync');
     });
 
-    socket.on('expense_created', (expense) => {
+    socket.on('transaction_created', (transaction) => {
       // Use display amount if available, otherwise convert
-      const displayAmount = expense.displayAmount || expense.amount;
-      const transaction = {
-        id: expense._id,
-        text: expense.description,
-        amount: expense.type === 'expense' ? -displayAmount : displayAmount,
-        category: expense.category,
-        type: expense.type,
-        date: expense.date,
-        displayCurrency: expense.displayCurrency || 'INR'
+      const displayAmount = transaction.displayAmount || transaction.amount;
+      const newTransaction = {
+        id: transaction._id,
+        text: transaction.description,
+        amount: transaction.type === 'expense' ? -displayAmount : displayAmount,
+        category: transaction.category,
+        type: transaction.type,
+        date: transaction.date,
+        displayCurrency: transaction.displayCurrency || 'INR'
       };
-      transactions.push(transaction);
+      transactions.push(newTransaction);
       displayTransactions();
       updateValues();
-      showNotification('New expense synced from another device', 'info');
+      showNotification('New transaction synced from another device', 'info');
     });
 
     socket.on('expense_updated', (expense) => {
@@ -94,9 +133,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on('expense_deleted', (data) => {
       transactions = transactions.filter(t => t.id !== data.id);
+      selectedTransactions.delete(data.id); // Remove from selection if deleted
+      updateActionBar();
       displayTransactions();
       updateValues();
       showNotification('Expense deleted from another device', 'info');
+    });
+
+    socket.on('bulk_expense_updated', (data) => {
+      const { ids, updates } = data;
+      let updatedCount = 0;
+
+      transactions = transactions.map(t => {
+        if (ids.includes(t.id)) {
+          updatedCount++;
+          return { ...t, ...updates };
+        }
+        return t;
+      });
+
+      if (updatedCount > 0) {
+        displayTransactions();
+        updateValues();
+        showNotification(`${updatedCount} expenses updated via bulk action`, 'info');
+      }
+    });
+
+    socket.on('bulk_expense_deleted', (data) => {
+      const { ids } = data;
+      transactions = transactions.filter(t => !ids.includes(t.id));
+
+      ids.forEach(id => selectedTransactions.delete(id));
+      updateActionBar();
+
+      displayTransactions();
+      updateValues();
+      showNotification(`${ids.length} expenses deleted via bulk action`, 'info');
     });
 
     socket.on('disconnect', () => {
@@ -107,32 +179,44 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =====================
      API FUNCTIONS
   ====================== */
-  async function fetchExpenses() {
+  async function fetchTransactions() {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses`, {
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
         headers: getAuthHeaders()
       });
-      if (!response.ok) throw new Error('Failed to fetch expenses');
+
+      if (response.status === 401) {
+        console.warn('API returned 401 - session may have expired');
+        return [];
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch expenses');
+      }
+
       const data = await response.json();
       return data.data.map(expense => ({
         id: expense._id,
         text: expense.description,
-        amount: expense.type === 'expense' ? -(expense.displayAmount || expense.amount) : (expense.displayAmount || expense.amount),
+        amount: expense.type === 'expense'
+          ? -(expense.displayAmount || expense.amount)
+          : (expense.displayAmount || expense.amount),
         category: expense.category,
         type: expense.type,
         date: expense.date,
         displayCurrency: expense.displayCurrency || 'INR',
-        approvalStatus: expense.approvalStatus || 'approved' // Default to approved for backward compatibility
+        approvalStatus: expense.approvalStatus || 'approved'
       }));
     } catch (error) {
-      console.error('Error fetching expenses:', error);
-      throw error; // Let the calling function handle the error
+      console.error('Network error, loading offline data:', error);
+      return JSON.parse(localStorage.getItem('transactions') || '[]');
     }
   }
 
-  async function saveExpense(expense) {
+
+  async function saveTransaction(transaction) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses`, {
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,9 +232,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function updateExpense(id, expense) {
+  async function updateTransaction(id, transaction) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -166,9 +250,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function deleteExpense(id) {
+  async function deleteTransaction(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -272,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
       item.className = `suggestion-item ${index === 0 ? 'primary' : ''}`;
 
       const confidenceLevel = suggestion.confidence > 0.75 ? 'high' :
-                              suggestion.confidence > 0.5 ? 'medium' : 'low';
+        suggestion.confidence > 0.5 ? 'medium' : 'low';
 
       item.innerHTML = `
         <div class="suggestion-content">
@@ -387,7 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const savedExpense = await saveExpense(expense);
+      const savedExpense = await saveTransaction(expense);
 
       // Convert to local format using display amounts
       const displayAmount = savedExpense.displayAmount || savedExpense.amount;
@@ -429,7 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!transactionToRemove) return;
 
     try {
-      await deleteExpense(id);
+      await deleteTransaction(id);
       transactions = transactions.filter(transaction => transaction.id !== id);
       displayTransactions();
       updateValues();
@@ -443,7 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load transactions from API
   async function loadTransactions() {
     try {
-      const expenses = await fetchExpenses();
+      const expenses = await fetchTransactions();
       transactions = expenses;
       displayTransactions();
       updateValues();
@@ -486,6 +570,8 @@ document.addEventListener("DOMContentLoaded", () => {
     filteredTransactions
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .forEach(transaction => addTransactionDOM(transaction));
+
+    updateMasterCheckbox();
   }
 
   function addTransactionDOM(transaction) {
@@ -495,9 +581,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const date = new Date(transaction.date);
     const formattedDate = date.toLocaleDateString('en-IN');
     const categoryInfo = categories[transaction.category] || categories.other;
-    const currencySymbol = transaction.displayCurrency === 'INR' ? '₹' : 
-                          transaction.displayCurrency === 'USD' ? '$' : 
-                          transaction.displayCurrency === 'EUR' ? '€' : transaction.displayCurrency;
+    const currencySymbol = transaction.displayCurrency === 'INR' ? '₹' :
+      transaction.displayCurrency === 'USD' ? '$' :
+        transaction.displayCurrency === 'EUR' ? '€' : transaction.displayCurrency;
 
     // Determine approval status
     let statusBadge = '';
@@ -509,9 +595,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     item.innerHTML = `
       <div class="transaction-content">
-        <div class="transaction-main">
-          <span class="transaction-text">${transaction.text}</span>
-          <span class="transaction-amount">${currencySymbol}${Math.abs(transaction.amount).toFixed(2)}</span>
+        <div class="transaction-item-wrapper">
+          <input type="checkbox" class="transaction-checkbox" data-id="${transaction.id}" 
+            ${selectedTransactions.has(transaction.id) ? 'checked' : ''} onchange="toggleSelection('${transaction.id}')">
+          <div class="transaction-main">
+            <span class="transaction-text">${transaction.text}</span>
+            <span class="transaction-amount">${currencySymbol}${Math.abs(transaction.amount).toFixed(2)}</span>
+          </div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
           <span class="transaction-category" style="background-color: ${categoryInfo.color}20; color: ${categoryInfo.color};">
@@ -539,10 +629,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const expense = amounts.filter(item => item < 0).reduce((acc, item) => acc + item, 0) * -1;
 
     // Use the currency from the first transaction or default to INR
-    const currencySymbol = transactions.length > 0 ? 
-      (transactions[0].displayCurrency === 'INR' ? '₹' : 
-       transactions[0].displayCurrency === 'USD' ? '$' : 
-       transactions[0].displayCurrency === 'EUR' ? '€' : transactions[0].displayCurrency) : '₹';
+    const currencySymbol = transactions.length > 0 ?
+      (transactions[0].displayCurrency === 'INR' ? '₹' :
+        transactions[0].displayCurrency === 'USD' ? '$' :
+          transactions[0].displayCurrency === 'EUR' ? '€' : transactions[0].displayCurrency) : '₹';
 
     balance.innerHTML = `${currencySymbol}${total.toFixed(2)}`;
     moneyPlus.innerHTML = `+${currencySymbol}${income.toFixed(2)}`;
@@ -616,11 +706,200 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =====================
+     BULK ACTION FUNCTIONS
+  ====================== */
+
+  function toggleSelection(id) {
+    if (selectedTransactions.has(id)) {
+      selectedTransactions.delete(id);
+    } else {
+      selectedTransactions.add(id);
+    }
+    updateActionBar();
+    updateMasterCheckbox();
+
+    // Update checkbox in DOM without full re-render
+    const checkbox = document.querySelector(`.transaction-checkbox[data-id="${id}"]`);
+    if (checkbox) checkbox.checked = selectedTransactions.has(id);
+  }
+
+  function toggleSelectAll() {
+    const isChecked = selectAllCheckbox.checked;
+
+    // Get currently visible transactions based on filter
+    let visibleTransactions = transactions;
+    if (currentFilter !== 'all') {
+      visibleTransactions = transactions.filter(t => t.type === currentFilter);
+    }
+
+    if (isChecked) {
+      visibleTransactions.forEach(t => selectedTransactions.add(t.id));
+    } else {
+      // Only deselect visible ones (or deselect all?)
+      // Standard behavior: deselect all
+      selectedTransactions.clear();
+    }
+
+    displayTransactions(); // Re-render to update all checkboxes
+    updateActionBar();
+  }
+
+  function updateActionBar() {
+    const count = selectedTransactions.size;
+    selectedCountSpan.textContent = `${count} selected`;
+
+    if (count > 0) {
+      bulkActionBar.classList.add('visible');
+    } else {
+      bulkActionBar.classList.remove('visible');
+    }
+  }
+
+  function updateMasterCheckbox() {
+    // Check if all visible transactions are selected
+    let visibleTransactions = transactions;
+    if (currentFilter !== 'all') {
+      visibleTransactions = transactions.filter(t => t.type === currentFilter);
+    }
+
+    if (visibleTransactions.length === 0) {
+      if (selectAllCheckbox) selectAllCheckbox.checked = false;
+      return;
+    }
+
+    const allSelected = visibleTransactions.every(t => selectedTransactions.has(t.id));
+    if (selectAllCheckbox) selectAllCheckbox.checked = allSelected;
+  }
+
+  async function confirmBulkDelete() {
+    const count = selectedTransactions.size;
+    if (count === 0) return;
+
+    if (confirm(`Are you sure you want to delete ${count} transactions? This cannot be undone.`)) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/expenses/bulk-delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          body: JSON.stringify({ ids: Array.from(selectedTransactions) })
+        });
+
+        if (!response.ok) throw new Error('Failed to delete expenses');
+
+        const result = await response.json();
+        showNotification(`Successfully deleted ${result.data.deleted} expenses`, 'success');
+
+        // Optimistic update
+        transactions = transactions.filter(t => !selectedTransactions.has(t.id));
+        selectedTransactions.clear();
+        updateActionBar();
+        displayTransactions();
+        updateValues();
+
+      } catch (error) {
+        console.error('Bulk delete failed:', error);
+        showNotification('Failed to delete expenses', 'error');
+      }
+    }
+  }
+
+  function openBulkEditModal() {
+    if (selectedTransactions.size === 0) return;
+    bulkEditModal.classList.add('active');
+  }
+
+  function closeBulkEditModal() {
+    bulkEditModal.classList.remove('active');
+    bulkEditForm.reset();
+  }
+
+  async function handleBulkEditSubmit(e) {
+    e.preventDefault();
+
+    const updates = {};
+    if (bulkCategorySelect.value) updates.category = bulkCategorySelect.value;
+    if (bulkTypeSelect.value) updates.type = bulkTypeSelect.value;
+
+    if (Object.keys(updates).length === 0) {
+      showNotification('No changes selected', 'warning');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/expenses/bulk-update`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          ids: Array.from(selectedTransactions),
+          updates
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update expenses');
+
+      const result = await response.json();
+      showNotification(`Successfully updated ${result.data.modified} expenses`, 'success');
+
+      // Optimistic update
+      const ids = Array.from(selectedTransactions);
+      transactions = transactions.map(t => {
+        if (ids.includes(t.id)) {
+          return { ...t, ...updates };
+        }
+        return t;
+      });
+
+      selectedTransactions.clear();
+      updateActionBar();
+      displayTransactions();
+      updateValues();
+      closeBulkEditModal();
+
+    } catch (error) {
+      console.error('Bulk update failed:', error);
+      showNotification('Failed to update expenses', 'error');
+    }
+  }
+
+  /* =====================
      INITIALIZATION
   ====================== */
   async function Init() {
     await loadTransactions();
     initializeSocket();
+
+    // Bulk Action Event Listeners
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', toggleSelectAll);
+    }
+
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.addEventListener('click', confirmBulkDelete);
+    }
+
+    if (bulkEditBtn) {
+      bulkEditBtn.addEventListener('click', openBulkEditModal);
+    }
+
+    if (closeBulkModalBtn) {
+      closeBulkModalBtn.addEventListener('click', closeBulkEditModal);
+    }
+
+    if (cancelBulkEditBtn) {
+      cancelBulkEditBtn.addEventListener('click', closeBulkEditModal);
+    }
+
+    if (bulkEditForm) {
+      bulkEditForm.addEventListener('submit', handleBulkEditSubmit);
+    }
+
+    // Make toggleSelection global so inline onchange works
+    window.toggleSelection = toggleSelection;
   }
 
   // Event listeners

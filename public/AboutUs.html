@@ -14,9 +14,18 @@
 
   <!-- SAME CSS FILE -->
   <link rel="stylesheet" href="expensetracker.css">
+  <link rel="stylesheet" href="aboutus.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
 </head>
 
-<body>
+<body id="top">
+
+
+
+
+<div class="cursor-trail-container" id="cursor-trail"></div>
 
   <!-- HEADER -->
   <header class="header">
@@ -127,36 +136,313 @@
       </div>
 
     </div>
+
+       <section  id="feedback" class="feedback-section">
+        <div class="feedback-header">
+          <h2 class="hero-title">Share Your Feedback</h2>
+          <p class="hero-subtitle">Your words help us to grow </p>
+        </div>
+      <form class="feedback-form">
+        <input id="text" type="text" placeholder="Your name" required>
+        <input id="text" type="email" placeholder="Your email" required>
+        <textarea id="textarea" rows="4" placeholder="Your feedback" required></textarea>
+        <button id="submit" type="submit">Submit</button>
+      </form>
+    </section>
+
   </main>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-container">
-      <div class="footer-section">
-        <div class="footer-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
+ 
+<!-- < !--FOOTER -->
+<footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
+
+                <p class="footer-description">
+                    Smart money management made simple. Track, analyze, and optimize
+                    your financial habits.
+                </p>
+
+                <div class="social-links">
+                    <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="X (Twitter)">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
+
+                    <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="Github">
+                        <i class="fab fa-github"></i>
+                    </a>
+
+                    <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="Email">
+                        <i class="far fa-envelope"></i>
+                    </a>
+
+                    <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="AboutUs.html">About Us</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
         </div>
-        <p>Smart money management made simple.</p>
-      </div>
 
-      <div class="footer-section">
-        <h4>Resources</h4>
-        <ul class="footer-links">
-          <li><a href="finance-tips.html">Finance Tips</a></li>
-          <li><a href="terms_service.html">Terms of Service</a></li>
-          <li><a href="AboutUs.html">About Us</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
-        </ul>
-      </div>
-    </div>
+        <div class="footer-bottom">
+            <div class="footer-container">
+                  <p id="copyright" style="text-align:center;"></p>
+                  <script>
+                    document.getElementById("copyright").innerHTML =
+                      `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+                  </script>
+                <div class="footer-stats">
+                    <span>🏆 Trusted by 10,000+ users</span>
+                    <span>💰 ₹50M+ tracked</span>
+                    <span>📊 99.9% uptime</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+<!-- Blue Cursor Trail -->
+<div class="circle-container" id="cursorTrail"></div>
+<script>
+/* ============================= */
+/* 🔵 Blue Cursor Trail Script  */
+/* ============================= */
 
-    <div class="footer-bottom">
-      <div class="footer-container">
-        <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
+const container = document.getElementById('cursorTrail');
+const circleCount = 12;
+const circles = [];
+
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+
+if (container) {
+  for (let i = 0; i < circleCount; i++) {
+    const circle = document.createElement('div');
+    circle.classList.add('cursor-circle');
+    container.appendChild(circle);
+    circles.push({ el: circle, x: mouseX, y: mouseY });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  document.addEventListener('mousedown', () => {
+    circles.forEach(c => c.el.classList.add('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseup', () => {
+    circles.forEach(c => c.el.classList.remove('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.add('cursor-hovering'));
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.remove('cursor-hovering'));
+    }
+  });
+
+  function animateCursor() {
+    let x = mouseX;
+    let y = mouseY;
+
+    circles.forEach(circle => {
+      circle.x += (x - circle.x) * 0.25;
+      circle.y += (y - circle.y) * 0.25;
+
+      circle.el.style.left = circle.x + 'px';
+      circle.el.style.top = circle.y + 'px';
+
+      x = circle.x;
+      y = circle.y;
+    });
+
+    requestAnimationFrame(animateCursor);
+  }
+
+  animateCursor();
+}
+</script>
+
+
+<script>
+(function() {
+  // Hide default cursor
+  document.body.style.cursor = 'none';
+  if (window.innerWidth < 768) return; // Disable on small screens
+  
+
+  const container = document.getElementById('cursor-trail');
+  const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const trailCircles = [];
+  const COUNT = 8; // Fewer circles for smoother trail
+
+  // Create trail circles
+  for (let i = 0; i < COUNT; i++) {
+    const circle = document.createElement('div');
+    circle.className = 'trail-dot';
+
+    // Opacity decreases along the trail
+    const opacity = 0.9 - (i / COUNT) * 0.8;
+    circle.style.opacity = opacity.toString();
+
+    // Size decreases along the trail
+    const scale = 1 - (i / COUNT) * 0.5;
+    circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+    container.appendChild(circle);
+    trailCircles.push({ 
+      element: circle, 
+      x: coords.x, 
+      y: coords.y,
+      targetX: coords.x,
+      targetY: coords.y
+    });
+  }
+
+  // Track mouse position
+  let isMoving = false;
+  let lastMouseX = coords.x;
+  let lastMouseY = coords.y;
+  let velocity = { x: 0, y: 0 };
+
+  window.addEventListener('mousemove', e => {
+    coords.x = e.clientX;
+    coords.y = e.clientY;
+
+    // Calculate velocity for smooth movement
+    velocity.x = e.clientX - lastMouseX;
+    velocity.y = e.clientY - lastMouseY;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+
+    isMoving = true;
+
+    // Reset movement timeout
+    clearTimeout(window.movementTimeout);
+    window.movementTimeout = setTimeout(() => {
+      isMoving = false;
+    }, 50);
+  });
+
+  // Click effect
+  window.addEventListener('mousedown', () => {
+    trailCircles.forEach(circle => {
+      circle.element.classList.add('cursor-clicking');
+    });
+  });
+
+  window.addEventListener('mouseup', () => {
+    trailCircles.forEach(circle => {
+      circle.element.classList.remove('cursor-clicking');
+    });
+  });
+
+  // Hover effect for interactive elements
+  window.addEventListener('mouseover', e => {
+    const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
+    trailCircles.forEach(circle => {
+      circle.element.classList.toggle('cursor-hovering', !!interactive);
+    });
+  });
+
+  // Smooth animation function
+  function animateTrail() {
+    let targetX = coords.x;
+    let targetY = coords.y;
+
+    // Add velocity offset to first circle for more natural feel
+    const velocityOffset = 0.5;
+    const offsetX = velocity.x * velocityOffset;
+    const offsetY = velocity.y * velocityOffset;
+
+    trailCircles.forEach((circle, index) => {
+      // First circle follows cursor exactly
+      if (index === 0) {
+        circle.x = targetX + offsetX;
+        circle.y = targetY + offsetY;
+      } 
+      // Other circles follow with smooth delay
+      else {
+        const prevCircle = trailCircles[index - 1];
+
+        // Smooth interpolation factor (changes based on movement speed)
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        const lerpFactor = isMoving ? 
+          Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
+          0.1; // Slow movement = more spread
+
+        circle.x += (prevCircle.x - circle.x) * lerpFactor;
+        circle.y += (prevCircle.y - circle.y) * lerpFactor;
+      }
+
+      // Apply position with easing
+      circle.element.style.left = circle.x + 'px';
+      circle.element.style.top = circle.y + 'px';
+
+      // Dynamic opacity based on speed and position
+      if (index > 0) {
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        const baseOpacity = 0.9 - (index / COUNT) * 0.8;
+        const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
+        circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
+      }
+
+      // Update target for next circle
+      targetX = circle.x;
+      targetY = circle.y;
+    });
+
+    requestAnimationFrame(animateTrail);
+  }
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    // Adjust if cursor goes out of bounds
+    if (coords.x > window.innerWidth) coords.x = window.innerWidth;
+    if (coords.y > window.innerHeight) coords.y = window.innerHeight;
+  });
+
+  // Handle mouse leave/enter
+  window.addEventListener('mouseleave', () => {
+    trailCircles.forEach(circle => {
+      circle.element.style.opacity = '0';
+    });
+  });
+
+  window.addEventListener('mouseenter', () => {
+    trailCircles.forEach((circle, index) => {
+      const opacity = 0.9 - (index / COUNT) * 0.8;
+      circle.element.style.opacity = opacity.toString();
+    });
+  });
+
+  // Start animation
+  animateTrail();
+})();
+</script>
 
 </body>
 

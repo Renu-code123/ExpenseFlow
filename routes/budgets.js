@@ -1,188 +1,146 @@
 const express = require('express');
-const Joi = require('joi');
 const auth = require('../middleware/auth');
-const Budget = require('../models/Budget');
+const budgetRepository = require('../repositories/budgetRepository');
+const userRepository = require('../repositories/userRepository');
+const expenseRepository = require('../repositories/expenseRepository');
 const budgetService = require('../services/budgetService');
+const ResponseFactory = require('../utils/ResponseFactory');
+const { asyncHandler } = require('../middleware/errorMiddleware');
+const { BudgetSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
+const { budgetLimiter } = require('../middleware/rateLimiter');
+const { NotFoundError } = require('../utils/AppError');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
+
 const router = express.Router();
 
-const budgetSchema = Joi.object({
-  name: Joi.string().trim().max(100).required(),
-  category: Joi.string().valid('food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'other', 'all').required(),
-  amount: Joi.number().min(0).required(),
-  period: Joi.string().valid('monthly', 'weekly', 'yearly').default('monthly'),
-  startDate: Joi.date().required(),
-  endDate: Joi.date().required(),
-  alertThreshold: Joi.number().min(0).max(100).default(80)
-});
+/**
+ * @route   POST /api/budgets
+ * @desc    Create a new budget
+ * @access  Private
+ */
+router.post('/', requireAuth, budgetLimiter, validateRequest(BudgetSchemas.create), asyncHandler(async (req, res) => {
+  const budget = await budgetService.createBudget(req.user._id, req.body);
+  return ResponseFactory.created(res, budget, 'Budget created successfully');
+}));
 
-// Create budget
-router.post('/', auth, async (req, res) => {
-  try {
-    const { error, value } = budgetSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+/**
+ * @route   GET /api/budgets
+ * @desc    Get all budgets with filtering
+ * @access  Private
+ */
+router.get('/', requireAuth, validateQuery(BudgetSchemas.create), asyncHandler(async (req, res) => {
+  const { period, active } = req.query;
+  const filters = {};
 
-    const budget = new Budget({ ...value, user: req.user._id });
-    await budget.save();
+  if (period) filters.period = period;
+  if (active !== undefined) filters.isActive = active === 'true';
 
-    res.status(201).json(budget);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  const budgets = await budgetRepository.findByUser(req.user._id, filters, { sort: { createdAt: -1 } });
 
-// Get all budgets
-router.get('/', auth, async (req, res) => {
-  try {
-    const { period, active } = req.query;
-    const query = { user: req.user._id };
-    
-    if (period) query.period = period;
-    if (active !== undefined) query.isActive = active === 'true';
+  return ResponseFactory.success(res, budgets);
+}));
 
-    const budgets = await Budget.find(query).sort({ createdAt: -1 });
-    
-    // Calculate spent amounts
-    for (const budget of budgets) {
-      await budgetService.calculateBudgetSpent(budget);
-    }
+/**
+ * @route   GET /api/budgets/summary
+ * @desc    Get budget summary
+ * @access  Private
+ */
+router.get('/summary', requireAuth, asyncHandler(async (req, res) => {
+  const { period } = req.query;
+  const summary = await budgetRepository.getSummary(req.user._id, period);
+  return ResponseFactory.success(res, summary);
+}));
 
-    res.json(budgets);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+/**
+ * @route   GET /api/budgets/alerts
+ * @desc    Get budget alerts
+ * @access  Private
+ */
+router.get('/alerts', requireAuth, asyncHandler(async (req, res) => {
+  const { alerts } = await budgetService.checkBudgetAlerts(req.user._id);
+  return ResponseFactory.success(res, alerts);
+}));
 
-// Get budget summary
-router.get('/summary', auth, async (req, res) => {
-  try {
-    const { period = 'monthly' } = req.query;
-    const summary = await budgetService.getBudgetSummary(req.user._id, period);
-    res.json(summary);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+/**
+ * @route   GET /api/budgets/intelligence
+ * @desc    Get budgets with AI intelligence data
+ * @access  Private
+ */
+router.get('/intelligence', requireAuth, asyncHandler(async (req, res) => {
+  const budgets = await budgetService.getBudgetsWithIntelligence(req.user._id);
+  return ResponseFactory.success(res, budgets);
+}));
 
-// Get budget alerts
-router.get('/alerts', auth, async (req, res) => {
-  try {
-    const alerts = await budgetService.checkBudgetAlerts(req.user._id);
-    res.json(alerts);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+/**
+ * @route   PUT /api/budgets/:id
+ * @desc    Update a budget
+ * @access  Private
+ */
+router.put('/:id', requireAuth, validateRequest(BudgetSchemas.create), asyncHandler(async (req, res) => {
+  const budget = await budgetRepository.updateOne(
+    { _id: req.params.id, user: req.user._id },
+    req.body
+  );
 
-// Update budget
-router.put('/:id', auth, async (req, res) => {
-  try {
-    const { error, value } = budgetSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+  if (!budget) throw new NotFoundError('Budget not found');
+  return ResponseFactory.success(res, budget, 'Budget updated successfully');
+}));
 
-    const budget = await Budget.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      value,
-      { new: true }
-    );
+/**
+ * @route   DELETE /api/budgets/:id
+ * @desc    Delete a budget
+ * @access  Private
+ */
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
+  const budget = await budgetRepository.deleteOne({ _id: req.params.id, user: req.user._id });
+  if (!budget) throw new NotFoundError('Budget not found');
 
-    if (!budget) return res.status(404).json({ error: 'Budget not found' });
-    res.json(budget);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  return ResponseFactory.success(res, null, 'Budget deleted successfully');
+}));
 
-// Delete budget
-router.delete('/:id', auth, async (req, res) => {
-  try {
-    const budget = await Budget.findOneAndDelete({ _id: req.params.id, user: req.user._id });
-    if (!budget) return res.status(404).json({ error: 'Budget not found' });
-    res.json({ message: 'Budget deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+/**
+ * @route   GET /api/budgets/monthly-limit
+ * @desc    Get monthly budget limit and status
+ * @access  Private
+ */
+router.get('/monthly-limit', requireAuth, asyncHandler(async (req, res) => {
+  const user = await userRepository.findById(req.user._id);
+  if (!user) throw new NotFoundError('User not found');
 
-// Create monthly budgets
-router.post('/monthly', auth, async (req, res) => {
-  try {
-    const budgetData = req.body; // { food: 10000, transport: 5000, ... }
-    const budgets = await budgetService.createMonthlyBudgets(req.user._id, budgetData);
-    res.status(201).json(budgets);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  // Calculate current month's expenses
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-// Set monthly budget limit
-router.post('/monthly-limit', auth, async (req, res) => {
-  try {
-    const { limit } = req.body;
-    if (typeof limit !== 'number' || limit < 0) {
-      return res.status(400).json({ error: 'Invalid budget limit' });
-    }
+  const totalSpent = await expenseRepository.getTotalByUser(req.user._id, {
+    date: { $gte: startOfMonth, $lte: endOfMonth }
+  });
 
-    const User = require('../models/User');
-    await User.findByIdAndUpdate(req.user._id, { monthlyBudgetLimit: limit });
+  const limit = user.monthlyBudgetLimit || 0;
+  const remaining = limit - totalSpent;
+  const percentage = limit > 0 ? (totalSpent / limit) * 100 : 0;
+  const isExceeded = totalSpent > limit && limit > 0;
 
-    res.json({ message: 'Monthly budget limit updated successfully', limit });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  return ResponseFactory.success(res, {
+    limit,
+    totalSpent,
+    remaining: Math.max(0, remaining),
+    percentage: Math.min(100, percentage),
+    isExceeded,
+    daysInMonth: endOfMonth.getDate(),
+    currentDay: now.getDate()
+  });
+}));
 
-// Get monthly budget limit and status
-router.get('/monthly-limit', auth, async (req, res) => {
-  try {
-    const User = require('../models/User');
-    const Expense = require('../models/Expense');
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Calculate current month's expenses
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
-    const monthlyExpenses = await Expense.aggregate([
-      {
-        $match: {
-          user: req.user._id,
-          type: 'expense',
-          date: { $gte: startOfMonth, $lte: endOfMonth }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$amount' }
-        }
-      }
-    ]);
-
-    const totalSpent = monthlyExpenses.length > 0 ? monthlyExpenses[0].total : 0;
-    const limit = user.monthlyBudgetLimit || 0;
-    const remaining = limit - totalSpent;
-    const percentage = limit > 0 ? (totalSpent / limit) * 100 : 0;
-    const isExceeded = totalSpent > limit && limit > 0;
-    const isNearLimit = percentage >= 80 && !isExceeded;
-
-    res.json({
-      limit,
-      totalSpent,
-      remaining: Math.max(0, remaining),
-      percentage: Math.min(100, percentage),
-      isExceeded,
-      isNearLimit,
-      daysInMonth: endOfMonth.getDate(),
-      currentDay: now.getDate()
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+/**
+ * @route   POST /api/budgets/monthly-limit
+ * @desc    Set monthly budget limit
+ * @access  Private
+ */
+router.post('/monthly-limit', requireAuth, validateRequest(BudgetSchemas.limit), asyncHandler(async (req, res) => {
+  const { limit } = req.body;
+  await userRepository.updateById(req.user._id, { monthlyBudgetLimit: limit });
+  return ResponseFactory.success(res, { limit }, 'Monthly budget limit updated successfully');
+}));
 
 module.exports = router;

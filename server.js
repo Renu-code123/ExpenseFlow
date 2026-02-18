@@ -1,104 +1,141 @@
-/**
- * Server Entry Point
- * Modular server with async initialization
- */
-
 const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
-
-const config = require('./config');
-const { configureMiddleware } = require('./config/middleware');
-const { initializeSocket } = require('./config/socket');
-const { configureRoutes } = require('./routes');
-const CronJobs = require('./services/cronJobs');
+const cors = require('cors');
+const helmet = require('helmet');
+require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
 
-/**
- * Connect to MongoDB database
- * @returns {Promise<void>}
- */
+/* ================================
+   SECURITY
+================================ */
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: [
+        "'self'",
+        "https:",
+        "wss:",
+        "http://localhost:3000",
+        "ws://localhost:3000"
+      ]
+    }
+  }
+}));
+
+/* ================================
+   CORS (VERCEL SAFE)
+================================ */
+
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+/* ================================
+   BODY PARSER
+================================ */
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+/* ================================
+   DATABASE CONNECTION
+================================ */
+
 async function connectDatabase() {
   try {
-    await mongoose.connect(config.database.uri, config.database.options);
-    console.log('MongoDB connected');
-    return true;
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
-}
-
-/**
- * Initialize cron jobs after database connection
- */
-function initializeCronJobs() {
-  CronJobs.init();
-  console.log('Email cron jobs initialized');
-}
-
-/**
- * Setup Socket.IO with the server
- * @returns {socketIo.Server}
- */
-function setupSocketIO() {
-  const io = initializeSocket(server);
-  
-  // Make io available to routes
-  app.set('io', io);
-  
-  // Make io globally available for notifications
-  global.io = io;
-  
-  return io;
-}
-
-/**
- * Start the server
- * @returns {Promise<void>}
- */
-async function startServer() {
-  try {
-    // Step 1: Configure middleware
-    configureMiddleware(app);
-    console.log('Middleware configured');
-
-    // Step 2: Configure routes
-    configureRoutes(app);
-    console.log('Routes configured');
-
-    // Step 3: Connect to database first
-    await connectDatabase();
-
-    // Step 4: Initialize cron jobs after DB connection
-    initializeCronJobs();
-
-    // Step 5: Setup Socket.IO
-    setupSocketIO();
-    console.log('Socket.IO initialized');
-
-    // Step 6: Start listening
-    server.listen(config.server.port, () => {
-      console.log(`Server running on port ${config.server.port}`);
-      console.log('Security features enabled: Rate limiting, Input sanitization, Security headers');
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000
     });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+
+    console.log('✅ MongoDB connected');
+
+    // Cron jobs only in development
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const CronJobs = require('./jobs/cronJobs');
+        CronJobs.init();
+
+        require('./jobs/trendAnalyzer').start();
+        require('./jobs/reportScheduler').start();
+        require('./jobs/accessAuditor').start();
+
+        console.log('✓ Cron jobs initialized');
+      } catch (err) {
+        console.log('Cron jobs skipped:', err.message);
+      }
+    }
+
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err.message);
   }
 }
 
-// Export for testing
-module.exports = {
-  app,
-  server,
-  connectDatabase,
-  startServer
-};
+connectDatabase();
 
-// Start the server if this is the main module
-if (require.main === module) {
-  startServer();
+/* ================================
+   ROUTES
+================================ */
+
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/expenses', require('./routes/expenses'));
+app.use('/api/workspaces', require('./routes/workspaces'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/export', require('./routes/export'));
+
+
+/* ================================
+   STATIC FILES (ONLY DEV)
+================================ */
+
+if (process.env.NODE_ENV !== 'production') {
+  const path = require('path');
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 }
+
+/* ================================
+   HEALTH CHECK
+================================ */
+
+app.get('/', (req, res) => {
+  res.json({ status: 'Server running 🚀' });
+});
+
+/* ================================
+   ERROR HANDLER
+================================ */
+
+app.use((err, req, res, next) => {
+  console.error('🔥 Server Error:', err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Internal Server Error'
+  });
+});
+
+/* ================================
+   SERVER START (ONLY DEV)
+================================ */
+
+const PORT = process.env.PORT || 5000;
+
+if (process.env.NODE_ENV !== 'production') {
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
+
+/* ================================
+   EXPORT FOR VERCEL
+================================ */
+
+module.exports = app;
+

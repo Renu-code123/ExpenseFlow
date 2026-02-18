@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <title>Performance Dashboard - ExpenseFlow</title>
+
+    <!-- Critical CSS Inline -->
+    <style>body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(135deg,#0f0f23 0%,#1a1a2e 50%,#16213e 100%);color:#e0e0e0;min-height:100vh}.nav-bar{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);position:sticky;top:0;z-index:100}.nav-content{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;max-width:1200px;margin:0 auto}.nav-back{color:#e0e0e0;text-decoration:none;display:flex;align-items:center;gap:.5rem;font-weight:500}.nav-title{display:flex;align-items:center;gap:.5rem;font-size:1.25rem;font-weight:600}.nav-actions{display:flex;gap:1rem}.nav-link{color:#e0e0e0;text-decoration:none;padding:.5rem 1rem;border-radius:8px;transition:all .3s}.nav-link:hover{background:rgba(255,255,255,.1)}.container{max-width:1200px;margin:0 auto;padding:2rem}.page-header{margin-bottom:2rem}.header-content{display:flex;align-items:center;justify-content:space-between}h1{font-size:2rem;margin:0}.perf-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin:2rem 0}.metric-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.5rem;text-align:center}.metric-value{font-size:2rem;font-weight:700;margin:.5rem 0;color:#667eea}.metric-label{color:#a0a0a0;font-size:.9rem}.status-good{color:#4caf50}.status-warning{color:#ff9800}.status-error{color:#f44336}.perf-chart{background:rgba(255,255,255,.05);border-radius:12px;padding:1.5rem;margin:2rem 0}.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.chart-title{font-size:1.25rem;font-weight:600}.chart-controls{display:flex;gap:1rem}.chart-btn{padding:.5rem 1rem;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:rgba(255,255,255,.05);color:#e0e0e0;cursor:pointer}.chart-btn.active{background:#667eea;border-color:#667eea}.optimization-tips{background:rgba(255,255,255,.05);border-radius:12px;padding:1.5rem;margin:2rem 0}.tips-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}.tip-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:1rem}.tip-title{font-weight:600;margin-bottom:.5rem}.tip-desc{color:#a0a0a0;font-size:.9rem}.loading-skeleton{background:linear-gradient(90deg,#333 25%,#444 50%,#333 75%);background-size:200% 100%;animation:loading 1.5s infinite;border-radius:8px}@keyframes loading{0%{background-position:200% 0}100%{background-position:-200% 0}}</style>
+
+    <!-- Preload resources -->
+    <link rel="preload" href="performance-min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="nav-title">
+                <i class="fas fa-tachometer-alt"></i> Performance Dashboard
+            </div>
+            <div class="nav-actions">
+                <a href="reports-performance.html" class="nav-link">Reports</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+                <a href="settings.html" class="nav-link">Settings</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1>🚀 Performance Dashboard</h1>
+                <div class="header-actions">
+                    <button class="perf-btn" onclick="runPerformanceTest()">
+                        <i class="fas fa-play"></i> Run Test
+                    </button>
+                    <button class="perf-btn secondary" onclick="clearCache()">
+                        <i class="fas fa-trash"></i> Clear Cache
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <section class="perf-metrics-section">
+            <h2>📊 Performance Metrics</h2>
+            <div class="perf-metrics" id="perfMetrics">
+                <div class="metric-card">
+                    <div class="metric-icon">⚡</div>
+                    <div class="metric-value" id="loadTime">--</div>
+                    <div class="metric-label">Page Load Time</div>
+                    <div class="metric-status status-good">Good</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">🎯</div>
+                    <div class="metric-value" id="lcp">--</div>
+                    <div class="metric-label">Largest Contentful Paint</div>
+                    <div class="metric-status status-good">Good</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">📦</div>
+                    <div class="metric-value" id="bundleSize">--</div>
+                    <div class="metric-label">Bundle Size</div>
+                    <div class="metric-status status-warning">Warning</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">💾</div>
+                    <div class="metric-value" id="cacheSize">--</div>
+                    <div class="metric-label">Cache Size</div>
+                    <div class="metric-status status-good">Good</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Chart -->
+        <section class="perf-chart-section">
+            <div class="perf-chart">
+                <div class="chart-header">
+                    <h3 class="chart-title">Performance Over Time</h3>
+                    <div class="chart-controls">
+                        <button class="chart-btn active" onclick="setChartPeriod('1h')">1H</button>
+                        <button class="chart-btn" onclick="setChartPeriod('24h')">24H</button>
+                        <button class="chart-btn" onclick="setChartPeriod('7d')">7D</button>
+                        <button class="chart-btn" onclick="setChartPeriod('30d')">30D</button>
+                    </div>
+                </div>
+                <div id="performanceChart" class="chart-container">
+                    <div class="loading-skeleton" style="height:300px;width:100%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Optimization Tips -->
+        <section class="optimization-tips-section">
+            <h2>💡 Optimization Tips</h2>
+            <div class="optimization-tips">
+                <div class="tips-grid" id="optimizationTips">
+                    <div class="tip-card">
+                        <div class="tip-title">🚀 Enable Compression</div>
+                        <div class="tip-desc">Enable gzip/brotli compression on your server to reduce file sizes by up to 70%.</div>
+                        <div class="tip-status">Not Implemented</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-title">🖼️ Image Optimization</div>
+                        <div class="tip-desc">Use WebP format and lazy loading for images to improve load times.</div>
+                        <div class="tip-status">Partially Implemented</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-title">📦 Code Splitting</div>
+                        <div class="tip-desc">Split JavaScript into smaller chunks to reduce initial bundle size.</div>
+                        <div class="tip-status status-good">Implemented</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-title">💾 Service Worker</div>
+                        <div class="tip-desc">Implement service worker for caching and offline functionality.</div>
+                        <div class="tip-status status-good">Implemented</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-title">🎯 Critical CSS</div>
+                        <div class="tip-desc">Inline critical CSS to eliminate render-blocking resources.</div>
+                        <div class="tip-status status-good">Implemented</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-title">📱 PWA Features</div>
+                        <div class="tip-desc">Add PWA features like app manifest and install prompt.</div>
+                        <div class="tip-status">Not Implemented</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resource Analysis -->
+        <section class="resource-analysis-section">
+            <h2>📋 Resource Analysis</h2>
+            <div class="resource-table">
+                <table style="width:100%;border-collapse:collapse;background:rgba(255,255,255,.05);border-radius:12px;overflow:hidden">
+                    <thead>
+                        <tr style="background:rgba(255,255,255,.1)">
+                            <th style="padding:1rem;text-align:left">Resource</th>
+                            <th style="padding:1rem;text-align:left">Type</th>
+                            <th style="padding:1rem;text-align:left">Size</th>
+                            <th style="padding:1rem;text-align:left">Load Time</th>
+                            <th style="padding:1rem;text-align:left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resourceTable">
+                        <tr>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">performance-min.css</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">CSS</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">-- KB</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">-- ms</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)"><span class="status-good">Cached</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">performance.js</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">JS</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">-- KB</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">-- ms</td>
+                            <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)"><span class="status-warning">Network</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <script src="protect.js"></script>
+    <!-- Performance JavaScript -->
+    <script>
+        // Performance monitoring
+        const perfStart = performance.now();
+        let performanceData = {
+            loadTime: 0,
+            lcp: 0,
+            resources: [],
+            metrics: {}
+        };
+
+        // Initialize performance monitoring
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePerformanceMonitoring();
+            loadPerformanceData();
+            setupCharts();
+        });
+
+        function initializePerformanceMonitoring() {
+            // Measure page load time
+            performanceData.loadTime = performance.now() - perfStart;
+            document.getElementById('loadTime').textContent = performanceData.loadTime.toFixed(0) + 'ms';
+
+            // Monitor LCP
+            if ('PerformanceObserver' in window) {
+                const lcpObserver = new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    const lastEntry = entries[entries.length - 1];
+                    performanceData.lcp = lastEntry.startTime;
+                    document.getElementById('lcp').textContent = performanceData.lcp.toFixed(0) + 'ms';
+                });
+                lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+
+                // Monitor resource loading
+                const resourceObserver = new PerformanceObserver((list) => {
+                    list.getEntries().forEach((entry) => {
+                        performanceData.resources.push({
+                            name: entry.name,
+                            type: getResourceType(entry.initiatorType),
+                            size: entry.transferSize || 0,
+                            loadTime: entry.responseEnd - entry.requestStart
+                        });
+                    });
+                    updateResourceTable();
+                });
+                resourceObserver.observe({ entryTypes: ['resource'] });
+            }
+
+            // Check cache status
+            checkCacheStatus();
+        }
+
+        function getResourceType(initiatorType) {
+            const types = {
+                'link': 'CSS',
+                'script': 'JS',
+                'img': 'Image',
+                'fetch': 'API',
+                'xmlhttprequest': 'XHR'
+            };
+            return types[initiatorType] || 'Other';
+        }
+
+        function updateResourceTable() {
+            const tbody = document.getElementById('resourceTable');
+            tbody.innerHTML = '';
+
+            performanceData.resources.slice(0, 10).forEach(resource => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">${resource.name.split('/').pop()}</td>
+                    <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">${resource.type}</td>
+                    <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">${(resource.size / 1024).toFixed(1)} KB</td>
+                    <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">${resource.loadTime.toFixed(0)} ms</td>
+                    <td style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.05)">
+                        <span class="status-good">Loaded</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function checkCacheStatus() {
+            if ('caches' in window) {
+                caches.open('expenseflow-reports-static-v1').then(cache => {
+                    cache.keys().then(requests => {
+                        document.getElementById('cacheSize').textContent = requests.length + ' files';
+                    });
+                });
+            }
+        }
+
+        function loadPerformanceData() {
+            // Simulate bundle size data
+            document.getElementById('bundleSize').textContent = '245 KB';
+
+            // Load Font Awesome
+            const faLink = document.createElement('link');
+            faLink.rel = 'stylesheet';
+            faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+            document.head.appendChild(faLink);
+        }
+
+        function setupCharts() {
+            // Simple chart placeholder - in real implementation would use Chart.js or similar
+            setTimeout(() => {
+                const chartContainer = document.getElementById('performanceChart');
+                chartContainer.innerHTML = `
+                    <div style="height:300px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(102,126,234,.1),rgba(118,75,162,.1));border-radius:8px;border:1px solid rgba(255,255,255,.1)">
+                        <div style="text-align:center">
+                            <div style="font-size:3rem;margin-bottom:1rem">📈</div>
+                            <div style="font-size:1.2rem;font-weight:600;margin-bottom:.5rem">Performance Chart</div>
+                            <div style="color:#a0a0a0">Real-time performance metrics would be displayed here</div>
+                            <div style="margin-top:1rem">
+                                <div style="display:inline-block;margin:0 .5rem;padding:.5rem 1rem;background:#667eea;border-radius:20px;font-size:.8rem">Load Time: ${performanceData.loadTime.toFixed(0)}ms</div>
+                                <div style="display:inline-block;margin:0 .5rem;padding:.5rem 1rem;background:#4caf50;border-radius:20px;font-size:.8rem">LCP: ${performanceData.lcp.toFixed(0) || '--'}ms</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+    <!-- Performance JavaScript -->
+    <script src="performance.js"></script>
+    <script>
+        // Initialize performance monitoring
+        const perfMonitor = new PerformanceMonitor();
+        let perfStart = performance.now();
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            perfMonitor.init();
+
+            // Update load time
+            setTimeout(() => {
+                const loadTime = performance.now() - perfStart;
+                document.getElementById('loadTime').textContent = loadTime.toFixed(0) + 'ms';
+                perfMonitor.updateMetricStatus('loadTime', loadTime.toFixed(0) + 'ms');
+            }, 100);
+        });
+
+        // Global functions for buttons
+        async function runPerformanceTest() {
+            const testBtn = document.querySelector('button[onclick="runPerformanceTest()"]');
+            const originalText = testBtn.innerHTML;
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+            testBtn.disabled = true;
+
+            try {
+                const results = await perfMonitor.runPerformanceTest();
+
+                // Update metrics with test results
+                document.getElementById('loadTime').textContent = results.loadTime.toFixed(0) + 'ms';
+                perfMonitor.updateMetricStatus('loadTime', results.loadTime.toFixed(0) + 'ms');
+
+                alert('Performance test completed! Check updated metrics.');
+            } catch (error) {
+                console.error('Performance test failed:', error);
+                alert('Performance test failed. Check console for details.');
+            } finally {
+                testBtn.innerHTML = originalText;
+                testBtn.disabled = false;
+            }
+        }
+
+        async function clearCache() {
+            const clearBtn = document.querySelector('button[onclick="clearCache()"]');
+            const originalText = clearBtn.innerHTML;
+            clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+            clearBtn.disabled = true;
+
+            try {
+                await perfMonitor.clearCache();
+                alert('Cache cleared! Refresh the page to see fresh performance data.');
+            } catch (error) {
+                console.error('Cache clear failed:', error);
+                alert('Cache clear failed. Check console for details.');
+            } finally {
+                clearBtn.innerHTML = originalText;
+                clearBtn.disabled = false;
+            }
+        }
+
+        function setChartPeriod(period) {
+            const buttons = document.querySelectorAll('.chart-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update chart data based on period
+            perfMonitor.updateChartPeriod(period);
+        }
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/reports-sw.js').catch(console.error);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            perfMonitor.destroy();
+        });
+    </script>
+    </script>
+
+    <!-- Non-critical CSS -->
+    <noscript><link rel="stylesheet" href="performance-min.css"></noscript>
+</body>
+</html>

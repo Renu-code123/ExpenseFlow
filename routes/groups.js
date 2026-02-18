@@ -2,40 +2,17 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const groupService = require('../services/groupService');
-const Joi = require('joi');
-
-// Validation schemas
-const createGroupSchema = Joi.object({
-  name: Joi.string().trim().min(1).max(100).required(),
-  description: Joi.string().trim().max(500).optional(),
-  currency: Joi.string().valid('USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'HKD', 'NZD',
-                               'SEK', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'BRL',
-                               'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'HUF', 'CZK', 'ILS', 'CLP', 'PHP',
-                               'AED', 'SAR', 'MYR', 'RON').default('USD'),
-  settings: Joi.object({
-    allowPublicExpenses: Joi.boolean().default(false),
-    requireApproval: Joi.boolean().default(false),
-    defaultSplitMethod: Joi.string().valid('equal', 'percentage', 'amount').default('equal')
-  }).optional()
-});
-
-const updateSettingsSchema = Joi.object({
-  allowPublicExpenses: Joi.boolean(),
-  requireApproval: Joi.boolean(),
-  defaultSplitMethod: Joi.string().valid('equal', 'percentage', 'amount')
-});
+const { GroupSchemas, validateRequest } = require('../middleware/inputValidator');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 /**
  * @route   POST /api/groups
  * @desc    Create a new group
  * @access  Private
  */
-router.post('/', auth, async (req, res) => {
+router.post('/', requireAuth, validateRequest(GroupSchemas.create), async (req, res) => {
   try {
-    const { error, value } = createGroupSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    const group = await groupService.createGroup(req.user._id, value);
+    const group = await groupService.createGroup(req.user._id, req.body);
 
     res.status(201).json({
       success: true,
@@ -53,7 +30,7 @@ router.post('/', auth, async (req, res) => {
  * @desc    Get user's groups
  * @access  Private
  */
-router.get('/', auth, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const groups = await groupService.getUserGroups(req.user._id);
 
@@ -73,7 +50,7 @@ router.get('/', auth, async (req, res) => {
  * @desc    Get group by ID
  * @access  Private
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
   try {
     const group = await groupService.getGroupById(req.params.id, req.user._id);
 
@@ -95,15 +72,11 @@ router.get('/:id', auth, async (req, res) => {
  * @desc    Add member to group
  * @access  Private
  */
-router.post('/:id/members', auth, async (req, res) => {
+router.post('/:id/members', requireAuth, validateRequest(GroupSchemas.addMember), async (req, res) => {
   try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-
-    const group = await groupService.addMember(req.params.id, req.user._id, email);
+    const { email, role } = req.body;
+    const memberData = { email, role: role || 'member' };
+    const group = await groupService.addMember(req.params.id, req.user._id, memberData);
 
     res.json({
       success: true,
@@ -124,7 +97,7 @@ router.post('/:id/members', auth, async (req, res) => {
  * @desc    Remove member from group
  * @access  Private
  */
-router.delete('/:id/members/:memberId', auth, async (req, res) => {
+router.delete('/:id/members/:memberId', requireAuth, async (req, res) => {
   try {
     const group = await groupService.removeMember(req.params.id, req.user._id, req.params.memberId);
 
@@ -147,7 +120,7 @@ router.delete('/:id/members/:memberId', auth, async (req, res) => {
  * @desc    Add expense to group
  * @access  Private
  */
-router.post('/:id/expenses', auth, async (req, res) => {
+router.post('/:id/expenses', requireAuth, async (req, res) => {
   try {
     const { expenseId } = req.body;
 
@@ -176,7 +149,7 @@ router.post('/:id/expenses', auth, async (req, res) => {
  * @desc    Update group settings
  * @access  Private
  */
-router.put('/:id/settings', auth, async (req, res) => {
+router.put('/:id/settings', requireAuth, async (req, res) => {
   try {
     const { error, value } = updateSettingsSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
@@ -202,7 +175,7 @@ router.put('/:id/settings', auth, async (req, res) => {
  * @desc    Delete group
  * @access  Private
  */
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const result = await groupService.deleteGroup(req.params.id, req.user._id);
 
@@ -224,7 +197,7 @@ router.delete('/:id', auth, async (req, res) => {
  * @desc    Get group statistics
  * @access  Private
  */
-router.get('/:id/statistics', auth, async (req, res) => {
+router.get('/:id/statistics', requireAuth, async (req, res) => {
   try {
     const statistics = await groupService.getGroupStatistics(req.params.id, req.user._id);
 

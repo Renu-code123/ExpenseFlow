@@ -1,293 +1,165 @@
-const ApprovalRequest = require('../models/ApprovalRequest');
-const SharedSpace = require('../models/SharedSpace');
-const SpaceActivity = require('../models/SpaceActivity');
-const Expense = require('../models/Expense');
-const emailService = require('./emailService');
+const Transaction = require('../models/Transaction');
+const ApprovalWorkflow = require('../models/ApprovalWorkflow');
+const Team = require('../models/Team');
+const User = require('../models/User');
 
 class ApprovalService {
-    // Create approval request
-    async createApprovalRequest(spaceId, requesterId, expenseData, priority = 'medium') {
-        const space = await SharedSpace.findById(spaceId).populate('members.user', 'name email');
-        
-        if (!space) {
-            throw new Error('Shared space not found');
+    /**
+   * Check if a transaction requires approval
+   */
+    async requiresApproval(transactionData, workspaceId) {
+        // Logic: If amount > team/user limit, return true
+        const user = await User.findById(transactionData.user);
+        const team = await Team.findOne({ 'members.user': user._id });
+
+        if (team && transactionData.amount > team.approvalLimit) {
+            return true;
         }
-        
-        if (!space.isMember(requesterId)) {
-            throw new Error('You are not a member of this space');
-        }
-        
-        // Check if approval is required
-        const requiresApproval = expenseData.amount >= space.settings.require_approval_above;
-        
-        if (!requiresApproval) {
-            throw new Error('Approval not required for this expense amount');
-        }
-        
-        // Create approval request
-        const approvalRequest = new ApprovalRequest({
-            space: spaceId,
-            requester: requesterId,
-            expense_data: expenseData,
-            required_approvals: space.settings.approval_threshold_count || 1,
-            priority,
-            status: 'pending'
-        });
-        
-        await approvalRequest.save();
-        
-        // Log activity
-        await SpaceActivity.logActivity({
-            space: spaceId,
-            actor: requesterId,
-            action: 'approval_requested',
-            target_type: 'approval',
-            target_id: approvalRequest._id,
-            details: {
-                amount: expenseData.amount,
-                description: expenseData.description
-            }
-        });
-        
-        // Notify approvers
-        await this.notifyApprovers(space, approvalRequest);
-        
-        return approvalRequest;
-    }
-    
-    // Process approval decision
-    async processApproval(requestId, approverId, decision, comment = null) {
-        const request = await ApprovalRequest.findById(requestId)
-            .populate('requester', 'name email')
-            .populate('space');
-        
-        if (!request) {
-            throw new Error('Approval request not found');
-        }
-        
-        if (request.status !== 'pending') {
-            throw new Error('This approval request is no longer pending');
-        }
-        
-        const space = await SharedSpace.findById(request.space._id);
-        
-        if (!space) {
-            throw new Error('Shared space not found');
-        }
-        
-        // Check if user has permission to approve
-        if (!space.hasPermission(approverId, 'approve_expenses')) {
-            throw new Error('You do not have permission to approve expenses');
-        }
-        
-        // Cannot approve own request
-        if (request.requester._id.toString() === approverId.toString()) {
-            throw new Error('You cannot approve your own expense request');
-        }
-        
-        // Add approval
-        await request.addApproval(approverId, decision, comment);
-        
-        // Log activity
-        await SpaceActivity.logActivity({
-            space: request.space._id,
-            actor: approverId,
-            action: decision === 'approved' ? 'approval_granted' : 'approval_denied',
-            target_type: 'approval',
-            target_id: requestId,
-            details: {
-                amount: request.expense_data.amount,
-                comment: comment
-            }
-        });
-        
-        // If approved, create the expense
-        if (request.status === 'approved') {
-            const expense = await this.createApprovedExpense(request);
-            request.expense_id = expense._id;
-            await request.save();
-            
-            // Notify requester
-            await this.notifyRequesterApproved(request, expense);
-            
-            // Log expense creation
-            await SpaceActivity.logActivity({
-                space: request.space._id,
-                actor: approverId,
-                action: 'expense_added',
-                target_type: 'expense',
-                target_id: expense._id,
-                details: {
-                    amount: expense.amount,
-                    description: expense.description,
-                    approval_id: requestId
-                }
-            });
-        }
-        // If rejected, notify requester
-        else if (request.status === 'rejected') {
-            await this.notifyRequesterRejected(request, comment);
-        }
-        
-        return request;
-    }
-    
-    // Create expense from approved request
-    async createApprovedExpense(request) {
-        const expense = new Expense({
-            user: request.requester._id,
-            description: request.expense_data.description,
-            amount: request.expense_data.amount,
-            category: request.expense_data.category,
-            date: request.expense_data.date || new Date(),
-            notes: request.expense_data.notes,
-            receipt_url: request.expense_data.receipt_url,
-            shared_space: request.space._id,
-            approval_required: true,
-            approved: true,
-            approved_by: request.final_decision_by,
-            approved_at: request.final_decision_at
-        });
-        
-        await expense.save();
-        return expense;
-    }
-    
-    // Cancel approval request
-    async cancelRequest(requestId, userId) {
-        const request = await ApprovalRequest.findById(requestId);
-        
-        if (!request) {
-            throw new Error('Approval request not found');
-        }
-        
-        if (request.requester.toString() !== userId.toString()) {
-            throw new Error('You can only cancel your own requests');
-        }
-        
-        await request.cancel();
-        
-        // Log activity
-        await SpaceActivity.logActivity({
-            space: request.space,
-            actor: userId,
-            action: 'approval_requested',
-            target_type: 'approval',
-            target_id: requestId,
-            details: { description: 'Request cancelled by requester' }
-        });
-        
-        return request;
-    }
-    
-    // Get pending requests for a space
-    async getPendingRequests(spaceId, userId) {
-        const space = await SharedSpace.findById(spaceId);
-        
-        if (!space) {
-            throw new Error('Shared space not found');
-        }
-        
-        if (!space.isMember(userId)) {
-            throw new Error('You are not a member of this space');
-        }
-        
-        // If user can approve, show all pending
-        if (space.hasPermission(userId, 'approve_expenses')) {
-            return ApprovalRequest.getPendingForSpace(spaceId);
-        }
-        
-        // Otherwise, only show user's own requests
-        return ApprovalRequest.find({ 
-            space: spaceId,
-            requester: userId,
-            status: 'pending'
-        }).populate('approvals.approver', 'name');
-    }
-    
-    // Notify approvers of new request
-    async notifyApprovers(space, request) {
-        // Get members with approval permission
-        const approvers = space.members.filter(m => 
-            m.permissions.approve_expenses && 
-            m.user.toString() !== request.requester.toString()
-        );
-        
-        for (const approver of approvers) {
-            // Check notification preferences
-            if (approver.notification_preferences?.approval_request !== false) {
-                try {
-                    await emailService.sendApprovalRequestNotification({
-                        to: approver.user.email,
-                        requester_name: request.requester.name,
-                        space_name: space.name,
-                        amount: request.expense_data.amount,
-                        description: request.expense_data.description,
-                        priority: request.priority,
-                        request_id: request._id
-                    });
-                } catch (error) {
-                    console.error('Failed to send approval notification:', error);
-                }
+
+        const workflow = await this.getApplicableWorkflow(transactionData);
+        if (workflow && workflow.steps.length > 0) {
+            // Check if first step has an auto-approve threshold
+            if (workflow.steps[0].autoApproveUnder && transactionData.amount > workflow.steps[0].autoApproveUnder) {
+                return true;
             }
         }
+
+        return false;
     }
-    
-    // Notify requester of approval
-    async notifyRequesterApproved(request, expense) {
-        try {
-            await emailService.sendApprovalResultNotification({
-                to: request.requester.email,
-                space_name: request.space.name,
-                amount: request.expense_data.amount,
-                description: request.expense_data.description,
-                status: 'approved',
-                expense_id: expense._id
-            });
-        } catch (error) {
-            console.error('Failed to send approval result notification:', error);
+
+    /**
+     * Submit an expense for approval
+       */
+    async submitForApproval(transactionId, userId) {
+        const transaction = await Transaction.findOne({ _id: transactionId, user: userId });
+        if (!transaction) throw new Error('Transaction not found');
+
+        if (transaction.approvalStatus !== 'draft') {
+            throw new Error('Transaction already submitted or processed');
         }
+
+        // Identify workflow
+        const workflow = await this.getApplicableWorkflow(transaction);
+
+        transaction.approvalStatus = 'pending';
+        transaction.submissionDate = new Date();
+        transaction.auditTrail.push({
+            action: 'submission',
+            user: userId,
+            details: `Submitted for approval using workflow: ${workflow.name}`
+        });
+
+        await transaction.save();
+
+        // Notify first level approvers
+        await this.notifyApprovers(transaction, workflow, 1);
+
+        return transaction;
     }
-    
-    // Notify requester of rejection
-    async notifyRequesterRejected(request, comment) {
-        try {
-            await emailService.sendApprovalResultNotification({
-                to: request.requester.email,
-                space_name: request.space.name,
-                amount: request.expense_data.amount,
-                description: request.expense_data.description,
-                status: 'rejected',
+
+    /**
+     * Approve an expense
+     */
+    async approveTransaction(transactionId, approverId, comment) {
+        const transaction = await Transaction.findById(transactionId);
+        if (!transaction) throw new Error('Transaction not found');
+
+        if (transaction.approvalStatus !== 'pending') {
+            throw new Error('Transaction is not in pending state');
+        }
+
+        transaction.approvalStatus = 'approved';
+        transaction.approver = approverId;
+
+        if (comment) {
+            transaction.approvalComments.push({
+                user: approverId,
                 comment: comment
             });
-        } catch (error) {
-            console.error('Failed to send rejection notification:', error);
         }
-    }
-    
-    // Cleanup expired requests
-    async cleanupExpiredRequests() {
-        const expiredRequests = await ApprovalRequest.find({
-            status: 'pending',
-            expires_at: { $lt: new Date() }
+
+        transaction.auditTrail.push({
+            action: 'approval',
+            user: approverId,
+            details: 'Transaction approved'
         });
-        
-        for (const request of expiredRequests) {
-            request.status = 'cancelled';
-            request.final_decision_at = new Date();
-            await request.save();
-            
-            await SpaceActivity.logActivity({
-                space: request.space,
-                actor: request.requester,
-                action: 'approval_requested',
-                target_type: 'approval',
-                target_id: request._id,
-                details: { description: 'Request expired' }
-            });
+
+        await transaction.save();
+        return transaction;
+    }
+
+    /**
+     * Reject an expense
+     */
+    async rejectTransaction(transactionId, approverId, comment) {
+        if (!comment) throw new Error('Reason for rejection is mandatory');
+
+        const transaction = await Transaction.findById(transactionId);
+        if (!transaction) throw new Error('Transaction not found');
+
+        transaction.approvalStatus = 'rejected';
+        transaction.approver = approverId;
+
+        transaction.approvalComments.push({
+            user: approverId,
+            comment: comment
+        });
+
+        transaction.auditTrail.push({
+            action: 'rejection',
+            user: approverId,
+            details: `Transaction rejected: ${comment}`
+        });
+
+        await transaction.save();
+        return transaction;
+    }
+
+    /**
+     * Find applicable workflow based on transaction and user
+     */
+    async getApplicableWorkflow(transaction) {
+        const user = await User.findById(transaction.user);
+
+        // Logic: Look for department specific workflow, then default
+        let workflow = await ApprovalWorkflow.findOne({
+            department: transaction.department || 'General',
+            isActive: true
+        });
+
+        if (!workflow) {
+            workflow = await ApprovalWorkflow.findOne({ isDefault: true, isActive: true });
         }
-        
-        return expiredRequests.length;
+
+        if (!workflow) {
+            // Create a basic default one if none exists
+            workflow = new ApprovalWorkflow({
+                name: 'Standard Approval',
+                isDefault: true,
+                steps: [{ order: 1, approverRole: 'manager' }]
+            });
+            await workflow.save();
+        }
+
+        return workflow;
+    }
+
+    /**
+     * Notify approvers for the current step
+     */
+    async notifyApprovers(transaction, workflow, stepOrder) {
+        // Placeholder for notification logic (Email/Push)
+        console.log(`[ApprovalService] Notifying approvers for step ${stepOrder} of ${workflow.name}`);
+    }
+
+    /**
+     * Get pending approvals for a manager
+     */
+    async getPendingApprovals(managerId) {
+        // In a real system, we'd check if managerId is an approver for these transactions
+        return await Transaction.find({
+            approvalStatus: 'pending'
+        }).populate('user', 'name email');
     }
 }
 

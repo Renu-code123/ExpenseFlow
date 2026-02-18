@@ -1,3 +1,5 @@
+// Auth check handled by protect.js (Clerk-based)
+
 /**
  * Tax Calculator & Reports Client-Side Manager
  * Handles tax calculations, report generation, and PDF exports
@@ -66,10 +68,10 @@ class TaxReportsManager {
    */
   async request(url, options = {}) {
     const token = this.getToken();
-    if (!token) {
-      window.location.href = '/login.html';
-      return;
-    }
+  if (!token) {
+  console.warn('No auth token available');
+  throw new Error('Not authenticated');
+}
 
     const config = {
       ...options,
@@ -83,8 +85,7 @@ class TaxReportsManager {
     const response = await fetch(`${this.baseUrl}${url}`, config);
     
     if (response.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login.html';
+      console.warn('API returned 401 - session may have expired');
       return;
     }
 

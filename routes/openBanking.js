@@ -26,6 +26,7 @@ const transactionImportService = require('../services/transactionImportService')
 const LinkedAccount = require('../models/LinkedAccount');
 const ImportedTransaction = require('../models/ImportedTransaction');
 const BankConnection = require('../models/BankConnection');
+const { requireSensitive2FA } = require('../middleware/twoFactorAuthMiddleware');
 
 // ==================== Connection Management ====================
 
@@ -34,7 +35,8 @@ const BankConnection = require('../models/BankConnection');
  * @desc    Create a link token for bank connection
  * @access  Private
  */
-router.post('/link/token', auth, validateCreateLinkToken, async (req, res) => {
+// Risk-based step-up auth: requireSensitive2FA for bank linking
+router.post('/link/token', auth, requireSensitive2FA, validateCreateLinkToken, async (req, res) => {
   try {
     const { provider, products, countries, language, accountTypes } = req.body;
     
@@ -61,7 +63,8 @@ router.post('/link/token', auth, validateCreateLinkToken, async (req, res) => {
  * @desc    Exchange public token for access token and create connection
  * @access  Private
  */
-router.post('/link/exchange', auth, validateExchangeToken, async (req, res) => {
+// Risk-based step-up auth: requireSensitive2FA for bank linking
+router.post('/link/exchange', auth, requireSensitive2FA, validateExchangeToken, async (req, res) => {
   try {
     const { publicToken, provider, metadata } = req.body;
     

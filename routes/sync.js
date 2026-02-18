@@ -1,110 +1,71 @@
 const express = require('express');
-const Joi = require('joi');
-const Expense = require('../models/Expense');
-const SyncQueue = require('../models/SyncQueue');
-const auth = require('../middleware/auth');
 const router = express.Router();
+const auth = require('../middleware/auth');
+const syncManager = require('../services/syncManager');
 
-const syncSchema = Joi.object({
-  operations: Joi.array().items(
-    Joi.object({
-      action: Joi.string().valid('CREATE', 'UPDATE', 'DELETE').required(),
-      resourceType: Joi.string().valid('expense').required(),
-      resourceId: Joi.string().required(),
-      data: Joi.object().optional(),
-      deviceId: Joi.string().required()
-    })
-  ).required()
-});
-
-// POST sync offline data
-router.post('/batch', auth, async (req, res) => {
+/**
+ * @route   GET /api/sync/delta
+ * @desc    Fetch differential updates since a specific version
+ */
+router.get('/delta', auth, async (req, res) => {
   try {
-    const { error, value } = syncSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+    const lastVersion = parseInt(req.query.v) || 0;
+    const changes = await syncManager.getDifferentialUpdates(req.user._id, lastVersion);
 
-    const results = [];
-    const io = req.app.get('io');
+    const latestVersion = changes.length > 0 ? changes[changes.length - 1].version : lastVersion;
 
-    for (const operation of value.operations) {
-      try {
-        let result;
-        
-        switch (operation.action) {
-          case 'CREATE':
-            const expense = new Expense({ 
-              ...operation.data, 
-              user: req.user._id 
-            });
-            result = await expense.save();
-            
-            // Emit to other devices
-            io.to(`user_${req.user._id}`).emit('expense_created', result);
-            break;
-            
-          case 'UPDATE':
-            result = await Expense.findOneAndUpdate(
-              { _id: operation.resourceId, user: req.user._id },
-              operation.data,
-              { new: true }
-            );
-            
-            if (result) {
-              io.to(`user_${req.user._id}`).emit('expense_updated', result);
-            }
-            break;
-            
-          case 'DELETE':
-            result = await Expense.findOneAndDelete({
-              _id: operation.resourceId,
-              user: req.user._id
-            });
-            
-            if (result) {
-              io.to(`user_${req.user._id}`).emit('expense_deleted', { id: operation.resourceId });
-            }
-            break;
-        }
-        
-        results.push({
-          resourceId: operation.resourceId,
-          success: true,
-          data: result
-        });
-        
-      } catch (opError) {
-        results.push({
-          resourceId: operation.resourceId,
-          success: false,
-          error: opError.message
-        });
-      }
-    }
-
-    res.json({ results });
+    res.json({
+      success: true,
+      v: latestVersion,
+      count: changes.length,
+      changes
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// GET sync status
-router.get('/status', auth, async (req, res) => {
+/**
+ * @route   POST /api/sync/push
+ * @desc    Push local changes from a client with conflict resolution
+ */
+router.post('/push', auth, async (req, res) => {
   try {
-    const lastSync = await SyncQueue.findOne({ 
-      user: req.user._id 
-    }).sort({ createdAt: -1 });
-    
-    const pendingCount = await SyncQueue.countDocuments({
-      user: req.user._id,
-      processed: false
-    });
+    const deviceId = req.headers['x-device-id'] || 'web-default';
+    const { entityType, data } = req.body;
+
+    if (!entityType || !data) {
+      return res.status(400).json({ success: false, error: 'Missing sync payload' });
+    }
+
+    const result = await syncManager.applyIncomingUpdate(req.user._id, deviceId, entityType, data);
 
     res.json({
-      lastSync: lastSync?.createdAt || null,
-      pendingOperations: pendingCount
+      success: true,
+      action: result.action,
+      entity: result.entity,
+      logs: result.logs
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('[SyncRoute] Push failed:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route   POST /api/sync/delete
+ * @desc    Propagate a hard/soft delete across devices
+ */
+router.post('/delete', auth, async (req, res) => {
+  try {
+    const deviceId = req.headers['x-device-id'] || 'web-default';
+    const { entityType, entityId } = req.body;
+
+    await syncManager.softDelete(req.user._id, deviceId, entityType, entityId);
+
+    res.json({ success: true, message: 'Delete captured and synced' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Profile | ExpenseFlow</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="profile.css">
+</head>
+
+<body>
+<!-- NAVBAR -->
+<header class="header">
+  <nav class="nav-container">
+    <div class="nav-logo">
+      <i class="fas fa-wallet"></i> ExpenseFlow
+    </div>
+    <div class="nav-menu">
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="profile.html" class="nav-link active">Profile</a>
+      <span class="theme-toggle" onclick="toggleTheme()">🌙</span>
+    </div>
+  </nav>
+</header>
+
+<main class="main-content">
+        <section class="profile-card">
+            <div class="profile-header">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+            <div class="info">
+                <h2 class="profile-name" id="profile-name"></h2>
+                <p class="profile-role">ExpenseFlow User</p>
+            </div>
+            </div>
+            <div>
+            <div class="profile-details">
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <span>Email</span>
+                        <span id="profile-email"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Username</span>
+                        <span class="value" id="profile-username"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Account Created</span>
+                        <span class="value" id="profile-created"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-logo">
+        <i class="fas fa-wallet"></i> ExpenseFlow
+      </div>
+      <p class="footer-description">Smart money management made simple. Track, convert, and optimize your finances effortlessly.</p>
+      <div class="social-links">
+        <a href="#" class="social-link"><i class="fab fa-x-twitter"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4>Resources</h4>
+      <ul class="footer-links">
+        <li><a href="finance-tips.html"><i class="fas fa-lightbulb"></i> Finance Tips</a></li>
+        <li><a href="Help-Center.html"><i class="fas fa-question-circle"></i> Help Center</a></li>
+        <li><a href="community.html"><i class="fas fa-users"></i> Community</a></li>
+        <li><a href="blog.html"><i class="fas fa-blog"></i> Blog</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul class="footer-links">
+        <li><a href="privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+        <li><a href="terms.html"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+        <li><a href="cookies.html"><i class="fas fa-cookie-bite"></i> Cookie Policy</a></li>
+        <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact Us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 ExpenseFlow. All rights reserved. | Rates are updated daily
+  </div>
+</footer>
+<script src="profile.js"></script>
+</script>
+</body>
+</html>

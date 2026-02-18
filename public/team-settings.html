@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Management - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Dashboard</a>
+            <div class="nav-title">Structure & Hierarchy</div>
+            <div id="user-role-badge"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="settings-layout">
+            <!-- Sidebar -->
+            <aside class="settings-sidebar glass-card">
+                <ul class="settings-nav">
+                    <li class="active"><a href="#teams-section"><i class="fas fa-users"></i> Teams</a></li>
+                    <li><a href="#workflows-section"><i class="fas fa-project-diagram"></i> Workflows</a></li>
+                    <li><a href="#limits-section"><i class="fas fa-dollar-sign"></i> Approval Limits</a></li>
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="settings-main">
+                <section id="teams-section" class="glass-card">
+                    <div class="section-header">
+                        <h2>My Teams</h2>
+                        <button class="btn-primary" onclick="showCreateTeamModal()"><i class="fas fa-plus"></i> New
+                            Team</button>
+                    </div>
+                    <div id="teams-grid" class="teams-grid">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                <section id="workflows-section" class="glass-card mt-20">
+                    <div class="section-header">
+                        <h2>Approval Workflows</h2>
+                        <button class="btn-secondary" onclick="showCreateWorkflowModal()">Configure Rules</button>
+                    </div>
+                    <div id="workflows-list">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Create Team Modal -->
+    <div id="team-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Create Team</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="team-form">
+                <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" id="team-name" required placeholder="e.g. Sales India">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="team-department">
+                        <option value="HR">Human Resources</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Sales">Sales</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Finance">Finance</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Approval Limit (Monthly)</label>
+                    <input type="number" id="team-limit" value="50000">
+                </div>
+                <button type="submit" class="btn-full">Create Team Structure</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/team-controller.js"></script>
+</body>
+
+</html>

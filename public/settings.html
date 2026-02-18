@@ -1,385 +1,1401 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings & Profile - ExpenseFlow</title>
-    <link rel="stylesheet" href="settings.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings & Profile - ExpenseFlow</title>
+  <link rel="stylesheet" href="settings.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+  /* ====== HARD LAYOUT FIX FOR SETTINGS PAGE ====== */
+
+html, body {
+  height: 100%;
+  overflow: hidden;   /* Prevent whole page scrolling */
+}
+
+.settings-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.settings-main {
+  display: flex;
+  height: calc(100vh - 80px); /* adjust if you have header height */
+  overflow: hidden;
+}
+
+/* Left nav */
+.settings-nav {
+  flex-shrink: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Right panel */
+.settings-content {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Each tab scrolls internally */
+.tab-content {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  box-sizing: border-box;
+  padding-bottom: 4rem;
+}
+
+/* Active tab only */
+.tab-content.active {
+  display: block;
+}
+
+/* Notifications specific safety */
+#notifications-tab,
+.notifications-section {
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+    /* Ensure main layout doesn't break */
+.settings-main {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+}
+
+/* Right content area */
+.settings-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Each tab should stay inside */
+.tab-content {
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding-bottom: 3rem; /* prevents spill */
+}
+
+/* Fix notifications section specifically */
+.notifications-section {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Prevent any absolute/fixed child from pushing layout */
+.notifications-section * {
+  max-width: 100%;
+}
+
+  </style>
 </head>
+
+<style>
+  
+/* Header Styles */
+.header {
+  position: relative;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  backdrop-filter: blur(20px);
+  background: rgba(15, 15, 35, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom:2rem;
+}
+
+.navbar {
+  padding: 1rem 0;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-logo:hover {
+  transform: scale(1.05);
+}
+
+.nav-logo i {
+  font-size: 2rem;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.nav-logo span {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-menu {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  align-items: center;
+  margin-right: 15px;
+  margin-left: 15px;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--accent-primary);
+  background: rgba(100, 255, 218, 0.1);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Workspace Selector */
+.workspace-selector {
+  position: relative;
+  margin-right: 1rem;
+}
+
+.workspace-current {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  color: var(--accent-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.workspace-current:hover {
+  background: rgba(100, 255, 218, 0.2);
+  transform: translateY(-2px);
+}
+
+.workspace-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-primary);
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.workspace-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.workspace-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.dropdown-arrow {
+  transition: transform 0.3s ease;
+}
+
+.workspace-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.workspace-dropdown.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.workspace-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.workspace-item:hover,
+.workspace-item.active {
+  background: rgba(100, 255, 218, 0.1);
+}
+
+.workspace-item:last-child {
+  border-bottom: none;
+}
+
+.workspace-avatar-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-primary);
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.owner-badge {
+  margin-left: auto;
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.workspace-divider {
+  padding: 0.5rem 1rem;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.workspace-footer {
+  padding: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.add-workspace-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.add-workspace-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 255, 218, 0.3);
+}
+
+.currency-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  color: var(--accent-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.currency-btn:hover {
+  background: rgba(100, 255, 218, 0.2);
+  transform: translateY(-2px);
+}
+
+.currency-btn i {
+  font-size: 1rem;
+}
+
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-primary);
+}
+
+.username {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.bar {
+  width: 25px;
+  height: 3px;
+  background: var(--accent-primary);
+  margin: 3px 0;
+  transition: 0.3s;
+  border-radius: 5px;
+}
+
+/* Dropdown Menu */
+.nav-item.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 180px;
+  background: rgba(15, 15, 35, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(100, 255, 218, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 0.5rem 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: all 0.25s ease;
+  z-index: 1100;
+  margin-top: 0.5rem;
+}
+
+.nav-item.dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-link {
+  display: block;
+  padding: 0.6rem 1.2rem;
+  color: #a0a0c0;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dropdown-link:hover,
+.dropdown-link.active {
+  color: #64ffda;
+  background: rgba(100, 255, 218, 0.08);
+}
+
+/* Language Select */
+.language-select {
+  padding: 0.4rem 0.6rem;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  color: #64ffda;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  appearance: auto;
+}
+
+.language-select:hover {
+  background: rgba(100, 255, 218, 0.2);
+}
+
+.language-select option {
+  background: #0f0f23;
+  color: #e0e0e0;
+}
+
+/* Logout Link */
+#redirect a {
+  color: #a0a0c0;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+#redirect a:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+}
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0 1rem;
+  }
+
+  .nav-menu {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+    gap: 0.75rem;
+    display: none;
+  }
+
+  .nav-menu.active {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  .nav-link {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+  }
+
+  .dropdown-menu {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    background: rgba(100, 255, 218, 0.05);
+    border-radius: 8px;
+    margin-top: 0.25rem;
+  }
+
+  .user-profile {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero-section {
+    padding: 4rem 1.5rem 2rem;
+    text-align: left;
+  }
+
+  .hero-title {
+    font-size: 2.4rem;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-cta .cta-primary,
+  .hero-cta .cta-secondary {
+    width: 100%;
+  }
+
+  .hero-section + .container {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  #budget-goals-dashboard {
+    margin: 4.5rem 1rem;
+    padding: 1.75rem;
+  }
+
+  .dashboard-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .dashboard-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+
+  .alerts-section {
+    order: 3;
+  }
+
+  .items-list {
+    max-height: 360px;
+  }
+}
+</style>
 <body>
-    <div class="settings-container">
-        <header class="settings-header">
-            <div class="header-left">
-                <a href="dashboard-clean.html" class="back-btn">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-                <h1><i class="fas fa-cog"></i> Settings & Profile</h1>
+
+  <!-- Smooth Cursor Trail -->
+  <style>
+    .cursor-trail-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999999;
+    }
+
+    .trail-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+      box-shadow:
+        0 0 15px rgba(100, 255, 218, 0.8),
+        0 0 30px rgba(100, 255, 218, 0.4);
+      transform: translate(-50%, -50%);
+      will-change: transform, opacity;
+      mix-blend-mode: screen;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .trail-dot:first-child {
+      width: 12px;
+      height: 12px;
+      background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
+      box-shadow:
+        0 0 20px rgba(100, 255, 218, 0.9),
+        0 0 40px rgba(100, 255, 218, 0.6);
+      z-index: 2;
+    }
+
+    .cursor-clicking {
+      transform: translate(-50%, -50%) scale(1.5);
+      background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
+      box-shadow:
+        0 0 25px rgba(255, 107, 157, 0.9),
+        0 0 50px rgba(255, 107, 157, 0.6) !important;
+    }
+
+    .cursor-hovering {
+      transform: translate(-50%, -50%) scale(1.3);
+      background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
+    }
+    .cursor-trail-container {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+  </style>
+
+  <div class="cursor-trail-container" id="cursor-trail"></div>
+
+  <script>
+    (function () {
+      // Hide default cursor
+      document.body.style.cursor = 'none';
+
+      const container = document.getElementById('cursor-trail');
+      const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      const trailCircles = [];
+      const COUNT = 12; // Fewer circles for smoother trail
+
+      // Create trail circles
+      for (let i = 0; i < COUNT; i++) {
+        const circle = document.createElement('div');
+        circle.className = 'trail-dot';
+
+        // Opacity decreases along the trail
+        const opacity = 0.9 - (i / COUNT) * 0.8;
+        circle.style.opacity = opacity.toString();
+
+        // Size decreases along the trail
+        const scale = 1 - (i / COUNT) * 0.5;
+        circle.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+        container.appendChild(circle);
+        trailCircles.push({
+          element: circle,
+          x: coords.x,
+          y: coords.y,
+          targetX: coords.x,
+          targetY: coords.y
+        });
+      }
+
+      // Track mouse position
+      let isMoving = false;
+      let lastMouseX = coords.x;
+      let lastMouseY = coords.y;
+      let velocity = { x: 0, y: 0 };
+
+      window.addEventListener('mousemove', e => {
+        coords.x = e.clientX;
+        coords.y = e.clientY;
+
+        // Calculate velocity for smooth movement
+        velocity.x = e.clientX - lastMouseX;
+        velocity.y = e.clientY - lastMouseY;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+
+        isMoving = true;
+
+        // Reset movement timeout
+        clearTimeout(window.movementTimeout);
+        window.movementTimeout = setTimeout(() => {
+          isMoving = false;
+        }, 50);
+      });
+
+      // Click effect
+      window.addEventListener('mousedown', () => {
+        trailCircles.forEach(circle => {
+          circle.element.classList.add('cursor-clicking');
+        });
+      });
+
+      window.addEventListener('mouseup', () => {
+        trailCircles.forEach(circle => {
+          circle.element.classList.remove('cursor-clicking');
+        });
+      });
+
+      // Hover effect for interactive elements
+      window.addEventListener('mouseover', e => {
+        const interactive = e.target.closest('a, button, input, select, textarea, [role="button"]');
+        trailCircles.forEach(circle => {
+          circle.element.classList.toggle('cursor-hovering', !!interactive);
+        });
+      });
+
+      // Smooth animation function
+      function animateTrail() {
+        let targetX = coords.x;
+        let targetY = coords.y;
+
+        // Add velocity offset to first circle for more natural feel
+        const velocityOffset = 0.5;
+        const offsetX = velocity.x * velocityOffset;
+        const offsetY = velocity.y * velocityOffset;
+
+        trailCircles.forEach((circle, index) => {
+          // First circle follows cursor exactly
+          if (index === 0) {
+            circle.x = targetX + offsetX;
+            circle.y = targetY + offsetY;
+          }
+          // Other circles follow with smooth delay
+          else {
+            const prevCircle = trailCircles[index - 1];
+
+            // Smooth interpolation factor (changes based on movement speed)
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            const lerpFactor = isMoving ?
+              Math.min(0.3 + (speed * 0.01), 0.5) :  // Faster movement = tighter trail
+              0.1; // Slow movement = more spread
+
+            circle.x += (prevCircle.x - circle.x) * lerpFactor;
+            circle.y += (prevCircle.y - circle.y) * lerpFactor;
+          }
+
+          // Apply position with easing
+          circle.element.style.left = circle.x + 'px';
+          circle.element.style.top = circle.y + 'px';
+
+          // Dynamic opacity based on speed and position
+          if (index > 0) {
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            const baseOpacity = 0.9 - (index / COUNT) * 0.8;
+            const speedMultiplier = Math.min(1 + speed * 0.02, 1.5);
+            circle.element.style.opacity = (baseOpacity * speedMultiplier).toString();
+          }
+
+          // Update target for next circle
+          targetX = circle.x;
+          targetY = circle.y;
+        });
+
+        requestAnimationFrame(animateTrail);
+      }
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        // Adjust if cursor goes out of bounds
+        if (coords.x > window.innerWidth) coords.x = window.innerWidth;
+        if (coords.y > window.innerHeight) coords.y = window.innerHeight;
+      });
+
+      // Handle mouse leave/enter
+      window.addEventListener('mouseleave', () => {
+        trailCircles.forEach(circle => {
+          circle.element.style.opacity = '0';
+        });
+      });
+
+      window.addEventListener('mouseenter', () => {
+        trailCircles.forEach((circle, index) => {
+          const opacity = 0.9 - (index / COUNT) * 0.8;
+          circle.element.style.opacity = opacity.toString();
+        });
+      });
+
+      // Start animation
+      animateTrail();
+    })();
+  </script>
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="dashboard.html" class="nav-link ">Dashboard</a>
+          <a href="accounts.html" class="nav-link">Accounts</a>
+          <a href="analytics.html" class="nav-link ">Analytics</a>
+          <a href="goals.html" class="nav-link ">Goals</a>
+
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle">More</a>
+            <div class="dropdown-menu">
+              <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
+              <a href="settings.html" class="dropdown-link active">Overview</a>
+              <a href="./contributor.html" class="dropdown-link ">Contributors</a>
             </div>
-        </header>
+          </div>
+        </div>
+        
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="user-profile">
+          <div id="workspace-selector" class="workspace-selector"></div>
+          <select id="language-switcher" class="language-select" aria-label="Language">
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="fr">FR</option>
+          </select>
+          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
+          </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username" id="navUsername"></span>
+          <div id="redirect">
+            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-        <main class="settings-main">
-            <!-- Settings Navigation -->
-            <div class="settings-nav">
-                <button class="nav-item active" data-tab="profile">
-                    <i class="fas fa-user"></i> Profile
+  <div class="settings-container">
+    <header class="settings-header">
+      <div class="header-left">
+        <a href="dashboard-clean.html" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1><i class="fas fa-cog"></i> Settings & Profile</h1>
+      </div>
+    </header>
+
+    <main class="settings-main">
+      <!-- Settings Navigation -->
+      <div class="settings-nav">
+        <button class="nav-item active" data-tab="profile">
+          <i class="fas fa-user"></i> Profile
+        </button>
+        <button class="nav-item" data-tab="preferences">
+          <i class="fas fa-sliders-h"></i> Preferences
+        </button>
+        <button class="nav-item" data-tab="security">
+          <i class="fas fa-shield-alt"></i> Security
+        </button>
+        <button class="nav-item" data-tab="notifications">
+          <i class="fas fa-bell"></i> Notifications
+        </button>
+        <button class="nav-item" data-tab="data">
+          <i class="fas fa-database"></i> Data & Privacy
+        </button>
+      </div>
+
+      <!-- Settings Content -->
+      <div class="settings-content">
+        <!-- Profile Tab -->
+        <div id="profile-tab" class="tab-content active">
+          <div class="profile-section">
+            <div class="profile-header">
+              <div class="profile-avatar">
+                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face"
+                  alt="Profile" id="profile-image">
+                <button class="avatar-edit-btn" id="change-avatar-btn">
+                  <i class="fas fa-camera"></i>
                 </button>
-                <button class="nav-item" data-tab="preferences">
-                    <i class="fas fa-sliders-h"></i> Preferences
-                </button>
-                <button class="nav-item" data-tab="security">
-                    <i class="fas fa-shield-alt"></i> Security
-                </button>
-                <button class="nav-item" data-tab="notifications">
-                    <i class="fas fa-bell"></i> Notifications
-                </button>
-                <button class="nav-item" data-tab="data">
-                    <i class="fas fa-database"></i> Data & Privacy
-                </button>
+                <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+              </div>
+              <div class="profile-info">
+                <h2 id="profile-name">John Doe</h2>
+                <p id="profile-email">john.doe@example.com</p>
+                <span class="profile-badge">Premium Member</span>
+              </div>
             </div>
 
-            <!-- Settings Content -->
-            <div class="settings-content">
-                <!-- Profile Tab -->
-                <div id="profile-tab" class="tab-content active">
-                    <div class="profile-section">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face" alt="Profile" id="profile-image">
-                                <button class="avatar-edit-btn" id="change-avatar-btn">
-                                    <i class="fas fa-camera"></i>
-                                </button>
-                            </div>
-                            <div class="profile-info">
-                                <h2 id="profile-name">John Doe</h2>
-                                <p id="profile-email">john.doe@example.com</p>
-                                <span class="profile-badge">Premium Member</span>
-                            </div>
-                        </div>
+            <div class="profile-form">
+              <div class="form-section">
+                <h3>Personal Information</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" value="John">
+                  </div>
+                  <div class="form-group">
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" value="Doe">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="email">Email Address</label>
+                  <input type="email" id="email" value="john.doe@example.com">
+                </div>
+                <div class="form-group">
+                  <label for="phone">Phone Number</label>
+                  <input type="tel" id="phone" value="+1 (555) 123-4567">
+                </div>
+                <div class="form-group">
+                  <label for="bio">Bio</label>
+                  <textarea id="bio" rows="3"
+                    placeholder="Tell us about yourself...">Financial enthusiast focused on smart money management and achieving financial goals.</textarea>
+                </div>
+              </div>
 
-                        <div class="profile-form">
-                            <div class="form-section">
-                                <h3>Personal Information</h3>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="first-name">First Name</label>
-                                        <input type="text" id="first-name" value="John">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="last-name">Last Name</label>
-                                        <input type="text" id="last-name" value="Doe">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="email">Email Address</label>
-                                    <input type="email" id="email" value="john.doe@example.com">
-                                </div>
-                                <div class="form-group">
-                                    <label for="phone">Phone Number</label>
-                                    <input type="tel" id="phone" value="+1 (555) 123-4567">
-                                </div>
-                                <div class="form-group">
-                                    <label for="bio">Bio</label>
-                                    <textarea id="bio" rows="3" placeholder="Tell us about yourself...">Financial enthusiast focused on smart money management and achieving financial goals.</textarea>
-                                </div>
-                            </div>
+              <div class="form-actions">
+                <button type="button" class="btn-secondary">Cancel</button>
+                <button type="button" class="btn-primary" id="save-profile-btn">
+                  <i class="fas fa-save"></i> Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                            <div class="form-actions">
-                                <button type="button" class="btn-secondary">Cancel</button>
-                                <button type="button" class="btn-primary" id="save-profile-btn">
-                                    <i class="fas fa-save"></i> Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Preferences Tab -->
+        <div id="preferences-tab" class="tab-content">
+          <div class="preferences-section">
+            <div class="form-section">
+              <h3>Currency & Region</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="currency">Default Currency</label>
+                  <select id="currency">
+                    <option value="USD">🇺🇸 USD - US Dollar</option>
+                    <option value="EUR">🇪🇺 EUR - Euro</option>
+                    <option value="GBP">🇬🇧 GBP - British Pound</option>
+                    <option value="INR">🇮🇳 INR - Indian Rupee</option>
+                    <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="timezone">Timezone</label>
+                  <select id="timezone">
+                    <option value="UTC-8">Pacific Time (UTC-8)</option>
+                    <option value="UTC-5">Eastern Time (UTC-5)</option>
+                    <option value="UTC+0">GMT (UTC+0)</option>
+                    <option value="UTC+5:30">India Standard Time (UTC+5:30)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="language">Language</label>
+                <select id="language">
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                  <option value="hi">हिन्दी</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Display Settings</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Dark Mode</label>
+                    <small>Use dark theme for better viewing in low light</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="dark-mode" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Compact View</label>
+                    <small>Show more information in less space</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="compact-view">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Show Animations</label>
+                    <small>Enable smooth transitions and animations</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="animations" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-primary" id="save-preferences-btn">
+                <i class="fas fa-save"></i> Save Preferences
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div id="security-tab" class="tab-content">
+          <div class="security-section">
+            <div class="form-section">
+              <h3>Password & Authentication</h3>
+              <div class="form-group">
+                <label for="current-password">Current Password</label>
+                <input type="password" id="current-password" placeholder="Enter current password">
+              </div>
+              <div class="form-group">
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" placeholder="Enter new password">
+              </div>
+              <div class="form-group">
+                <label for="confirm-password">Confirm New Password</label>
+                <input type="password" id="confirm-password" placeholder="Confirm new password">
+              </div>
+              <button type="button" class="btn-primary" id="change-password-btn">
+                <i class="fas fa-key"></i> Change Password
+              </button>
+            </div>
+
+            <div class="form-section">
+              <h3>Security Preferences</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Login Alerts</label>
+                    <small>Get notified of new login attempts</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <!-- ID matched to likely settings.js preference if any, or just visual -->
+                    <input type="checkbox" id="login-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Two-Factor Authentication</h3>
+              <div class="security-item">
+                <div class="security-info">
+                  <h4>Authenticator App</h4>
+                  <p>Use an authenticator app for additional security</p>
+                  <span class="status-badge enabled">Enabled</span>
+                </div>
+                <button class="btn-secondary" id="manage-2fa-btn">Manage</button>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="fas fa-desktop"></i>
+                Active Sessions
+              </h3>
+              <div id="active-sessions-list">
+                <!-- Sessions will be loaded here -->
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">Loading sessions...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="fas fa-clipboard-list"></i>
+                Security Log
+              </h3>
+              <div style="overflow-x: auto;">
+                <table class="settings-table" style="width: 100%; border-collapse: collapse; color: #fff;">
+                  <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid rgba(100,255,218,0.2);">
+                      <th style="padding: 1rem;">Event</th>
+                      <th style="padding: 1rem;">Location</th>
+                      <th style="padding: 1rem;">Device</th>
+                      <th style="padding: 1rem;">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="security-log-body">
+                    <!-- Logs will be loaded here -->
+                    <tr>
+                      <td colspan="4" style="padding: 1rem; text-align: center; color: #a0a0c0;">Loading security log...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div id="notifications-tab" class="tab-content">
+          <div class="notifications-section">
+            <div class="form-section">
+              <h3>Email Notifications</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Budget Alerts</label>
+                    <small>Get notified when you're close to budget limits</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="budget-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Weekly Reports</label>
+                    <small>Receive weekly spending summaries</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="weekly-reports" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Goal Reminders</label>
+                    <small>Get reminded about your financial goals</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="goal-reminders">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Push Notifications</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Transaction Alerts</label>
+                    <small>Instant notifications for new transactions</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="transaction-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Security Alerts</label>
+                    <small>Important security and login notifications</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="security-alerts" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-primary" id="save-notifications-btn">
+                <i class="fas fa-save"></i> Save Notification Settings
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data & Privacy Tab -->
+        <div id="data-tab" class="tab-content">
+          <div class="data-section">
+            <div class="form-section">
+              <h3>Data Export</h3>
+              <p>Download a copy of your data in various formats</p>
+              <div class="export-options">
+                <button class="btn-secondary" id="export-csv-btn">
+                  <i class="fas fa-file-csv"></i> Export as CSV
+                </button>
+                <button class="btn-secondary" id="export-json-btn">
+                  <i class="fas fa-file-code"></i> Export as JSON
+                </button>
+                <button class="btn-secondary" id="export-pdf-btn">
+                  <i class="fas fa-file-pdf"></i> Export as PDF Report
+                </button>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Privacy Settings</h3>
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Analytics & Insights</label>
+                    <small>Allow us to analyze your data to provide better insights</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="analytics-consent" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <div class="toggle-info">
+                    <label>Marketing Communications</label>
+                    <small>Receive tips, updates, and promotional content</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="marketing-consent">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section danger-zone">
+              <h3>Danger Zone</h3>
+              <div class="danger-actions">
+                <div class="danger-item">
+                  <div class="danger-info">
+                    <h4>Delete All Data</h4>
+                    <p>Permanently delete all your transactions, budgets, and goals</p>
+                  </div>
+                  <button class="btn-danger" id="delete-data-btn">Delete Data</button>
+                </div>
+                <div class="danger-item">
+                  <div class="danger-info">
+                    <h4>Delete Account</h4>
+                    <p>Permanently delete your account and all associated data</p>
+                  </div>
+                  <button class="btn-danger" id="delete-account-btn">Delete Account</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    
+      </div>
+    
+    </main>
+        <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
                 </div>
 
-                <!-- Preferences Tab -->
-                <div id="preferences-tab" class="tab-content">
-                    <div class="preferences-section">
-                        <div class="form-section">
-                            <h3>Currency & Region</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="currency">Default Currency</label>
-                                    <select id="currency">
-                                        <option value="USD">🇺🇸 USD - US Dollar</option>
-                                        <option value="EUR">🇪🇺 EUR - Euro</option>
-                                        <option value="GBP">🇬🇧 GBP - British Pound</option>
-                                        <option value="INR">🇮🇳 INR - Indian Rupee</option>
-                                        <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="timezone">Timezone</label>
-                                    <select id="timezone">
-                                        <option value="UTC-8">Pacific Time (UTC-8)</option>
-                                        <option value="UTC-5">Eastern Time (UTC-5)</option>
-                                        <option value="UTC+0">GMT (UTC+0)</option>
-                                        <option value="UTC+5:30">India Standard Time (UTC+5:30)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="language">Language</label>
-                                <select id="language">
-                                    <option value="en">English</option>
-                                    <option value="es">Español</option>
-                                    <option value="fr">Français</option>
-                                    <option value="de">Deutsch</option>
-                                    <option value="hi">हिन्दी</option>
-                                </select>
-                            </div>
-                        </div>
+                <p class="footer-description">
+                    Smart money management made simple. Track, analyze, and optimize
+                    your financial habits.
+                </p>
 
-                        <div class="form-section">
-                            <h3>Display Settings</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Dark Mode</label>
-                                        <small>Use dark theme for better viewing in low light</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="dark-mode" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Compact View</label>
-                                        <small>Show more information in less space</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="compact-view">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Show Animations</label>
-                                        <small>Enable smooth transitions and animations</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="animations" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+                <div class="social-links">
+                    <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="X (Twitter)">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
 
-                        <div class="form-actions">
-                            <button type="button" class="btn-primary" id="save-preferences-btn">
-                                <i class="fas fa-save"></i> Save Preferences
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="Github">
+                        <i class="fab fa-github"></i>
+                    </a>
 
-                <!-- Security Tab -->
-                <div id="security-tab" class="tab-content">
-                    <div class="security-section">
-                        <div class="form-section">
-                            <h3>Password & Authentication</h3>
-                            <div class="form-group">
-                                <label for="current-password">Current Password</label>
-                                <input type="password" id="current-password" placeholder="Enter current password">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-password">New Password</label>
-                                <input type="password" id="new-password" placeholder="Enter new password">
-                            </div>
-                            <div class="form-group">
-                                <label for="confirm-password">Confirm New Password</label>
-                                <input type="password" id="confirm-password" placeholder="Confirm new password">
-                            </div>
-                            <button type="button" class="btn-primary" id="change-password-btn">
-                                <i class="fas fa-key"></i> Change Password
-                            </button>
-                        </div>
+                    <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="Email">
+                        <i class="far fa-envelope"></i>
+                    </a>
 
-                        <div class="form-section">
-                            <h3>Two-Factor Authentication</h3>
-                            <div class="security-item">
-                                <div class="security-info">
-                                    <h4>Authenticator App</h4>
-                                    <p>Use an authenticator app for additional security</p>
-                                    <span class="status-badge enabled">Enabled</span>
-                                </div>
-                                <button class="btn-secondary" id="manage-2fa-btn">Manage</button>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Login Sessions</h3>
-                            <div class="sessions-list">
-                                <div class="session-item">
-                                    <div class="session-info">
-                                        <h4>Current Session</h4>
-                                        <p>Chrome on Windows • New York, NY</p>
-                                        <small>Active now</small>
-                                    </div>
-                                    <span class="session-badge current">Current</span>
-                                </div>
-                                <div class="session-item">
-                                    <div class="session-info">
-                                        <h4>Mobile App</h4>
-                                        <p>iPhone • New York, NY</p>
-                                        <small>2 hours ago</small>
-                                    </div>
-                                    <button class="btn-danger-sm">Revoke</button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn-danger" id="revoke-all-btn">
-                                <i class="fas fa-sign-out-alt"></i> Sign Out All Devices
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notifications Tab -->
-                <div id="notifications-tab" class="tab-content">
-                    <div class="notifications-section">
-                        <div class="form-section">
-                            <h3>Email Notifications</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Budget Alerts</label>
-                                        <small>Get notified when you're close to budget limits</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="budget-alerts" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Weekly Reports</label>
-                                        <small>Receive weekly spending summaries</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="weekly-reports" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Goal Reminders</label>
-                                        <small>Get reminded about your financial goals</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="goal-reminders">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Push Notifications</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Transaction Alerts</label>
-                                        <small>Instant notifications for new transactions</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="transaction-alerts" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Security Alerts</label>
-                                        <small>Important security and login notifications</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="security-alerts" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" class="btn-primary" id="save-notifications-btn">
-                                <i class="fas fa-save"></i> Save Notification Settings
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Data & Privacy Tab -->
-                <div id="data-tab" class="tab-content">
-                    <div class="data-section">
-                        <div class="form-section">
-                            <h3>Data Export</h3>
-                            <p>Download a copy of your data in various formats</p>
-                            <div class="export-options">
-                                <button class="btn-secondary" id="export-csv-btn">
-                                    <i class="fas fa-file-csv"></i> Export as CSV
-                                </button>
-                                <button class="btn-secondary" id="export-json-btn">
-                                    <i class="fas fa-file-code"></i> Export as JSON
-                                </button>
-                                <button class="btn-secondary" id="export-pdf-btn">
-                                    <i class="fas fa-file-pdf"></i> Export as PDF Report
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Privacy Settings</h3>
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Analytics & Insights</label>
-                                        <small>Allow us to analyze your data to provide better insights</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="analytics-consent" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                                <div class="toggle-item">
-                                    <div class="toggle-info">
-                                        <label>Marketing Communications</label>
-                                        <small>Receive tips, updates, and promotional content</small>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="marketing-consent">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-section danger-zone">
-                            <h3>Danger Zone</h3>
-                            <div class="danger-actions">
-                                <div class="danger-item">
-                                    <div class="danger-info">
-                                        <h4>Delete All Data</h4>
-                                        <p>Permanently delete all your transactions, budgets, and goals</p>
-                                    </div>
-                                    <button class="btn-danger" id="delete-data-btn">Delete Data</button>
-                                </div>
-                                <div class="danger-item">
-                                    <div class="danger-info">
-                                        <h4>Delete Account</h4>
-                                        <p>Permanently delete your account and all associated data</p>
-                                    </div>
-                                    <button class="btn-danger" id="delete-account-btn">Delete Account</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <script src="settings.js"></script>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="AboutUs.html">About Us</a></li>
+                    <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
+                    <li><a href="terms_service.html">Terms of Service</a></li>
+                    <li><a href="Help-Center.html">Help Center</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-container">
+                <p>
+                    &copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for
+                    better financial management.
+                </p>
+                <div class="footer-stats">
+                    <span>🏆 Trusted by 10,000+ users</span>
+                    <span>💰 ₹50M+ tracked</span>
+                    <span>📊 99.9% uptime</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+      // Tab switching functionality
+      function switchTab(tabName) {
+        // Remove active class from all tabs and buttons
+        document.querySelectorAll('.tab-content').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        document.querySelectorAll('.nav-item').forEach(btn => {
+          btn.classList.remove('active');
+        });
+
+        // Add active class to selected tab and button
+        const activeTab = document.getElementById(tabName + '-tab');
+        if (activeTab) activeTab.classList.add('active');
+
+        // Highlight the button that was clicked (based on data-tab)
+        const activeBtn = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+      }
+
+      // Attach click listeners to nav items
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab(btn.dataset.tab);
+        });
+      });
+
+      // Mobile menu toggle (if nav-toggle exists)
+      const navToggle = document.getElementById('nav-toggle');
+      if (navToggle) {
+        navToggle.addEventListener('click', function () {
+          const navMenu = document.getElementById('nav-menu');
+          if (navMenu) navMenu.classList.toggle('active');
+        });
+      }
+
+      // Form submission handlers (visual feedback)
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          // Simple visual feedback
+          const btn = form.querySelector('button[type="submit"]');
+          if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Saved';
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+            }, 2000);
+          }
+        });
+      });
+
+      // Danger zone confirmations
+      document.querySelectorAll('.btn-danger').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          // Prevent default only if it's not the revoke button which has specific handler
+          if (!this.id.includes('revoke')) {
+            const action = this.textContent.trim();
+            if (!confirm(`Are you sure you want to ${action}? This action cannot be undone.`)) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }
+        });
+      });
+    </script>
+  </div>
+  <script src="protect.js"></script>
+  <script src="settings.js"></script>
 </body>
+
 </html>

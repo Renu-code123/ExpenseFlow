@@ -13,6 +13,17 @@ class EmailService {
     });
   }
 
+  /**
+   * Generic mail sender
+   */
+  async sendMail(options) {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      ...options
+    };
+    return await this.transporter.sendMail(mailOptions);
+  }
+
   formatCurrency(amount, user, options = {}) {
     const currency = user?.preferredCurrency || 'INR';
     const locale = user?.locale || 'en-US';

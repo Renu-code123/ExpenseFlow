@@ -1,0 +1,394 @@
+
+    /* =========================
+   MOBILE RESPONSIVE STYLES
+   ========================= */
+    @media (max-width: 768px) {
+
+      /* General */
+      body {
+        overflow-x: hidden;
+      }
+
+      .container {
+        padding: 1rem;
+      }
+
+      /* Navbar */
+      .nav-menu {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background: #0f0f23;
+        flex-direction: column;
+        align-items: center;
+        display: none;
+      }
+
+      .nav-menu.active {
+        display: flex;
+      }
+
+      .nav-link {
+        padding: 1rem;
+        width: 100%;
+        text-align: center;
+      }
+
+      .nav-toggle {
+        display: block;
+        cursor: pointer;
+      }
+
+      .user-profile {
+        display: none;
+      }
+
+      /* Hero */
+      .hero-title {
+        font-size: 1.8rem;
+        text-align: center;
+      }
+
+      .hero-subtitle {
+        text-align: center;
+        font-size: 1rem;
+      }
+
+      /* Balance & Cards */
+      .inc-exp-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .balance-card {
+        text-align: center;
+      }
+      
+
+      /* Filters */
+      .filter-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .advanced-filters {
+        flex-direction: column;
+      }
+
+      .date-filters,
+      .amount-filters {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      /* Transaction Form */
+      .form-row {
+        flex-direction: column;
+      }
+
+      .form-control {
+        width: 100%;
+      }
+
+      /* Footer */
+      .footer-container {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+      }
+
+      .footer-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+
+    #redirect {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 12px;
+      border: 1px solid #64ffda;
+      background-color: #0f0f23;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+
+    #redirect a {
+      color: #64ffda;
+      text-decoration: none;
+      font-weight: 500;
+      margin-right: 8px;
+    }
+
+    .i18n-multiline {
+      white-space: pre-line;
+    }
+
+    .footer-links {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(100px, 1fr));
+    }
+      .footer-links {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(100px, 1fr));
+        }
+
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .progress-fill.high {
+      background: #4caf50 !important;
+    }
+
+    .progress-fill.medium {
+      background: #ffc107 !important;
+    }
+
+    .progress-fill.low {
+      background: #f44336 !important;
+    }
+
+
+    .features-showcase {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      margin-top: 3rem;
+      
+    }
+
+.nav-item {
+  position:relative;
+  padding: 0.5rem 1rem;
+}
+.dropdown-toggle{
+  cursor: pointer;
+}
+.dropdown-menu a {
+  padding: 0.5rem 1rem;
+  color: #64ffda;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.dropdown-menu{
+  position:absolute;
+  top:100%;
+  left:0;
+  background:#0f0f23;
+  min-width: 120px;
+  display: none;
+  flex-direction: column;
+  border: 1px solid #64ffda;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  z-index: 1000;
+}
+
+.dropdown-menu ::after{
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 10px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #0f0f23 transparent;
+}
+.dropdown-link:hover {
+  background-color: #f0f0f0;
+  color: #0f0f23;
+
+}
+
+/* Show dropdown on hover (desktop) */
+.nav-item.dropdown:hover .dropdown-menu {
+  display: flex;
+
+}
+.recurring-item-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(100,255,218,0.15);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.recurring-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.badge {
+  background: rgba(100,255,218,0.15);
+  color: #64ffda;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+/* ================================
+   RECURRING EXPENSES – UI POLISH
+================================ */
+
+/* Recurring Section Wrapper */
+.recurring-section {
+  background: #0f172a;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* Header */
+.recurring-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.recurring-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recurring-header h2 i {
+  color: #64ffda;
+}
+
+/* Stats Row */
+#recurring-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+#recurring-stats .stat-card {
+  background: #020617;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(100,255,218,0.12);
+  text-align: center;
+}
+
+#recurring-stats .stat-card h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-bottom: 0.25rem;
+}
+
+#recurring-stats .stat-card p {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #64ffda;
+}
+
+/* Recurring List Grid */
+#recurring-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+/* Recurring Item Card */
+.recurring-item-card {
+  background: linear-gradient(180deg, #020617, #020617);
+  border-radius: 14px;
+  padding: 1.1rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recurring-item-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+}
+
+/* Card Header */
+.recurring-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.recurring-item-header h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f9fafb;
+}
+
+/* Frequency Badge */
+.recurring-item-header .badge {
+  background: rgba(100,255,218,0.15);
+  color: #64ffda;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Card Body */
+.recurring-item-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: #d1d5db;
+  margin-bottom: 0.75rem;
+}
+
+.recurring-item-body p strong {
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+/* Amount Highlight */
+.recurring-item-body .amount {
+  grid-column: span 2;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #34d399; /* green */
+}
+
+/* Actions */
+.recurring-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.recurring-item-actions button {
+  flex: 1;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.5rem;
+}
+
+/* Empty State */
+#recurring-list .empty-placeholder {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: 12px;
+}

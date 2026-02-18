@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Reports & Export Dashboard - Generate and download expense reports">
+    <title>Reports & Export - ExpenseFlow</title>
+
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+    <!-- DNS prefetch for CDN -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+
+    <!-- Critical CSS - Inline for above-the-fold content -->
+    <style>
+        /* Critical CSS - Navigation and Header */
+        body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(135deg,#0f0f23 0%,#1a1a2e 50%,#16213e 100%);color:#e0e0e0;min-height:100vh}
+        .nav-bar{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);position:sticky;top:0;z-index:100}
+        .nav-content{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;max-width:1200px;margin:0 auto}
+        .nav-back{color:#e0e0e0;text-decoration:none;display:flex;align-items:center;gap:.5rem;font-weight:500}
+        .nav-title{display:flex;align-items:center;gap:.5rem;font-size:1.25rem;font-weight:600}
+        .nav-actions{display:flex;gap:1rem}
+        .nav-link{color:#e0e0e0;text-decoration:none;padding:.5rem 1rem;border-radius:8px;transition:all .3s}
+        .nav-link:hover{background:rgba(255,255,255,.1)}
+        .container{max-width:1200px;margin:0 auto;padding:2rem}
+        .page-header{margin-bottom:2rem}
+        .header-content{display:flex;align-items:center;justify-content:space-between}
+        h1{font-size:2rem;margin:0}
+        .schedule-btn{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:8px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:.5rem}
+        .schedule-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,.3)}
+        .loading-skeleton{background:linear-gradient(90deg,#333 25%,#444 50%,#333 75%);background-size:200% 100%;animation:loading 1.5s infinite}
+        @keyframes loading{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    </style>
+
+    <!-- Non-critical CSS - Load asynchronously -->
+    <link rel="preload" href="reports-optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="reports-optimized.css"></noscript>
+
+    <!-- Font Awesome - Preload critical icons -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
+
+    <!-- Preload critical JavaScript -->
+    <link rel="modulepreload" href="reports-critical.js">
+    <link rel="preload" href="reports-noncritical.js" as="script">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="nav-title">
+                <i class="fas fa-file-alt"></i> Reports & Export
+            </div>
+            <div class="nav-actions">
+                <a href="goals.html" class="nav-link">Goals</a>
+                <a href="transactions.html" class="nav-link">Transactions</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1>📊 Reports & Export Dashboard</h1>
+                <div class="header-actions">
+                    <button class="schedule-btn" onclick="openScheduleModal()">
+                        <i class="fas fa-clock"></i> Schedule Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Export Section -->
+        <section class="quick-export-section">
+            <h2>⚡ Quick Export</h2>
+            <div class="quick-export-grid">
+                <button class="export-card" onclick="quickExport('monthly')" data-export-type="monthly">
+                    <div class="export-icon">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='18' font-size='20'%3E📅%3C/text%3E%3C/svg%3E" alt="Calendar icon" width="32" height="32" loading="lazy">
+                    </div>
+                    <div class="export-content">
+                        <h3>Monthly Report</h3>
+                        <p>Current month transactions and summary</p>
+                    </div>
+                </button>
+
+                <button class="export-card" onclick="quickExport('yearly')" data-export-type="yearly">
+                    <div class="export-icon">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='18' font-size='20'%3E📆%3C/text%3E%3C/svg%3E" alt="Year calendar icon" width="32" height="32" loading="lazy">
+                    </div>
+                    <div class="export-content">
+                        <h3>Yearly Report</h3>
+                        <p>Complete year financial overview</p>
+                    </div>
+                </button>
+
+                <button class="export-card" onclick="quickExport('tax')" data-export-type="tax">
+                    <div class="export-icon">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='18' font-size='20'%3E🧾%3C/text%3E%3C/svg%3E" alt="Tax document icon" width="32" height="32" loading="lazy">
+                    </div>
+                    <div class="export-content">
+                        <h3>Tax Report</h3>
+                        <p>Tax-ready expense categorization</p>
+                    </div>
+                </button>
+
+                <button class="export-card" onclick="quickExport('custom')" data-export-type="custom">
+                    <div class="export-icon">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='18' font-size='20'%3E⚙️%3C/text%3E%3C/svg%3E" alt="Settings icon" width="32" height="32" loading="lazy">
+                    </div>
+                    <div class="export-content">
+                        <h3>Custom Report</h3>
+                        <p>Build your own report format</p>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Report Builder - Lazy loaded -->
+        <div id="report-builder-placeholder" class="loading-placeholder">
+            <div class="loading-skeleton" style="height:400px;border-radius:12px;margin:2rem 0"></div>
+        </div>
+
+        <!-- Recent Reports - Lazy loaded -->
+        <div id="recent-reports-placeholder" class="loading-placeholder">
+            <div class="loading-skeleton" style="height:300px;border-radius:12px;margin:2rem 0"></div>
+        </div>
+
+        <!-- Scheduled Reports - Lazy loaded -->
+        <div id="scheduled-reports-placeholder" class="loading-placeholder">
+            <div class="loading-skeleton" style="height:200px;border-radius:12px;margin:2rem 0"></div>
+        </div>
+    </div>
+    <script src="protect.js"></script>
+    <!-- Modals - Lazy loaded -->
+    <div id="modals-placeholder"></div>
+
+    <!-- Critical JavaScript - Inline -->
+    <script>
+        // Performance monitoring
+        const perfData = {
+            startTime: performance.now(),
+            resourcesLoaded: 0,
+            criticalPathComplete: false
+        };
+
+        // Critical path JavaScript
+        function quickExport(type) {
+            // Show immediate feedback
+            const btn = event.target.closest('.export-card');
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => btn.style.transform = '', 150);
+
+            // Lazy load export functionality
+            import('./reports-noncritical.js').then(module => {
+                module.handleQuickExport(type);
+            }).catch(err => {
+                console.error('Failed to load export functionality:', err);
+                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} report export failed. Please try again.`);
+            });
+        }
+
+        function openScheduleModal() {
+            // Lazy load modal functionality
+            loadNonCriticalJS().then(() => {
+                if (window.ReportsApp && window.ReportsApp.openScheduleModal) {
+                    window.ReportsApp.openScheduleModal();
+                }
+            });
+        }
+
+        // Load non-critical resources
+        function loadNonCriticalJS() {
+            return new Promise((resolve) => {
+                if (window.ReportsApp) {
+                    resolve();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'reports-noncritical.js';
+                script.onload = () => {
+                    perfData.resourcesLoaded++;
+                    resolve();
+                };
+                script.onerror = () => resolve(); // Continue even if load fails
+                document.head.appendChild(script);
+            });
+        }
+
+        // Lazy load sections
+        function lazyLoadSections() {
+            const observerOptions = {
+                root: null,
+                rootMargin: '50px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const placeholder = entry.target;
+                        const sectionId = placeholder.id.replace('-placeholder', '');
+
+                        // Load section content
+                        loadSection(sectionId, placeholder);
+                        observer.unobserve(placeholder);
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all placeholders
+            document.querySelectorAll('.loading-placeholder').forEach(placeholder => {
+                observer.observe(placeholder);
+            });
+        }
+
+        function loadSection(sectionId, placeholder) {
+            const sectionContent = getSectionContent(sectionId);
+            placeholder.outerHTML = sectionContent;
+
+            // Load corresponding JavaScript if needed
+            if (sectionId === 'report-builder') {
+                loadNonCriticalJS();
+            }
+        }
+
+        function getSectionContent(sectionId) {
+            const contents = {
+                'report-builder': `
+                    <section class="report-builder-section">
+                        <h2>🛠️ Report Builder</h2>
+                        <div class="builder-container">
+                            <form class="builder-form" onsubmit="handleFormSubmit(event)">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="reportName">Report Name *</label>
+                                        <input type="text" id="reportName" placeholder="e.g., Q1 Business Expenses" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="reportType">Report Type</label>
+                                        <select id="reportType">
+                                            <option value="summary">Summary Report</option>
+                                            <option value="detailed">Detailed Report</option>
+                                            <option value="comparison">Comparison Report</option>
+                                            <option value="trend">Trend Analysis</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="dateFrom">From Date *</label>
+                                        <input type="date" id="dateFrom" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateTo">To Date *</label>
+                                        <input type="date" id="dateTo" required>
+                                    </div>
+                                </div>
+                                <fieldset class="form-group">
+                                    <legend>Categories to Include</legend>
+                                    <div class="checkbox-grid">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" value="food" checked>
+                                            <span class="checkmark"></span>
+                                            Food & Dining
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" value="transport" checked>
+                                            <span class="checkmark"></span>
+                                            Transportation
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" value="shopping" checked>
+                                            <span class="checkmark"></span>
+                                            Shopping
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" value="utilities" checked>
+                                            <span class="checkmark"></span>
+                                            Bills & Utilities
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" value="entertainment" checked>
+                                            <span class="checkmark"></span>
+                                            Entertainment
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" value="healthcare" checked>
+                                            <span class="checkmark"></span>
+                                            Healthcare
+                                        </label>
+                                    </div>
+                                </fieldset>
+                                <fieldset class="form-group">
+                                    <legend>Export Format</legend>
+                                    <div class="radio-group">
+                                        <label class="radio-item">
+                                            <input type="radio" name="format" value="pdf" checked>
+                                            <span class="radio-mark"></span>
+                                            PDF Report
+                                        </label>
+                                        <label class="radio-item">
+                                            <input type="radio" name="format" value="excel">
+                                            <span class="radio-mark"></span>
+                                            Excel Spreadsheet
+                                        </label>
+                                        <label class="radio-item">
+                                            <input type="radio" name="format" value="csv">
+                                            <span class="radio-mark"></span>
+                                            CSV Data
+                                        </label>
+                                    </div>
+                                </fieldset>
+                                <div class="form-actions">
+                                    <button type="button" class="btn-preview" onclick="previewReport()">Preview</button>
+                                    <button type="submit" class="btn-generate">Generate Report</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+                `,
+                'recent-reports': `
+                    <section class="recent-reports-section">
+                        <h2>📋 Recent Reports</h2>
+                        <div class="reports-table-container">
+                            <table class="reports-table">
+                                <thead>
+                                    <tr>
+                                        <th>Report Name</th>
+                                        <th>Type</th>
+                                        <th>Created</th>
+                                        <th>Size</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTableBody">
+                                    <tr>
+                                        <td>Monthly Summary</td>
+                                        <td>Summary</td>
+                                        <td>2024-01-15</td>
+                                        <td>2.3 MB</td>
+                                        <td>
+                                            <button class="btn-preview" onclick="previewReport()">Preview</button>
+                                            <button class="btn-generate" onclick="downloadReport('Monthly Summary')">Download</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Q4 Tax Report</td>
+                                        <td>Tax</td>
+                                        <td>2024-01-10</td>
+                                        <td>1.8 MB</td>
+                                        <td>
+                                            <button class="btn-preview" onclick="previewReport()">Preview</button>
+                                            <button class="btn-generate" onclick="downloadReport('Q4 Tax Report')">Download</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Expense Analysis</td>
+                                        <td>Analysis</td>
+                                        <td>2024-01-08</td>
+                                        <td>3.1 MB</td>
+                                        <td>
+                                            <button class="btn-preview" onclick="previewReport()">Preview</button>
+                                            <button class="btn-generate" onclick="downloadReport('Expense Analysis')">Download</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                `,
+                'scheduled-reports': `
+                    <section class="scheduled-reports-section">
+                        <h2>⏰ Scheduled Reports</h2>
+                        <div class="scheduled-grid" id="scheduledGrid">
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-alt"></i>
+                                <h3>No scheduled reports</h3>
+                                <p>Set up automated reports to receive them regularly</p>
+                                <button class="add-schedule-btn" onclick="openScheduleModal()">
+                                    <i class="fas fa-plus"></i> Schedule Report
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                `
+            };
+            return contents[sectionId] || '';
+        }
+
+        // Initialize lazy loading
+        document.addEventListener('DOMContentLoaded', () => {
+            lazyLoadSections();
+            perfData.criticalPathComplete = true;
+
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                }).catch(error => {
+                    console.log('Service Worker registration failed:', error);
+                });
+            }
+
+            // Preload likely next pages
+            const links = document.querySelectorAll('a[href]');
+            links.forEach(link => {
+                if (link.href.includes('dashboard') || link.href.includes('goals') || link.href.includes('transactions')) {
+                    const linkPreload = document.createElement('link');
+                    linkPreload.rel = 'prefetch';
+                    linkPreload.href = link.href;
+                    document.head.appendChild(linkPreload);
+                }
+            });
+        });
+
+        // Performance observer
+        if ('PerformanceObserver' in window) {
+            const observer = new PerformanceObserver((list) => {
+                list.getEntries().forEach((entry) => {
+                    if (entry.entryType === 'largest-contentful-paint') {
+                        console.log('LCP:', entry.startTime);
+                    }
+                });
+            });
+            observer.observe({ entryTypes: ['largest-contentful-paint'] });
+        }
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        // Service Worker for caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA Setup Wizard - ExpenseFlow</title>
+    <link rel="stylesheet" href="2fa-setup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="wizard-container">
+            <div class="wizard-header">
+                <h1>Two-Factor Authentication Setup</h1>
+                <p>Secure your ExpenseFlow account with 2FA</p>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="progress-indicator">
+                <div class="step active" data-step="1">
+                    <span class="step-number">1</span>
+                    <span class="step-label">Choose Method</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="step" data-step="2">
+                    <span class="step-number">2</span>
+                    <span class="step-label">Setup</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="step" data-step="3">
+                    <span class="step-number">3</span>
+                    <span class="step-label">Verify</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="step" data-step="4">
+                    <span class="step-number">4</span>
+                    <span class="step-label">Backup Codes</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Choose Method -->
+            <div class="wizard-step active" id="step-1">
+                <h2>Choose Your 2FA Method</h2>
+                <p>Select how you want to secure your account:</p>
+
+                <div class="method-options">
+                    <div class="method-card" data-method="totp">
+                        <div class="method-icon">📱</div>
+                        <h3>Authenticator App (TOTP)</h3>
+                        <p>Use an authenticator app like Google Authenticator or Microsoft Authenticator</p>
+                        <ul class="method-features">
+                            <li>✓ Most secure</li>
+                            <li>✓ Works offline</li>
+                            <li>✓ No SMS costs</li>
+                        </ul>
+                    </div>
+
+                    <div class="method-card" data-method="sms">
+                        <div class="method-icon">💬</div>
+                        <h3>SMS Text Message</h3>
+                        <p>Receive verification codes via SMS</p>
+                        <ul class="method-features">
+                            <li>✓ Easy to use</li>
+                            <li>✓ Doesn't require app</li>
+                            <li>⚠ Internet required</li>
+                        </ul>
+                    </div>
+
+                    <div class="method-card" data-method="email">
+                        <div class="method-icon">✉️</div>
+                        <h3>Email Verification</h3>
+                        <p>Receive verification codes via email</p>
+                        <ul class="method-features">
+                            <li>✓ No phone number needed</li>
+                            <li>✓ Easy recovery</li>
+                            <li>✓ Trusted method</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="proceedToSetup()">Continue</button>
+                <button class="btn btn-secondary" onclick="cancelSetup()">Cancel</button>
+            </div>
+
+            <!-- Step 2: Setup -->
+            <div class="wizard-step" id="step-2">
+                <!-- TOTP Setup -->
+                <div id="step-2-totp" style="display: none;">
+                    <h2>Setup Authenticator App</h2>
+                    <p>Follow these steps to set up your authenticator:</p>
+
+                    <div class="setup-content">
+                        <div class="qr-section">
+                            <h3>Step 1: Scan QR Code</h3>
+                            <p>Scan this QR code with your authenticator app:</p>
+                            <div class="qr-code-container" id="qr-code"></div>
+                            <p class="or-text">OR</p>
+                            <h3>Enter Key Manually</h3>
+                            <div class="manual-entry">
+                                <code id="manual-key"></code>
+                                <button class="btn btn-copy" onclick="copyToClipboard('#manual-key')">Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="instructions">
+                            <h3>Recommended Authenticator Apps:</h3>
+                            <ul>
+                                <li>Google Authenticator</li>
+                                <li>Microsoft Authenticator</li>
+                                <li>Authy</li>
+                                <li>LastPass Authenticator</li>
+                                <li>FreeOTP</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="proceedToVerify()">I've Scanned the QR Code</button>
+                    <button class="btn btn-secondary" onclick="goBackToMethodSelection()">Back</button>
+                </div>
+
+                <!-- Email Setup -->
+                <div id="step-2-email" style="display: none;">
+                    <h2>Setup Email Verification</h2>
+                    <p>Enter an email address where you'll receive verification codes:</p>
+
+                    <div id="email-setup" class="setup-content">
+                        <div class="form-group">
+                            <label for="email-input">Email Address</label>
+                            <input type="email" id="email-input" placeholder="your-email@example.com" required>
+                            <div id="email-error" class="error-message"></div>
+                            <div id="email-loading" class="loading" style="display: none;">
+                                <span></span> Sending verification code...
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="setupEmailMethod()">Send Verification Code</button>
+                        <button class="btn btn-secondary" onclick="goBackToMethodSelection()">Back</button>
+                    </div>
+
+                    <div id="email-verify" style="display: none;">
+                        <h3>Verify Email Address</h3>
+                        <p>Enter the 6-digit code we sent to your email:</p>
+                        
+                        <div class="form-group">
+                            <input type="text" id="email-code" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="off">
+                            <div id="email-verify-error" class="error-message"></div>
+                            <div id="email-verify-loading" class="loading" style="display: none;">
+                                <span></span> Verifying...
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="verifyEmailMethod()">Verify Email</button>
+                        <button class="btn btn-secondary" onclick="setupEmailMethod()">Resend Code</button>
+                    </div>
+                </div>
+
+                <!-- SMS Setup -->
+                <div id="step-2-sms" style="display: none;">
+                    <h2>Setup SMS Verification</h2>
+                    <p>Enter your phone number to receive SMS verification codes:</p>
+
+                    <div id="sms-setup" class="setup-content">
+                        <div class="form-group">
+                            <label for="phone-input">Phone Number</label>
+                            <input type="tel" id="phone-input" placeholder="+1 (555) 000-0000" required>
+                            <p class="hint">Include country code (e.g., +1 for US, +44 for UK)</p>
+                            <div id="sms-error" class="error-message"></div>
+                            <div id="sms-loading" class="loading" style="display: none;">
+                                <span></span> Sending verification code...
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="setupSMSMethod()">Send SMS Code</button>
+                        <button class="btn btn-secondary" onclick="goBackToMethodSelection()">Back</button>
+                    </div>
+
+                    <div id="sms-verify" style="display: none;">
+                        <h3>Verify Phone Number</h3>
+                        <p>Enter the 6-digit code we sent to <span id="sms-phone-display"></span>:</p>
+                        
+                        <div class="form-group">
+                            <input type="text" id="sms-code" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="off">
+                            <div id="sms-verify-error" class="error-message"></div>
+                            <div id="sms-verify-loading" class="loading" style="display: none;">
+                                <span></span> Verifying...
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="verifySMSMethod()">Verify SMS Code</button>
+                        <button class="btn btn-secondary" onclick="setupSMSMethod()">Resend Code</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Verify TOTP -->
+            <div class="wizard-step" id="step-3">
+                <div id="step-3-totp">
+                    <h2>Verify Your Authenticator App</h2>
+                    <p>Enter the 6-digit code from your authenticator app to confirm setup:</p>
+
+                    <div class="verify-section">
+                        <div class="totp-input-group">
+                            <input 
+                                type="text" 
+                                id="totp-code" 
+                                class="totp-input" 
+                                placeholder="000000" 
+                                maxlength="6" 
+                                inputmode="numeric"
+                                autocomplete="off"
+                            >
+                            <button class="btn btn-small" onclick="verifyTOTP()">Verify</button>
+                        </div>
+                        <div id="totp-error" class="error-message"></div>
+                        <div id="totp-loading" class="loading" style="display: none;">
+                            <span></span> Verifying...
+                        </div>
+                    </div>
+
+                    <p class="hint">The code refreshes every 30 seconds. Make sure to enter it before it changes.</p>
+
+                    <button class="btn btn-secondary" onclick="goBackToSetup()">Back</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Backup Codes -->
+            <div class="wizard-step" id="step-4">
+                <h2>Save Your Backup Codes</h2>
+                <p><strong>Important:</strong> Save these backup codes in a secure location. You can use them to access your account if you lose access to your 2FA device.</p>
+
+                <div class="backup-codes-section">
+                    <div class="backup-codes-box" id="backup-codes-box">
+                        <!-- Codes will be inserted here -->
+                    </div>
+
+                    <div class="backup-actions">
+                        <button class="btn btn-secondary" onclick="downloadBackupCodes()">📥 Download Codes</button>
+                        <button class="btn btn-secondary" onclick="printBackupCodes()">🖨️ Print Codes</button>
+                        <button class="btn btn-secondary" onclick="copyBackupCodes()">📋 Copy All</button>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <p>⚠️ <strong>Warning:</strong> If you lose your device and backup codes, you will be locked out of your account. Store them safely!</p>
+                </div>
+
+                <div class="agreement">
+                    <label>
+                        <input type="checkbox" id="understood-backup" required>
+                        <span>I have saved my backup codes in a secure location</span>
+                    </label>
+                </div>
+
+                <button class="btn btn-primary" onclick="completeTwoFASetup()" id="complete-btn" disabled>
+                    Complete Setup
+                </button>
+            </div>
+
+            <!-- Success Message -->
+            <div class="wizard-step" id="step-success" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h2>2FA Setup Complete!</h2>
+                <p>Your account is now protected with two-factor authentication.</p>
+
+                <div class="success-details">
+                    <p>The next time you log in, you'll be asked for your 2FA code.</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="redirectToDashboard()">Go to Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="2fa-setup.js"></script>
+</body>
+</html>

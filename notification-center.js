@@ -2,7 +2,7 @@
 class NotificationCenter {
   constructor() {
     this.apiUrl = 'http://localhost:3000/api';
-    this.authToken = localStorage.getItem('authToken');
+    this.authToken = localStorage.getItem('token');
     this.notifications = [];
     this.unreadCount = 0;
     this.socket = null;

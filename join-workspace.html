@@ -1,74 +1,600 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Join Workspace - ExpenseFlow</title>
     <link rel="stylesheet" href="expensetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-color: #4CAF50;
+            --error-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --error-color: #ff4757;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-tertiary: rgba(255, 255, 255, 0.5);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 32px;
+            --spacing-xl: 48px;
+            --border-radius: 16px;
+            --border-radius-lg: 24px;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-sm);
+            line-height: 1.6;
+        }
+
         .join-container {
+            width: 100%;
+            max-width: 480px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .join-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl) var(--spacing-lg);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .join-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .logo h1 {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-xs);
+            line-height: 1.2;
+        }
+
+        .logo p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .content-section {
+            text-align: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .join-spinner {
+            font-size: 3.5rem;
+            margin: var(--spacing-lg) 0;
+            animation: spin 1.5s linear infinite, pulse 2s ease-in-out infinite;
+        }
+
+        .join-status {
+            margin-top: var(--spacing-md);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 1.1rem;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .workspace-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+            border-left: 4px solid transparent;
+            border-image: var(--primary-gradient) 1;
+            text-align: left;
+        }
+
+        .workspace-info h4 {
+            margin-bottom: var(--spacing-xs);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .workspace-info p {
+            color: var(--text-secondary);
+            margin: var(--spacing-xs) 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .invited-by {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-sm);
+            padding-top: var(--spacing-sm);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .inviter-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .inviter-details {
+            min-width: 0;
+        }
+
+        .inviter-details small {
+            display: block;
+            color: var(--text-tertiary);
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+        }
+
+        .inviter-details p {
+            margin: 0;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-xs);
+            margin-top: var(--spacing-md);
+        }
+
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        .permissions-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-md);
+            text-align: left;
+        }
+
+        .permissions-list h5 {
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .permissions-list ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        .permissions-list li {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            padding-left: 24px;
+            position: relative;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .permissions-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .permissions-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .error-state {
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            color: var(--error-color);
+            margin-bottom: var(--spacing-md);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success-color);
+            margin-bottom: var(--spacing-md);
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin: var(--spacing-md) 0 var(--spacing-sm);
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+            font-size: 1rem;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(20, 30, 48, 0.9);
+            backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            text-align: center;
-            padding: 20px;
+            z-index: 10;
+            border-radius: var(--border-radius-lg);
         }
 
-        .join-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 400px;
-            width: 100%;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .join-spinner {
-            font-size: 3rem;
-            color: var(--accent-primary);
-            margin-bottom: 20px;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .join-status {
-            margin-top: 20px;
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-        
-        button:focus,
-        input:focus,
-        a:focus {
-          outline: 3px solid #005fcc;
-          outline-offset: 2px;
-       }}
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .join-card {
+                padding: var(--spacing-lg) var(--spacing-md);
+            }
+            
+            .logo h1 {
+                font-size: 2rem;
+            }
+            
+            .join-spinner {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.3rem;
+            }
+            
+            .workspace-info {
+                padding: var(--spacing-sm);
+            }
+            
+            .btn-primary,
+            .btn-secondary {
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .join-card {
+                padding: var(--spacing-md) var(--spacing-sm);
+            }
+            
+            .logo h1 {
+                font-size: 1.8rem;
+            }
+            
+            .permissions-list {
+                padding: var(--spacing-sm);
+            }
+            
+            .permissions-list li {
+                font-size: 0.9rem;
+                padding-left: 20px;
+            }
+        }
     </style>
 </head>
 
 <body class="dark-mode">
     <div class="join-container">
         <div class="join-card">
-            <div id="join-loading">
-                <i class="fas fa-spinner fa-spin join-spinner"></i>
-                <h3>Joining Workspace...</h3>
-                <p class="join-status">Please wait while we process your invitation.</p>
+            <div class="logo">
+                <h1>ExpenseFlow</h1>
+                <p>Smart Expense Management</p>
             </div>
-            <div id="join-error" style="display: none;">
-                <i class="fas fa-exclamation-circle join-spinner" style="color: var(--error);"></i>
-                <h3 id="error-title">Invitation Error</h3>
-                <p id="error-message" class="join-status"></p>
-                <button onclick="window.location.href='index.html'" class="btn-submit" style="margin-top: 20px;">
-                    Go to Dashboard
+
+            <!-- Loading State -->
+            <div id="join-loading">
+                <div class="loading-overlay">
+                    <i class="fas fa-spinner join-spinner" style="color: #667eea;"></i>
+                    <h3 class="section-title">Joining Workspace</h3>
+                    <p class="section-subtitle">Processing your invitation...</p>
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div id="join-success" class="content-section" style="display: none;">
+                <i class="fas fa-check-circle success-icon"></i>
+                <h3 class="section-title">Welcome to the Team!</h3>
+                <p class="join-status">You've successfully joined the workspace.</p>
+                
+                <div class="workspace-info">
+                    <h4 id="workspace-name">Finance Team</h4>
+                    <p id="workspace-desc">Team expense management and budget tracking</p>
+                    <div class="invited-by">
+                        <div class="inviter-avatar" id="inviter-avatar">J</div>
+                        <div class="inviter-details">
+                            <small>Invited by</small>
+                            <p id="inviter-name">John Doe</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="permissions-list">
+                    <h5>You can now:</h5>
+                    <ul>
+                        <li>View shared expenses and transactions</li>
+                        <li>Submit new expense reports</li>
+                        <li>Track team budgets and limits</li>
+                        <li>Generate detailed financial reports</li>
+                        <li>Collaborate with team members</li>
+                    </ul>
+                </div>
+
+                <button onclick="redirectToDashboard()" class="btn-primary">
+                    <i class="fas fa-rocket"></i> Go to Dashboard
                 </button>
+                
+                <button onclick="showTutorial()" class="btn-secondary">
+                    <i class="fas fa-play-circle"></i> View Quick Tutorial
+                </button>
+            </div>
+
+            <!-- Error State -->
+            <div id="join-error" class="content-section" style="display: none;">
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle error-icon"></i>
+                    <h3 id="error-title" class="section-title">Invitation Error</h3>
+                    <p id="error-message" class="join-status">The invitation link is invalid or has expired.</p>
+                    
+                    <button onclick="window.location.href='index.html'" class="btn-primary">
+                        <i class="fas fa-home"></i> Back to Home
+                    </button>
+                    <button onclick="window.location.href='mailto:support@expenseflow.com?subject=Invitation%20Issue'" class="btn-secondary">
+                        <i class="fas fa-question-circle"></i> Contact Support
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="api-integration.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="workspace-feature.js"></script>
-</body>
+    <script>
+        function redirectToDashboard() {
+            showToast('Redirecting to dashboard...', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        }
 
+        function showTutorial() {
+            showToast('Opening tutorial...', 'info');
+            // In a real app, this would open a tutorial modal or page
+            window.open('tutorial.html', '_blank');
+        }
+
+        function showToast(message, type) {
+            Toastify({
+                text: message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: type === 'success' ? '#4CAF50' : 
+                               type === 'info' ? '#2196F3' : '#ff4757',
+                stopOnFocus: true
+            }).showToast();
+        }
+
+        function joinWorkspace(token) {
+            // Simulate API call
+            const success = Math.random() > 0.3; // 70% success rate for demo
+            
+            setTimeout(() => {
+                document.getElementById('join-loading').style.display = 'none';
+                
+                if (success) {
+                    // Success case
+                    const workspaceData = {
+                        name: "Finance Team",
+                        description: "Team expense management and budget tracking",
+                        inviter: {
+                            name: "John Doe",
+                            avatar: "J"
+                        }
+                    };
+                    
+                    document.getElementById('workspace-name').textContent = workspaceData.name;
+                    document.getElementById('workspace-desc').textContent = workspaceData.description;
+                    document.getElementById('inviter-name').textContent = workspaceData.inviter.name;
+                    document.getElementById('inviter-avatar').textContent = workspaceData.inviter.avatar;
+                    
+                    document.getElementById('join-success').style.display = 'block';
+                    showToast('Successfully joined workspace!', 'success');
+                } else {
+                    // Error case
+                    showErrorState(
+                        'Invitation Failed',
+                        'The invitation link has expired or you do not have permission to join this workspace.'
+                    );
+                }
+            }, 2000);
+        }
+
+        function showErrorState(title, message) {
+            document.getElementById('join-loading').style.display = 'none';
+            document.getElementById('error-title').textContent = title;
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('join-error').style.display = 'block';
+        }
+
+        // Handle invitation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteToken = urlParams.get('token');
+            
+            if (!inviteToken) {
+                showErrorState(
+                    'No invitation token found', 
+                    'Please use a valid invitation link provided by your team administrator.'
+                );
+                return;
+            }
+
+            // Start the joining process
+            joinWorkspace(inviteToken);
+        });
+    </script>
+</body>
 </html>

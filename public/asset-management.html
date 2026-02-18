@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Asset Management - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <div class="logo">
+                <i class="fas fa-building-columns"></i>
+                <span>AssetFlow</span>
+            </div>
+            <div class="nav-links">
+                <a href="dashboard-clean.html"><i class="fas fa-home"></i> Home</a>
+                <a href="#" class="active"><i class="fas fa-boxes-stacked"></i> Inventory</a>
+                <a href="#"><i class="fas fa-chart-pie"></i> Tax Impact</a>
+            </div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <header class="page-header">
+            <div class="header-text">
+                <h1>Fixed Asset Management</h1>
+                <p>Automated lifecycle tracking and depreciation engine.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="runDepreciationCycle()">
+                    <i class="fas fa-play"></i> Run Monthly Dep
+                </button>
+                <button class="btn-primary" onclick="openAssetModal()">
+                    <i class="fas fa-plus"></i> Register Asset
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Section -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><i class="fas fa-tags"></i></div>
+                <div class="stat-info">
+                    <span class="label">Total Assets</span>
+                    <h2 id="total-asset-count">-</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><i class="fas fa-money-bill-trend-up"></i></div>
+                <div class="stat-info">
+                    <span class="label">Net Book Value</span>
+                    <h2 id="total-book-value">-</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-info">
+                    <span class="label">Acc. Depreciation</span>
+                    <h2 id="total-accumulated-dep">-</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Asset Category Chart -->
+            <div class="grid-item glass-card col-span-1">
+                <div class="card-header">
+                    <h3>Value by Category</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Assets Table -->
+            <div class="grid-item glass-card col-span-2">
+                <div class="card-header">
+                    <h3>Asset Register</h3>
+                    <div class="card-actions">
+                        <select id="status-filter" onchange="loadAssets()">
+                            <option value="Active">Active</option>
+                            <option value="Disposed">Disposed</option>
+                            <option value="All">All Status</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Asset Details</th>
+                                <th>Category</th>
+                                <th>Purchase Price</th>
+                                <th>Remaining Life</th>
+                                <th>Current BV</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assets-table-body">
+                            <!-- JS populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Section (Hidden by default) -->
+        <div id="asset-detail-container" class="mt-20 hidden">
+            <div class="glass-card p-20">
+                <div class="detail-header">
+                    <h2 id="detail-asset-name">Asset Name</h2>
+                    <button class="btn-icon" onclick="closeDetails()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="detail-grid-3">
+                    <div class="projection-chart">
+                        <h3>5-Year Projection</h3>
+                        <canvas id="projectionChart"></canvas>
+                    </div>
+                    <div class="schedule-table">
+                        <h3>Depreciation History</h3>
+                        <div class="scroll-table">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Period</th>
+                                        <th>Method</th>
+                                        <th>Charge</th>
+                                        <th>Closing BV</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="asset-actions-card">
+                        <h3>Compliance & Disposal</h3>
+                        <button class="btn-secondary full-width mb-10" onclick="generateTaxReport()">Generate Tax
+                            Form</button>
+                        <button class="btn-primary full-width" onclick="openDisposalModal()">Dispose Asset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="asset-modal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close" onclick="closeAssetModal()">&times;</span>
+            <h2>Register Capital Asset</h2>
+            <form id="asset-form">
+                <div class="form-row">
+                    <input type="text" id="a-name" placeholder="Asset Name" required>
+                    <input type="text" id="a-code" placeholder="Asset Code (e.g. IT-2024-001)" required>
+                </div>
+                <div class="form-row">
+                    <select id="a-cat" required>
+                        <option value="IT Equipment">IT Equipment</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Machinery">Machinery</option>
+                        <option value="Buildings">Buildings</option>
+                        <option value="Vehicles">Vehicles</option>
+                    </select>
+                    <input type="date" id="a-date" required>
+                </div>
+                <div class="form-row">
+                    <input type="number" id="a-price" placeholder="Purchase Price" required>
+                    <input type="number" id="a-salvage" placeholder="Salvage Value">
+                </div>
+                <div class="form-row">
+                    <input type="number" id="a-life" placeholder="Useful Life (Years)" required>
+                    <select id="a-method">
+                        <option value="Straight Line">Straight Line</option>
+                        <option value="Written Down Value">Written Down Value</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary full-width">Register & Track</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/asset-controller.js"></script>
+</body>
+
+</html>

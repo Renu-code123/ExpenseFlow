@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Approvals - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Expense Approvals</div>
+            <div class="nav-user" id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span id="pending-count">0</span>
+                        <label>Pending Approvals</label>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon approved"><i class="fas fa-check"></i></div>
+                    <div class="stat-info">
+                        <span id="approved-count">0</span>
+                        <label>Approved Today</label>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon rejected"><i class="fas fa-times"></i></div>
+                    <div class="stat-info">
+                        <span id="rejected-count">0</span>
+                        <label>Rejected Today</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval List -->
+            <section class="approvals-section glass-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-tasks"></i> Pending Review</h2>
+                    <div class="header-actions">
+                        <button class="btn-sm" onclick="bulkApprove()"><i class="fas fa-check-double"></i> Bulk
+                            Approve</button>
+                    </div>
+                </div>
+                <div id="approvals-list" class="approvals-list">
+                    <div class="loading-placeholder">Loading assignments...</div>
+                </div>
+            </section>
+
+            <!-- Submission History -->
+            <section class="history-section glass-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> My Submissions</h2>
+                </div>
+                <div id="submissions-list" class="history-list">
+                    <div class="loading-placeholder">Loading your submissions...</div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Review Expense</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div id="modal-details"></div>
+            <div class="form-group">
+                <label>Approver Comments (Mandatory for rejection)</label>
+                <textarea id="approver-comment" placeholder="Add feedback or reason for rejection..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-reject" onclick="processApproval('reject')">Reject</button>
+                <button class="btn-approve" onclick="processApproval('approve')">Approve Expense</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/approval-controller.js"></script>
+</body>
+
+</html>
