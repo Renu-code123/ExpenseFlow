@@ -1,305 +1,396 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login / Signup – All in One</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login / Signup – ExpenseFlow</title>
 
-  <style>
-    /* ===== Base ===== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
-    }
+<style>
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0f0f23;
-      overflow-x: hidden;
-      color: #fff;
-    }
+/* ===== Base ===== */
 
-    /* ===== Container ===== */
-    .container {
-      background: #1a1a2e;
-      padding: 2rem;
-      width: 360px;
-      border-radius: 12px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-      z-index: 2;
-    }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-    h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f0f23;
+  overflow-x: hidden;
+  color: #fff;
+}
 
-    .input-box {
-      margin-bottom: 1rem;
-    }
 
-    .input-box input {
-      width: 100%;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 6px;
-      background: #2a2a4a;
-      color: #fff;
-      outline: none;
-    }
+/* ===== Container ===== */
 
-    .btn {
-      width: 100%;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 6px;
-      background: #6a5acd;
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+.container {
+  background: #1a1a2e;
+  padding: 2.5rem;
+  width: 420px;
+  border-radius: 14px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+  z-index: 2;
+}
 
-    .btn:hover {
-      background: #5848c2;
-    }
+h2 {
+  text-align: center;
+  margin-bottom: 1.8rem;
+  font-size: 1.8rem;
+}
 
-    .toggle {
-      margin-top: 1rem;
-      text-align: center;
-      font-size: 0.9rem;
-      color: #aaa;
-      cursor: pointer;
-    }
 
-    .toggle span {
-      color: #6a5acd;
-      font-weight: bold;
-    }
+/* ===== Inputs ===== */
 
-    /* ===== Cursor Trail ===== */
-    .cursor-trail-container {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 999999;
-    }
+.input-box {
+  margin-bottom: 1.2rem;
+}
 
-    .trail-dot {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-      box-shadow: 
-        0 0 15px rgba(100, 255, 218, 0.8),
-        0 0 30px rgba(100, 255, 218, 0.4);
-      transform: translate(-50%, -50%);
-      will-change: transform, opacity;
-      mix-blend-mode: screen;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
+.input-box input {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 7px;
+  background: #2a2a4a;
+  color: #fff;
+  outline: none;
+  font-size: 15px;
+}
 
-    .trail-dot:first-child {
-      width: 12px;
-      height: 12px;
-      background: linear-gradient(135deg, #64ffda 0%, #00b4d8 100%);
-      box-shadow: 
-        0 0 20px rgba(100, 255, 218, 0.9),
-        0 0 40px rgba(100, 255, 218, 0.6);
-      z-index: 2;
-    }
+.input-box input:focus {
+  border: 1px solid #6a5acd;
+}
 
-    .cursor-clicking {
-      transform: translate(-50%, -50%) scale(1.5);
-      background: linear-gradient(135deg, #ff6b9d 0%, #ffcc00 100%) !important;
-      box-shadow: 
-        0 0 25px rgba(255, 107, 157, 0.9),
-        0 0 50px rgba(255, 107, 157, 0.6) !important;
-    }
 
-    .cursor-hovering {
-      transform: translate(-50%, -50%) scale(1.3);
-      background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
-    }
+/* ===== Checkbox ===== */
 
-    /* ===== Responsive ===== */
-    @media (max-width: 768px) {
-      .container {
-        width: 100%;
-        margin: 1rem;
-        padding: 1.5rem;
-      }
+.checkbox-box {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 1rem;
+  color: #ccc;
+}
 
-      h2 {
-        font-size: 1.5rem;
-      }
-    }
-  </style>
+.checkbox-box input {
+  accent-color: #6a5acd;
+  cursor: pointer;
+}
+
+.checkbox-box a {
+  color: #6a5acd;
+  text-decoration: none;
+}
+
+
+/* ===== Button ===== */
+
+.btn {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 7px;
+  background: #6a5acd;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #5848c2;
+}
+
+.btn:disabled {
+  background: #444;
+  cursor: not-allowed;
+}
+
+
+/* ===== Toggle ===== */
+
+.toggle {
+  margin-top: 1.2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.toggle span {
+  color: #6a5acd;
+  font-weight: bold;
+}
+
+
+/* ===== Error ===== */
+
+.error {
+  color: #ff6b6b;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 10px;
+  display: none;
+}
+
+
+/* ===== Cursor Trail ===== */
+
+.cursor-trail-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999999;
+}
+
+.trail-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #64ffda, #00b4d8);
+  box-shadow: 0 0 15px rgba(100,255,218,0.8);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+}
+
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+
+  .container {
+    width: 100%;
+    margin: 1rem;
+    padding: 2rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+}
+
+</style>
 </head>
+
+
 <body>
 
-  <!-- Login / Signup Card -->
-  <div class="container">
-    <h2 id="title">Login</h2>
 
-    <div class="input-box" id="nameField" style="display:none;">
-      <input type="text" placeholder="Full Name" />
-    </div>
+<!-- Login / Signup Card -->
 
-    <div class="input-box">
-      <input type="email" placeholder="Email" />
-    </div>
+<div class="container">
 
-    <div class="input-box">
-      <input type="password" placeholder="Password" />
-    </div>
+  <h2 id="title">Login</h2>
 
-    <button class="btn" id="actionBtn">Login</button>
+  <div class="error" id="errorMsg"></div>
 
-    <div class="toggle" onclick="toggleForm()">
-      Don't have an account? <span id="toggleText">Sign Up</span>
-    </div>
+  <div class="input-box" id="nameField" style="display:none;">
+    <input type="text" id="name" placeholder="Full Name" />
   </div>
 
-  <!-- Cursor Trail Container -->
-  <div class="cursor-trail-container" id="trailContainer"></div>
+  <div class="input-box">
+    <input type="email" id="email" placeholder="Email" />
+  </div>
 
-  <!-- ===== JavaScript ===== -->
-  <script>
-    /* Login / Signup Toggle */
-    let isSignup = false;
+  <div class="input-box">
+    <input type="password" id="password" placeholder="Password" />
+  </div>
 
-    function toggleForm() {
-      const title = document.getElementById('title');
-      const nameField = document.getElementById('nameField');
-      const actionBtn = document.getElementById('actionBtn');
-      const toggleText = document.getElementById('toggleText');
 
-      isSignup = !isSignup;
+  <!-- Terms Checkbox -->
 
-      if (isSignup) {
-        title.innerText = 'Sign Up';
-        nameField.style.display = 'block';
-        actionBtn.innerText = 'Create Account';
-        toggleText.innerText = 'Login';
-      } else {
-        title.innerText = 'Login';
-        nameField.style.display = 'none';
-        actionBtn.innerText = 'Login';
-        toggleText.innerText = 'Sign Up';
-      }
+  <div class="checkbox-box" id="termsBox">
+
+    <input type="checkbox" id="termsCheck" />
+
+    <label for="termsCheck">
+      I agree to the 
+      <a href="public/signup-terms.html" target="_blank">Terms & Conditions</a>
+    </label>
+
+  </div>
+
+
+  <button class="btn" id="actionBtn">Login</button>
+
+
+  <div class="toggle" onclick="toggleForm()">
+    Don't have an account? <span id="toggleText">Sign Up</span>
+  </div>
+
+</div>
+
+
+<!-- Cursor Trail -->
+
+<div class="cursor-trail-container" id="trailContainer"></div>
+
+
+<!-- ===== JavaScript ===== -->
+
+<script>
+
+/* Toggle Form */
+
+let isSignup = false;
+
+function toggleForm() {
+
+  const title = document.getElementById("title");
+  const nameField = document.getElementById("nameField");
+  const actionBtn = document.getElementById("actionBtn");
+  const toggleText = document.getElementById("toggleText");
+  const termsBox = document.getElementById("termsBox");
+  const termsCheck = document.getElementById("termsCheck");
+  const error = document.getElementById("errorMsg");
+
+  error.style.display = "none";
+
+  isSignup = !isSignup;
+
+  if (isSignup) {
+
+    title.innerText = "Sign Up";
+    nameField.style.display = "block";
+    actionBtn.innerText = "Create Account";
+    toggleText.innerText = "Login";
+
+    termsBox.style.display = "flex";
+    actionBtn.disabled = true;
+    termsCheck.checked = false;
+
+  } else {
+
+    title.innerText = "Login";
+    nameField.style.display = "none";
+    actionBtn.innerText = "Login";
+    toggleText.innerText = "Sign Up";
+
+    termsBox.style.display = "none";
+    actionBtn.disabled = false;
+  }
+}
+
+
+/* Enable Button When Checked */
+
+document.getElementById("termsCheck").addEventListener("change", function () {
+
+  document.getElementById("actionBtn").disabled = !this.checked;
+
+});
+
+
+/* Submit */
+
+document.getElementById("actionBtn").addEventListener("click", function () {
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const error = document.getElementById("errorMsg");
+
+
+  error.style.display = "none";
+
+
+  if (isSignup) {
+
+    if (!name || !email || !password) {
+
+      error.innerText = "Please fill all fields!";
+      error.style.display = "block";
+      return;
     }
 
-    /* Smooth Cursor Trail */
-    const trailContainer = document.getElementById('trailContainer');
-    const trailDots = [];
-    const trailLength = 8;
+    if (!document.getElementById("termsCheck").checked) {
 
-    // Create trail dots
-    for (let i = 0; i < trailLength; i++) {
-      const dot = document.createElement('div');
-      dot.classList.add('trail-dot');
-      trailContainer.appendChild(dot);
-      trailDots.push({
-        element: dot,
-        x: 0,
-        y: 0,
-        scale: 1 - (i * 0.1),
-        opacity: 1 - (i * 0.12)
-      });
+      error.innerText = "Please accept Terms & Conditions!";
+      error.style.display = "block";
+      return;
     }
 
-    let mouseX = 0, mouseY = 0;
-    let trailX = 0, trailY = 0;
+    alert("Signup Successful!\nWelcome " + name);
 
-    document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    });
+  } else {
 
-    // Hover effects
-    const btn = document.getElementById('actionBtn');
-    const inputs = document.querySelectorAll('input');
-    
-    btn.addEventListener('mouseenter', () => {
-      trailDots[0].element.classList.add('cursor-hovering');
-    });
-    
-    btn.addEventListener('mouseleave', () => {
-      trailDots[0].element.classList.remove('cursor-hovering');
-    });
-    
-    inputs.forEach(input => {
-      input.addEventListener('mouseenter', () => {
-        trailDots[0].element.classList.add('cursor-hovering');
-      });
-      
-      input.addEventListener('mouseleave', () => {
-        trailDots[0].element.classList.remove('cursor-hovering');
-      });
-    });
+    if (!email || !password) {
 
-    // Click effect
-    document.addEventListener('mousedown', () => {
-      trailDots[0].element.classList.add('cursor-clicking');
-    });
-    
-    document.addEventListener('mouseup', () => {
-      trailDots[0].element.classList.remove('cursor-clicking');
-    });
-
-    // Animation loop
-    function animateTrail() {
-      trailX += (mouseX - trailX) * 0.2;
-      trailY += (mouseY - trailY) * 0.2;
-
-      trailDots.forEach((dot, index) => {
-        const delay = index * 3;
-        const dotX = trailX - delay;
-        const dotY = trailY - delay;
-        
-        dot.x += (dotX - dot.x) * 0.3;
-        dot.y += (dotY - dot.y) * 0.3;
-        
-        dot.element.style.left = dot.x + 'px';
-        dot.element.style.top = dot.y + 'px';
-        dot.element.style.opacity = dot.opacity;
-        dot.element.style.transform = `translate(-50%, -50%) scale(${dot.scale})`;
-      });
-
-      requestAnimationFrame(animateTrail);
+      error.innerText = "Please enter Email and Password!";
+      error.style.display = "block";
+      return;
     }
 
-    // Start animation
-    animateTrail();
+    alert("Login Successful!\nWelcome back!");
 
-    // Form submission (basic example)
-    document.getElementById('actionBtn').addEventListener('click', function() {
-      const email = document.querySelector('input[type="email"]').value;
-      const password = document.querySelector('input[type="password"]').value;
-      
-      if (isSignup) {
-        const name = document.querySelector('input[type="text"]').value;
-        if (!name || !email || !password) {
-          alert('Please fill all fields!');
-          return;
-        }
-        alert('Signup successful!\nName: ' + name + '\nEmail: ' + email);
-      } else {
-        if (!email || !password) {
-          alert('Please fill all fields!');
-          return;
-        }
-        alert('Login successful!\nEmail: ' + email);
-      }
-    });
-  </script>
+  }
+
+});
+
+
+/* Cursor Trail */
+
+const trailContainer = document.getElementById("trailContainer");
+const dots = [];
+const trailLength = 8;
+
+for (let i = 0; i < trailLength; i++) {
+
+  const dot = document.createElement("div");
+  dot.classList.add("trail-dot");
+  trailContainer.appendChild(dot);
+
+  dots.push({
+    el: dot,
+    x: 0,
+    y: 0,
+    opacity: 1 - i * 0.1
+  });
+}
+
+let mouseX = 0, mouseY = 0;
+
+document.addEventListener("mousemove", e => {
+
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+
+});
+
+
+function animate() {
+
+  let x = mouseX;
+  let y = mouseY;
+
+  dots.forEach((dot, i) => {
+
+    dot.x += (x - dot.x) * 0.3;
+    dot.y += (y - dot.y) * 0.3;
+
+    dot.el.style.left = dot.x + "px";
+    dot.el.style.top = dot.y + "px";
+    dot.el.style.opacity = dot.opacity;
+
+    x = dot.x;
+    y = dot.y;
+
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+</script>
 
 </body>
 </html>
