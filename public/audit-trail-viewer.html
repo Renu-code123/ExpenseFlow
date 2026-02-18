@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Trail Viewer - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Audit Trail & Compliance</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="audit-header">
+            <div class="header-main">
+                <h1>Forensic Audit Trail</h1>
+                <p>Immutable audit logs with cryptographic integrity verification</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="verifyIntegrity()">
+                    <i class="fas fa-shield-alt"></i> Verify Integrity
+                </button>
+                <button class="btn-primary" onclick="openComplianceModal()">
+                    <i class="fas fa-file-export"></i> Generate Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(100, 255, 218, 0.15);">
+                    <i class="fas fa-list" style="color: #64ffda;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Total Logs (24h)</label>
+                    <h2 id="total-logs-24h">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 107, 107, 0.15);">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Critical Events</label>
+                    <h2 id="critical-events">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(72, 219, 251, 0.15);">
+                    <i class="fas fa-calendar-week" style="color: #48dbfb;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Total Logs (7d)</label>
+                    <h2 id="total-logs-7d">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 159, 67, 0.15);">
+                    <i class="fas fa-check-circle" style="color: #ff9f43;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Integrity Status</label>
+                    <h2 id="integrity-status">Verified</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <section class="glass-card section-card">
+            <div class="card-header">
+                <h3><i class="fas fa-filter"></i> Filters</h3>
+                <button class="btn-sm btn-secondary" onclick="resetFilters()">Reset</button>
+            </div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="search-input" placeholder="Search logs..." onkeyup="handleSearch()">
+                </div>
+                <div class="filter-group">
+                    <label>Action</label>
+                    <select id="action-filter" multiple onchange="applyFilters()">
+                        <option value="create">Create</option>
+                        <option value="read">Read</option>
+                        <option value="update">Update</option>
+                        <option value="delete">Delete</option>
+                        <option value="login">Login</option>
+                        <option value="logout">Logout</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Severity</label>
+                    <select id="severity-filter" multiple onchange="applyFilters()">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select id="category-filter" multiple onchange="applyFilters()">
+                        <option value="security">Security</option>
+                        <option value="data">Data</option>
+                        <option value="system">System</option>
+                        <option value="compliance">Compliance</option>
+                        <option value="user_action">User Action</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Start Date</label>
+                    <input type="date" id="start-date" onchange="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>End Date</label>
+                    <input type="date" id="end-date" onchange="applyFilters()">
+                </div>
+            </div>
+        </section>
+
+        <!-- Audit Logs Table -->
+        <section class="glass-card section-card mt-20">
+            <div class="card-header">
+                <h3><i class="fas fa-table"></i> Audit Logs</h3>
+                <div class="pagination-controls">
+                    <button class="btn-sm" onclick="previousPage()"><i class="fas fa-chevron-left"></i></button>
+                    <span id="page-info">Page 1 of 1</span>
+                    <button class="btn-sm" onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Entity</th>
+                            <th>Severity</th>
+                            <th>Category</th>
+                            <th>IP Address</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-logs-tbody">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Analytics Row -->
+        <div class="analytics-row mt-20">
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-bar"></i> Activity by Action</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="actionChart"></canvas>
+                </div>
+            </section>
+
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-pie"></i> Severity Distribution</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Critical Events -->
+        <section class="glass-card section-card mt-20">
+            <div class="card-header">
+                <h3><i class="fas fa-exclamation-circle"></i> Recent Critical Events</h3>
+            </div>
+            <div id="critical-events-list" class="critical-events-list">
+                <!-- Loaded via JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Compliance Report Modal -->
+    <div id="compliance-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Generate Compliance Report</h3>
+                <span class="close-modal" onclick="closeComplianceModal()">&times;</span>
+            </div>
+            <form id="compliance-form">
+                <div class="form-group">
+                    <label>Report Type</label>
+                    <select id="report-type" required>
+                        <option value="CUSTOM">Custom Report</option>
+                        <option value="SOX">SOX (Sarbanes-Oxley)</option>
+                        <option value="GDPR">GDPR</option>
+                        <option value="HIPAA">HIPAA</option>
+                        <option value="PCI_DSS">PCI-DSS</option>
+                        <option value="ISO_27001">ISO 27001</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="report-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="date" id="report-end-date" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Export Formats</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="format" value="JSON" checked> JSON</label>
+                        <label><input type="checkbox" name="format" value="CSV"> CSV</label>
+                        <label><input type="checkbox" name="format" value="EXCEL"> Excel</label>
+                        <label><input type="checkbox" name="format" value="PDF"> PDF</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Generate Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Log Details Modal -->
+    <div id="log-details-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Audit Log Details</h3>
+                <span class="close-modal" onclick="closeLogDetailsModal()">&times;</span>
+            </div>
+            <div id="log-details-content" class="log-details-content">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/audit-controller.js"></script>
+</body>
+
+</html>

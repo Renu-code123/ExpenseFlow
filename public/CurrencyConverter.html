@@ -9,361 +9,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<style>
-
-/* =========================
-   DROPDOWN FIX: Always Black Background & White Text
-========================= */
-.converter-grid select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: #000 !important; /* Always black */
-  color: #fff !important; /* White text */
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-glass);
-  font-weight: 500;
-  font-size: 1rem;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff'/%3E%3C/svg%3E"); /* White arrow */
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 12px 8px;
-}
-
-/* Ensure options also stay black/white */
-.converter-grid select option {
-  background-color: #000 !important;
-  color: #fff !important;
-}
-
-/* Focus style */
-.converter-grid select:focus {
-  outline: none;
-  border-color: #FFD700; /* Golden border on focus */
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.25);
-}
+<link rel="stylesheet" href="currencyConverter.css">
 
 
-/* Focus effect */
-.converter-grid select:focus {
-  outline: none;
-  border-color: #64ffda; /* Accent color on focus */
-  box-shadow: 0 0 0 3px rgba(100,255,218,0.25);
-}
-
-
-/* Focus style */
-.converter-grid select:focus {
-  outline: none;
-  border-color: #FFD700;
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.25);
-}
-
-/* =========================
-   THEME VARIABLES
-========================= */
-:root {
-  --primary-gradient: linear-gradient(135deg, #667eea, #764ba2);
-  --bg-primary: #0f0f23;
-  --card-bg: rgba(255,255,255,0.06);
-  --text-primary: #ffffff;
-  --text-secondary: #b4b4b4;
-  --accent-primary: #64ffda;
-  --border-glass: rgba(255,255,255,0.12);
-  --shadow-glass: 0 12px 40px rgba(31,38,135,0.45);
-}
-
-body.light {
-  --bg-primary: #f5f7fb;
-  --card-bg: #ffffff;
-  --text-primary: #1a1a1a;
-  --text-secondary: #555;
-  --border-glass: #e2e2e2;
-  --shadow-glass: 0 8px 22px rgba(0,0,0,0.1);
-}
-
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:Inter,sans-serif;
-  background:var(--bg-primary);
-  color:var(--text-primary);
-  min-height:100vh;
-  animation: pageFade 0.7s ease;
-}
-
-/* =========================
-   NAVBAR
-========================= */
-.header{
-  position:fixed;
-  top:0;
-  width:100%;
-  z-index:1000;
-  background:var(--card-bg);
-  backdrop-filter:blur(24px);
-  border-bottom:1px solid var(--border-glass);
-}
-
-.nav-container{
-  max-width:1200px;
-  margin:auto;
-  padding:1.1rem 2rem;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.nav-logo{
-  display:flex;
-  gap:.6rem;
-  align-items:center;
-  font-weight:700;
-}
-
-.nav-menu{
-  display:flex;
-  gap:1.6rem;
-  align-items:center;
-}
-
-.nav-link{
-  color:var(--text-secondary);
-  text-decoration:none;
-  font-weight:500;
-  position:relative;
-}
-
-.nav-link::after{
-  content:"";
-  position:absolute;
-  bottom:-4px;
-  left:0;
-  width:0;
-  height:2px;
-  background:var(--accent-primary);
-  transition:.3s;
-}
-
-.nav-link:hover::after,
-.nav-link.active::after{width:100%}
-.nav-link:hover,
-.nav-link.active{color:var(--accent-primary)}
-
-.theme-toggle{
-  cursor:pointer;
-  font-size:1.25rem;
-}
-
-/* =========================
-   MAIN
-========================= */
-.main-content{padding-top:95px}
-
-.hero-section{
-  text-align:center;
-  padding:3.5rem 2rem;
-  animation: floatHero 6s ease-in-out infinite;
-}
-
-.hero-title{
-  font-size:3rem;
-  background:var(--primary-gradient);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-.hero-subtitle{
-  color:var(--text-secondary);
-  margin-top:.6rem;
-}
-
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:0 2rem;
-}
-
-/* =========================
-   CONVERTER CARD
-========================= */
-.converter-card{
-  background:var(--card-bg);
-  border-radius:22px;
-  border:1px solid var(--border-glass);
-  padding:2.5rem;
-  box-shadow:var(--shadow-glass);
-  animation: cardIn .6s ease;
-}
-
-.converter-card h3{
-  text-align:center;
-  margin-bottom:1.5rem;
-  font-size:1.4rem;
-}
-
-.converter-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:1.2rem;
-}
-
-.converter-grid input,
-.converter-grid select{
-  width:100%;
-  padding:1rem;
-  border-radius:12px;
-  border:1px solid var(--border-glass);
-  background:var(--card-bg);
-  color:var(--text-primary);
-  appearance:none;
-}
-
-.converter-grid select option{
-  background:var(--card-bg) !important;
-  color:var(--text-primary) !important;
-}
-
-.converter-grid input[disabled]{
-  color:var(--text-secondary);
-  background:var(--card-bg);
-}
-
-.converter-grid input:focus,
-.converter-grid select:focus{
-  outline:none;
-  border-color:var(--accent-primary);
-  box-shadow:0 0 0 3px rgba(100,255,218,.25);
-}
-
-/* Custom arrow for select */
-.converter-grid select {
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 12px 8px;
-}
-body.light .converter-grid select {
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%231a1a1a'/%3E%3C/svg%3E");
-}
-
-.convert-btn{
-  margin-top:1.5rem;
-  width:100%;
-  padding:1rem;
-  border:none;
-  border-radius:12px;
-  background:var(--primary-gradient);
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.convert-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 12px 30px rgba(102,126,234,.45);
-}
-
-.result-box{
-  margin-top:1.8rem;
-  text-align:center;
-  font-size:1.4rem;
-  font-weight:600;
-  animation: glowPulse 4s infinite alternate;
-}
-
-/* =========================
-   FOOTER
-========================= */
-.footer{
-  margin-top:4rem;
-  padding:3rem 0 2rem;
-  border-top:1px solid var(--border-glass);
-  background:var(--card-bg);
-  backdrop-filter:blur(20px);
-  border-radius:22px 22px 0 0;
-}
-
-.footer-container{
-  max-width:1200px;
-  margin:auto;
-  padding:0 2rem;
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:2rem;
-}
-
-.footer-logo{
-  display:flex;
-  gap:.5rem;
-  font-weight:700;
-  font-size:1.4rem;
-}
-
-.footer-links{
-  list-style:none;
-}
-
-.footer-links li{
-  margin-bottom:0.5rem;
-}
-
-.footer-links a{
-  color:var(--text-secondary);
-  text-decoration:none;
-  transition:0.3s;
-}
-
-.footer-links a:hover{
-  color:var(--accent-primary);
-  text-decoration:underline;
-}
-
-.footer-bottom{
-  text-align:center;
-  margin-top:1.5rem;
-  color:var(--text-secondary);
-  font-size:.9rem;
-  letter-spacing:0.5px;
-}
-
-.footer-container a{
-  color:var(--text-secondary);
-  transition:0.3s;
-}
-
-.footer-container a:hover{
-  color:var(--accent-primary);
-  transform:translateY(-2px);
-}
-
-/* =========================
-   ANIMATIONS
-========================= */
-@keyframes pageFade{
-  from{opacity:0;transform:translateY(12px)}
-  to{opacity:1;transform:none}
-}
-@keyframes floatHero{
-  0%,100%{transform:none}
-  50%{transform:translateY(-6px)}
-}
-@keyframes cardIn{
-  from{opacity:0;transform:scale(.96)}
-  to{opacity:1;transform:none}
-}
-@keyframes glowPulse{
-  from{text-shadow:none}
-  to{text-shadow:0 0 20px rgba(100,255,218,.35)}
-}
-</style>
 </head>
 
 <body>
-
 <!-- NAVBAR -->
 <header class="header">
   <nav class="nav-container">
@@ -379,51 +30,82 @@ body.light .converter-grid select {
 </header>
 
 <main class="main-content">
-<section class="hero-section">
-  <h1 class="hero-title">Currency Converter</h1>
-  <p class="hero-subtitle">Quick & simple currency conversion</p>
-</section>
+  <section class="hero-section">
+    <h1 class="hero-title">Currency Converter</h1>
+    <p class="hero-subtitle">Real-time exchange rates with a sleek, modern interface. Convert between 150+ currencies instantly.</p>
+  </section>
 
-<div class="container">
-  <div class="converter-card">
-    <h3><i class="fas fa-exchange-alt"></i> Convert Currency</h3>
+  <div class="container">
+    <div class="converter-card">
+      <h3><i class="fas fa-exchange-alt"></i> Convert Currency</h3>
 
-    <div class="converter-grid">
-      <input id="amount" type="number" placeholder="Enter amount">
+      <div class="converter-grid">
+        <div class="input-group">
+          <label for="amount"><i class="fas fa-money-bill-wave"></i> Amount</label>
+          <input id="amount" type="number" placeholder="Enter amount" min="0" step="0.01" value="100">
+        </div>
+        
+        <div class="input-group">
+          <label for="from"><i class="fas fa-flag"></i> From Currency</label>
+          <div class="select-wrapper">
+            <select id="from">
+              <option value="USD">🇺🇸 USD - US Dollar</option>
+              <option value="INR">🇮🇳 INR - Indian Rupee</option>
+              <option value="EUR">🇪🇺 EUR - Euro</option>
+              <option value="GBP">🇬🇧 GBP - British Pound</option>
+              <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+              <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+              <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+              <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
+              <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
+              <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="swap-container">
+        <button class="swap-btn" onclick="swapCurrencies()">
+          <i class="fas fa-arrow-down-arrow-up"></i>
+        </button>
+      </div>
+      
+      <div class="converter-grid">
+        <div class="input-group">
+          <label for="to"><i class="fas fa-flag"></i> To Currency</label>
+          <div class="select-wrapper">
+            <select id="to">
+              <option value="INR">🇮🇳 INR - Indian Rupee</option>
+              <option value="USD">🇺🇸 USD - US Dollar</option>
+              <option value="EUR">🇪🇺 EUR - Euro</option>
+              <option value="GBP">🇬🇧 GBP - British Pound</option>
+              <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+              <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+              <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+              <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
+              <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
+              <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="input-group">
+          <label for="converted"><i class="fas fa-calculator"></i> Converted Amount</label>
+          <input id="converted" disabled placeholder="Result will appear here">
+        </div>
+      </div>
 
-      <select id="from">
-        <option value="USD">USD</option>
-        <option value="INR">INR</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-        <option value="JPY">JPY</option>
-        <option value="AUD">AUD</option>
-        <option value="CAD">CAD</option>
-        <option value="CHF">CHF</option>
-        <option value="CNY">CNY</option>
-        <option value="SGD">SGD</option>
-      </select>
-
-      <select id="to">
-        <option value="USD">USD</option>
-        <option value="INR">INR</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-        <option value="JPY">JPY</option>
-        <option value="AUD">AUD</option>
-        <option value="CAD">CAD</option>
-        <option value="CHF">CHF</option>
-        <option value="CNY">CNY</option>
-        <option value="SGD">SGD</option>
-      </select>
-
-      <input disabled placeholder="Live demo rates">
+      <button class="convert-btn" onclick="convert()">
+        <i class="fas fa-bolt"></i> Convert Now
+      </button>
+      
+      <div class="result-box" id="result">
+        <div class="result-label">Conversion Result</div>
+        <div class="result-value" id="resultValue">—</div>
+        <div class="result-details" id="resultDetails">Enter amount and currencies to convert</div>
+      </div>
     </div>
-
-    <button class="convert-btn" onclick="convert()">Convert</button>
-    <div class="result-box" id="result">—</div>
   </div>
-</div>
 </main>
 
 <!-- FOOTER -->
@@ -433,66 +115,112 @@ body.light .converter-grid select {
       <div class="footer-logo">
         <i class="fas fa-wallet"></i> ExpenseFlow
       </div>
-      <p style="margin-top:0.8rem; line-height:1.6;">Smart money management made simple. Track, convert, and optimize your finances effortlessly.</p>
+      <p class="footer-description">Smart money management made simple. Track, convert, and optimize your finances effortlessly.</p>
+      <div class="social-links">
+        <a href="#" class="social-link"><i class="fab fa-x-twitter"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+      </div>
     </div>
     <div>
       <h4>Resources</h4>
       <ul class="footer-links">
-        <li><a href="finance-tips.html">Finance Tips</a></li>
-        <li><a href="Help-Center.html">Help Center</a></li>
-        <li><a href="community.html">Community</a></li>
+        <li><a href="finance-tips.html"><i class="fas fa-lightbulb"></i> Finance Tips</a></li>
+        <li><a href="Help-Center.html"><i class="fas fa-question-circle"></i> Help Center</a></li>
+        <li><a href="community.html"><i class="fas fa-users"></i> Community</a></li>
+        <li><a href="blog.html"><i class="fas fa-blog"></i> Blog</a></li>
       </ul>
     </div>
     <div>
-      <h4>Follow Us</h4>
-      <div style="display:flex; gap:1rem; font-size:1.2rem;">
-        <a href="#"><i class="fab fa-x-twitter"></i></a>
-        <a href="#"><i class="fab fa-facebook-f"></i></a>
-        <a href="#"><i class="fab fa-instagram"></i></a>
-        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-      </div>
+      <h4>Legal</h4>
+      <ul class="footer-links">
+        <li><a href="privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+        <li><a href="terms.html"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+        <li><a href="cookies.html"><i class="fas fa-cookie-bite"></i> Cookie Policy</a></li>
+        <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact Us</a></li>
+      </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    &copy; 2026 ExpenseFlow. All rights reserved.
+      <p id="copyright" style="text-align:center;"></p>
+      <script>
+        document.getElementById("copyright").innerHTML =
+          `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+      </script>
+
   </div>
 </footer>
-
+<!-- Blue Cursor Trail -->
+<div class="circle-container" id="cursorTrail"></div>
 <script>
-/* THEME */
-function toggleTheme(){
-  document.body.classList.toggle("light");
-  localStorage.setItem("theme",
-    document.body.classList.contains("light")?"light":"dark");
-}
-if(localStorage.getItem("theme")==="light"){
-  document.body.classList.add("light");
-}
+/* ============================= */
+/* 🔵 Blue Cursor Trail Script  */
+/* ============================= */
 
-/* CONVERSION (DUMMY RATES) */
-const rates = {
-  USD: {INR:83, EUR:0.92, GBP:0.79, JPY:145, AUD:1.56, CAD:1.34, CHF:0.88, CNY:7.3, SGD:1.36},
-  INR: {USD:0.012, EUR:0.011, GBP:0.0095, JPY:1.75, AUD:0.018, CAD:0.016, CHF:0.011, CNY:0.088, SGD:0.016},
-  EUR: {USD:1.08, INR:90, GBP:0.86, JPY:158, AUD:1.70, CAD:1.45, CHF:0.95, CNY:7.95, SGD:1.48},
-  GBP: {USD:1.26, INR:105, EUR:1.16, JPY:184, AUD:1.98, CAD:1.68, CHF:1.11, CNY:9.2, SGD:1.71},
-  JPY: {USD:0.0069, INR:0.57, EUR:0.0063, GBP:0.0054, AUD:0.011, CAD:0.0091, CHF:0.006, CNY:0.050, SGD:0.0093},
-  AUD: {USD:0.64, INR:53, EUR:0.59, GBP:0.50, JPY:90, CAD:0.85, CHF:0.56, CNY:4.63, SGD:0.86},
-  CAD: {USD:0.75, INR:62, EUR:0.69, GBP:0.60, JPY:105, AUD:1.17, CHF:0.66, CNY:5.42, SGD:1.01},
-  CHF: {USD:1.14, INR:94, EUR:1.05, GBP:0.90, JPY:158, AUD:1.79, CAD:1.52, CNY:8.19, SGD:1.53},
-  CNY: {USD:0.14, INR:11.4, EUR:0.13, GBP:0.11, JPY:19.3, AUD:0.22, CAD:0.18, CHF:0.12, SGD:0.19},
-  SGD: {USD:0.73, INR:60.5, EUR:0.68, GBP:0.58, JPY:106, AUD:1.17, CAD:0.99, CHF:0.65, CNY:5.25}
-};
+const container = document.getElementById('cursorTrail');
+const circleCount = 12;
+const circles = [];
 
-function convert(){
-  const amt = +amount.value;
-  if(!amt){ 
-    result.innerText = "Enter amount"; 
-    return; 
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+
+if (container) {
+  for (let i = 0; i < circleCount; i++) {
+    const circle = document.createElement('div');
+    circle.classList.add('cursor-circle');
+    container.appendChild(circle);
+    circles.push({ el: circle, x: mouseX, y: mouseY });
   }
-  const r = rates[from.value][to.value] || 1;
-  result.innerText = `${(amt*r).toFixed(2)} ${to.value}`;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  document.addEventListener('mousedown', () => {
+    circles.forEach(c => c.el.classList.add('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseup', () => {
+    circles.forEach(c => c.el.classList.remove('cursor-clicking'));
+  });
+
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.add('cursor-hovering'));
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest('a, button, .card, .link')) {
+      circles.forEach(c => c.el.classList.remove('cursor-hovering'));
+    }
+  });
+
+  function animateCursor() {
+    let x = mouseX;
+    let y = mouseY;
+
+    circles.forEach(circle => {
+      circle.x += (x - circle.x) * 0.25;
+      circle.y += (y - circle.y) * 0.25;
+
+      circle.el.style.left = circle.x + 'px';
+      circle.el.style.top = circle.y + 'px';
+
+      x = circle.x;
+      y = circle.y;
+    });
+
+    requestAnimationFrame(animateCursor);
+  }
+
+  animateCursor();
 }
 </script>
 
+
+<script src="currencyConverter.js"></script>
 </body>
 </html>

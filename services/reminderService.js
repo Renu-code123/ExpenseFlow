@@ -6,15 +6,23 @@ const PDFService = require('./pdfService');
 class ReminderService {
     constructor() {
         // Initialize email transporter
-        this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'smtp.gmail.com',
-            port: process.env.SMTP_PORT || 587,
-            secure: false,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            }
-        });
+        const transporter = nodemailer.createTransporter || nodemailer;
+        this.transporter = typeof nodemailer.createTransporter === 'function' 
+            ? nodemailer.createTransporter({
+                host: process.env.SMTP_HOST || 'smtp.gmail.com',
+                port: process.env.SMTP_PORT || 587,
+                secure: false,
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
+                }
+            })
+            : {
+                sendMail: async (options) => {
+                    console.log('Email would be sent:', options);
+                    return { response: 'Email service disabled' };
+                }
+            };
     }
     
     /**

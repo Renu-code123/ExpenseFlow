@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Compliance & Global Audit - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Global Tax Compliance</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="compliance-header">
+            <div class="header-main">
+                <h1>Forensic Audit Suite</h1>
+                <p>Multi-jurisdictional tax validation and suspicious activity detection</p>
+            </div>
+            <div class="header-stats">
+                <div class="radial-stat" id="compliance-score">
+                    <svg viewBox="0 0 36 36" class="circular-chart green">
+                        <path class="circle-bg"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="circle" stroke-dasharray="94, 100"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <text x="18" y="20.35" class="percentage">94%</text>
+                    </svg>
+                    <span>Health Score</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="compliance-grid">
+            <!-- Left Column: Controls and Rules -->
+            <div class="compliance-controls">
+                <section class="glass-card section-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-file-invoice-dollar"></i> Audit Packs</h3>
+                        <button class="btn-sm" onclick="openAuditModal()"><i class="fas fa-plus"></i> Generate
+                            Pack</button>
+                    </div>
+                    <div id="audit-packs-list" class="packs-list">
+                        <!-- Loaded via JS -->
+                        <div class="loading-placeholder">Loading history...</div>
+                    </div>
+                </section>
+
+                <section class="glass-card section-card mt-20">
+                    <div class="card-header">
+                        <h3><i class="fas fa-globe"></i> Jurisdictional Rules</h3>
+                        <button class="btn-text" onclick="openRuleModal()">Modify</button>
+                    </div>
+                    <div id="rules-summary" class="rules-summary">
+                        <!-- Loaded via JS -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Forensic Interface -->
+            <div class="forensic-interface">
+                <section class="glass-card section-card full-height">
+                    <div class="card-header">
+                        <h3><i class="fas fa-search-dollar"></i> Forensic Findings</h3>
+                    </div>
+                    <div class="forensic-filters">
+                        <span class="filter-chip active">All Alerts</span>
+                        <span class="filter-chip">Critical</span>
+                        <span class="filter-chip">Anomalies</span>
+                    </div>
+                    <div id="forensic-findings" class="findings-list">
+                        <div class="empty-findings">
+                            <i class="fas fa-shield-check"></i>
+                            <p>No high-risk tax anomalies detected in current period.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Generator Modal -->
+    <div id="audit-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Generate Audit Pack</h3>
+                <span class="close-modal" onclick="closeAuditModal()">&times;</span>
+            </div>
+            <form id="audit-form">
+                <div class="form-group">
+                    <label>Audit Period Start</label>
+                    <input type="date" id="audit-start" required>
+                </div>
+                <div class="form-group">
+                    <label>Audit Period End</label>
+                    <input type="date" id="audit-end" required>
+                </div>
+                <div class="audit-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" checked disabled> Deep Forensic Scan
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" checked disabled> Multi-Jurisdiction Check
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Initialize Forensic Audit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/compliance-controller.js"></script>
+</body>
+
+</html>

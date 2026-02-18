@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Flow Forecasting - ExpenseFlow</title>
+    <link rel="stylesheet" href="/expensetracker.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>💎 Cash Flow Forecasting & Runway Analytics</h1>
+                <p class="subtitle">Predict your financial future with AI-powered insights</p>
+            </div>
+            <div class="header-actions">
+                <button id="generate-forecast-btn" class="btn-primary">
+                    <span>🔮</span> Generate New Forecast
+                </button>
+                <a href="/" class="btn-secondary">← Back to Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Alert Banner -->
+        <div id="alert-banner" class="alert-banner hidden">
+            <div class="alert-content">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-text">
+                    <strong id="alert-title">Alert Title</strong>
+                    <p id="alert-message">Alert message</p>
+                </div>
+                <button class="alert-close" onclick="closeAlert()">×</button>
+            </div>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card runway-metric">
+                <div class="metric-icon">🛬</div>
+                <div class="metric-content">
+                    <h3>Financial Runway</h3>
+                    <div class="metric-value" id="runway-value">--</div>
+                    <div class="metric-label" id="runway-label">Loading...</div>
+                </div>
+            </div>
+
+            <div class="metric-card burn-metric">
+                <div class="metric-icon">🔥</div>
+                <div class="metric-content">
+                    <h3>Monthly Burn Rate</h3>
+                    <div class="metric-value" id="burn-value">$--</div>
+                    <div class="metric-label">Net monthly spending</div>
+                </div>
+            </div>
+
+            <div class="metric-card
+
+ confidence-metric">
+                <div class="metric-icon">📊</div>
+                <div class="metric-content">
+                    <h3>Forecast Confidence</h3>
+                    <div class="metric-value" id="confidence-value">--%</div>
+                    <div class="metric-label">Based on data quality</div>
+                </div>
+            </div>
+
+            <div class="metric-card balance-metric">
+                <div class="metric-icon">💰</div>
+                <div class="metric-content">
+                    <h3>Projected Balance (180d)</h3>
+                    <div class="metric-value" id="projected-balance-value">$--</div>
+                    <div class="metric-label">6 months from now</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-grid">
+            <!-- Forecast Chart -->
+            <div class="chart-card full-width">
+                <div class="card-header">
+                    <h2>📈 6-Month Balance Projection</h2>
+                    <div class="chart-controls">
+                        <button class="btn-sm" id="toggle-bounds">Toggle Confidence Bands</button>
+                        <button class="btn-sm" id="export-chart">Export Chart</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="forecast-chart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-dot actual"></span> Actual Balance</span>
+                    <span class="legend-item"><span class="legend-dot predicted"></span> Predicted Balance</span>
+                    <span class="legend-item"><span class="legend-dot bounds"></span> Confidence Interval</span>
+                </div>
+            </div>
+
+            <!-- Scenario Simulator -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🎲 What-If Scenarios</h2>
+                </div>
+                <div class="card-body">
+                    <div class="scenario-list" id="scenario-list">
+                        <p class="loading-text">Loading scenarios...</p>
+                    </div>
+                    <button class="btn-outline full-width" id="custom-scenario-btn">
+                        + Create Custom Scenario
+                    </button>
+                </div>
+            </div>
+
+            <!-- Insights Panel -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>💡 AI Insights</h2>
+                </div>
+                <div class="card-body">
+                    <div id="insights-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Scenario Modal -->
+        <div id="scenario-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create Custom Scenario</h2>
+                    <button class="modal-close" onclick="closeScenarioModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="scenario-form">
+                        <div class="form-group">
+                            <label>Scenario Name</label>
+                            <input type="text" id="scenario-name" placeholder="e.g., Major Purchase" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Adjustment Type</label>
+                            <select id="adjustment-type">
+                                <option value="one_time">One-Time Expense</option>
+                                <option value="recurring_add">Add Recurring Income</option>
+                                <option value="recurring_remove">Remove Recurring Expense</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Amount ($)</label>
+                            <input type="number" id="adjustment-amount" placeholder="e.g., 5000" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="date" id="adjustment-date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="adjustment-description" rows="3"
+                                placeholder="Describe this scenario..."></textarea>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-secondary" onclick="closeScenarioModal()">Cancel</button>
+                            <button type="submit" class="btn-primary">Simulate Scenario</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/forecast-ctrl.js"></script>
+</body>
+
+</html>

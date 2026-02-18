@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Variance & Forecasting - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Budget Variance & Predictive Analytics</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="budget-header">
+            <div class="header-main">
+                <h1>Advanced Budget Analytics</h1>
+                <p>ML-powered variance analysis and predictive spend forecasting</p>
+            </div>
+            <div class="header-actions">
+                <select id="budget-selector" class="budget-select" onchange="loadBudgetAnalytics()">
+                    <option value="">Select Budget...</option>
+                </select>
+                <button class="btn-primary" onclick="runVarianceAnalysis()">
+                    <i class="fas fa-chart-line"></i> Analyze Variance
+                </button>
+                <button class="btn-secondary" onclick="generateForecast()">
+                    <i class="fas fa-crystal-ball"></i> Generate Forecast
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(100, 255, 218, 0.15);">
+                    <i class="fas fa-percentage" style="color: #64ffda;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Utilization Rate</label>
+                    <h2 id="utilization-rate">0%</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 107, 107, 0.15);">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Anomalies Detected</label>
+                    <h2 id="anomalies-count">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(72, 219, 251, 0.15);">
+                    <i class="fas fa-balance-scale" style="color: #48dbfb;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Total Variance</label>
+                    <h2 id="total-variance">₹0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 159, 67, 0.15);">
+                    <i class="fas fa-bell" style="color: #ff9f43;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Critical Alerts</label>
+                    <h2 id="critical-alerts">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="analytics-grid">
+            <!-- Left: Variance Heatmap -->
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-th"></i> Variance Heatmap</h3>
+                    <div class="filter-controls">
+                        <select id="variance-filter" class="filter-select" onchange="filterVariances()">
+                            <option value="all">All Categories</option>
+                            <option value="unfavorable">Unfavorable Only</option>
+                            <option value="anomalies">Anomalies Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="variance-heatmap" class="variance-heatmap">
+                    <div class="loading-placeholder">Loading variance data...</div>
+                </div>
+            </section>
+
+            <!-- Right: Forecast Chart -->
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-area"></i> Spend Forecast</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+                <div id="forecast-summary" class="forecast-summary">
+                    <!-- Loaded via JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Optimization Recommendations -->
+        <section class="glass-card section-card mt-20">
+            <div class="card-header">
+                <h3><i class="fas fa-lightbulb"></i> Optimization Recommendations</h3>
+                <button class="btn-sm btn-primary" onclick="applySelectedRecommendations()">
+                    <i class="fas fa-check"></i> Apply Selected
+                </button>
+            </div>
+            <div id="recommendations-list" class="recommendations-list">
+                <!-- Loaded via JS -->
+            </div>
+        </section>
+
+        <!-- Analytics Row -->
+        <div class="analytics-row mt-20">
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-line"></i> Utilization Trend</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="utilizationTrendChart"></canvas>
+                </div>
+            </section>
+
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-pie"></i> Category Distribution</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="categoryDistChart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Alerts Section -->
+        <section class="glass-card section-card mt-20">
+            <div class="card-header">
+                <h3><i class="fas fa-bell"></i> Critical Alerts</h3>
+            </div>
+            <div id="alerts-list" class="alerts-list">
+                <!-- Loaded via JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Variance Analysis Modal -->
+    <div id="variance-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Run Variance Analysis</h3>
+                <span class="close-modal" onclick="closeVarianceModal()">&times;</span>
+            </div>
+            <form id="variance-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="variance-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="date" id="variance-end-date" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Analyze</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forecast Modal -->
+    <div id="forecast-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Generate Spend Forecast</h3>
+                <span class="close-modal" onclick="closeForecastModal()">&times;</span>
+            </div>
+            <form id="forecast-form">
+                <div class="form-group">
+                    <label>Category (Optional)</label>
+                    <input type="text" id="forecast-category" placeholder="Leave blank for overall budget">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Forecast Days</label>
+                        <input type="number" id="forecast-days" value="30" min="7" max="365" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Historical Days</label>
+                        <input type="number" id="historical-days" value="90" min="30" max="365" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Forecast Method</label>
+                    <select id="forecast-method">
+                        <option value="ensemble">Ensemble (Recommended)</option>
+                        <option value="linear">Linear Regression</option>
+                        <option value="exponential">Exponential Smoothing</option>
+                        <option value="seasonal">Seasonal Decomposition</option>
+                        <option value="moving_average">Moving Average</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Generate Forecast</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/budget-analytics-controller.js"></script>
+</body>
+
+</html>

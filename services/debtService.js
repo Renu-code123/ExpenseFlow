@@ -1,453 +1,435 @@
-const Debt = require('../models/Debt');
-const mongoose = require('mongoose');
+/**
+ * Debt Service
+ * Issue #520: Comprehensive Debt Management & Amortization Engine
+ * Complex interest calculations, payment projections, and strategy simulations
+ */
+
+const DebtAccount = require('../models/DebtAccount');
+const AmortizationSchedule = require('../models/AmortizationSchedule');
 
 class DebtService {
-  /**
-   * Calculate amortization schedule for a debt
-   */
-  calculateAmortizationSchedule(debt, extraPayment = 0) {
-    const monthlyInterestRate = (debt.interestRate / 100) / 12;
-    let remainingBalance = debt.currentBalance;
-    let month = 1;
-    const schedule = [];
-    const maxMonths = 600; // 50 years cap
-    
-    const monthlyPayment = debt.monthlyPayment + extraPayment;
-    
-    while (remainingBalance > 0.01 && month <= maxMonths) {
-      const interestPayment = remainingBalance * monthlyInterestRate;
-      let principalPayment = monthlyPayment - interestPayment;
-      
-      // Adjust final payment
-      if (principalPayment >= remainingBalance) {
-        principalPayment = remainingBalance;
-        remainingBalance = 0;
-      } else {
-        remainingBalance -= principalPayment;
-      }
-      
-      schedule.push({
-        month,
-        payment: monthlyPayment,
-        principalPayment: Math.round(principalPayment * 100) / 100,
-        interestPayment: Math.round(interestPayment * 100) / 100,
-        remainingBalance: Math.round(remainingBalance * 100) / 100,
-        totalInterestToDate: schedule.reduce((sum, p) => sum + p.interestPayment, 0) + interestPayment
-      });
-      
-      month++;
+    /**
+     * Create a new debt account
+     */
+    async createDebt(userId, debtData) {
+        // Calculate remaining months if not provided
+        if (!debtData.remainingMonths) {
+            debtData.remainingMonths = debtData.termMonths;
+        }
+
+        // Calculate expected payoff date
+        if (!debtData.expectedPayoffDate && debtData.firstPaymentDate) {
+            const payoffDate = new Date(debtData.firstPaymentDate);
+            payoffDate.setMonth(payoffDate.getMonth() + debtData.termMonths);
+            debtData.expectedPayoffDate = payoffDate;
+        }
+
+        const debt = new DebtAccount({
+            userId,
+            ...debtData
+        });
+
+        await debt.save();
+
+        // Generate initial amortization schedule
+        await this.generateAmortizationSchedule(debt._id, 0, 'standard');
+
+        return debt;
     }
-    
-    return schedule;
-  }
 
-  /**
-   * Calculate early payoff analysis
-   */
-  calculateEarlyPayoffAnalysis(debt, extraPayment = 0) {
-    const standardSchedule = this.calculateAmortizationSchedule(debt, 0);
-    const acceleratedSchedule = this.calculateAmortizationSchedule(debt, extraPayment);
-    
-    const standardMonths = standardSchedule.length;
-    const acceleratedMonths = acceleratedSchedule.length;
-    const monthsSaved = standardMonths - acceleratedMonths;
-    
-    const standardInterest = standardSchedule[standardSchedule.length - 1]?.totalInterestToDate || 0;
-    const acceleratedInterest = acceleratedSchedule[acceleratedSchedule.length - 1]?.totalInterestToDate || 0;
-    const interestSaved = standardInterest - acceleratedInterest;
-    
-    return {
-      currentPayoffMonths: standardMonths,
-      acceleratedPayoffMonths: acceleratedMonths,
-      monthsSaved,
-      currentTotalInterest: Math.round(standardInterest * 100) / 100,
-      acceleratedTotalInterest: Math.round(acceleratedInterest * 100) / 100,
-      interestSaved: Math.round(interestSaved * 100) / 100,
-      extraPaymentMonthly: extraPayment,
-      breakEvenDate: this.calculateBreakEvenDate(monthsSaved)
-    };
-  }
+    /**
+     * Generate amortization schedule for a debt
+     */
+    async generateAmortizationSchedule(debtId, extraPayment = 0, scheduleType = 'standard') {
+        const debt = await DebtAccount.findById(debtId);
+        if (!debt) {
+            throw new Error('Debt account not found');
+        }
 
-  /**
-   * Calculate break-even date
-   */
-  calculateBreakEvenDate(monthsSaved) {
-    const date = new Date();
-    date.setMonth(date.getMonth() + monthsSaved);
-    return date;
-  }
+        const scheduleData = await AmortizationSchedule.generateSchedule(debt, extraPayment, scheduleType);
 
-  /**
-   * Calculate debt-to-income ratio
-   */
-  async calculateDebtToIncomeRatio(userId, monthlyIncome) {
-    if (!monthlyIncome || monthlyIncome <= 0) {
-      return {
-        ratio: 0,
-        status: 'unknown',
-        monthlyDebtPayments: 0,
-        monthlyIncome: 0
-      };
+        // Calculate savings if extra payment
+        if (extraPayment > 0) {
+            const standardSchedule = await AmortizationSchedule.findOne({
+                debtAccountId: debtId,
+                scheduleType: 'standard'
+            });
+
+            if (standardSchedule) {
+                scheduleData.interestSaved = standardSchedule.totalInterest - scheduleData.totalInterest;
+                scheduleData.monthsSaved = standardSchedule.payments.length - scheduleData.payments.length;
+            }
+        }
+
+        // Remove old schedule of same type
+        await AmortizationSchedule.deleteMany({
+            debtAccountId: debtId,
+            scheduleType
+        });
+
+        const schedule = new AmortizationSchedule(scheduleData);
+        await schedule.save();
+
+        return schedule;
     }
-    
-    const debts = await Debt.find({ 
-      user: new mongoose.Types.ObjectId(userId),
-      status: 'active',
-      isActive: true
-    });
-    
-    const monthlyDebtPayments = debts.reduce((sum, debt) => sum + debt.monthlyPayment, 0);
-    const ratio = (monthlyDebtPayments / monthlyIncome) * 100;
-    
-    let status = 'good';
-    if (ratio > 43) status = 'critical';
-    else if (ratio > 36) status = 'high';
-    else if (ratio > 20) status = 'moderate';
-    
-    return {
-      ratio: Math.round(ratio * 100) / 100,
-      status,
-      monthlyDebtPayments: Math.round(monthlyDebtPayments * 100) / 100,
-      monthlyIncome: Math.round(monthlyIncome * 100) / 100,
-      remainingIncome: Math.round((monthlyIncome - monthlyDebtPayments) * 100) / 100
-    };
-  }
 
-  /**
-   * Get debt summary dashboard data
-   */
-  async getDebtSummary(userId) {
-    const debts = await Debt.find({ 
-      user: new mongoose.Types.ObjectId(userId),
-      isActive: true
-    });
-    
-    const activeDebts = debts.filter(d => d.status === 'active');
-    const paidOffDebts = debts.filter(d => d.status === 'paid_off');
-    
-    const totalPrincipal = debts.reduce((sum, d) => sum + d.principalAmount, 0);
-    const totalCurrentBalance = activeDebts.reduce((sum, d) => sum + d.currentBalance, 0);
-    const totalPaid = debts.reduce((sum, d) => sum + d.totalPaid, 0);
-    const totalInterestPaid = debts.reduce((sum, d) => sum + d.totalInterestPaid, 0);
-    
-    const monthlyPayments = activeDebts.reduce((sum, d) => sum + d.monthlyPayment, 0);
-    
-    // Calculate weighted average interest rate
-    const weightedInterestRate = activeDebts.length > 0
-      ? activeDebts.reduce((sum, d) => sum + (d.currentBalance * d.interestRate), 0) / totalCurrentBalance
-      : 0;
-    
-    // Group by loan type
-    const byType = {};
-    debts.forEach(debt => {
-      if (!byType[debt.loanType]) {
-        byType[debt.loanType] = {
-          count: 0,
-          totalBalance: 0,
-          totalPrincipal: 0,
-          monthlyPayment: 0
+    /**
+     * Calculate monthly payment using amortization formula
+     */
+    calculateMonthlyPayment(principal, annualRate, termMonths) {
+        const monthlyRate = annualRate / 100 / 12;
+
+        if (monthlyRate === 0) {
+            return principal / termMonths;
+        }
+
+        const payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) /
+            (Math.pow(1 + monthlyRate, termMonths) - 1);
+
+        return parseFloat(payment.toFixed(2));
+    }
+
+    /**
+     * Calculate total interest over loan term
+     */
+    calculateTotalInterest(principal, monthlyPayment, termMonths) {
+        return (monthlyPayment * termMonths) - principal;
+    }
+
+    /**
+     * Compare debt repayment strategies
+     */
+    async compareStrategies(userId, extraMonthlyAmount = 0) {
+        const debts = await DebtAccount.find({ userId, status: 'active' });
+
+        if (debts.length === 0) {
+            return {
+                message: 'No active debts found',
+                strategies: []
+            };
+        }
+
+        const strategies = {};
+
+        // Strategy 1: Standard (no extra payments)
+        strategies.standard = await this._simulateStrategy(debts, 'standard', 0);
+
+        // Strategy 2: Snowball (smallest balance first)
+        strategies.snowball = await this._simulateStrategy(
+            debts.sort((a, b) => a.currentBalance - b.currentBalance),
+            'snowball',
+            extraMonthlyAmount
+        );
+
+        // Strategy 3: Avalanche (highest interest first)
+        strategies.avalanche = await this._simulateStrategy(
+            debts.sort((a, b) => b.interestRate - a.interestRate),
+            'avalanche',
+            extraMonthlyAmount
+        );
+
+        // Find best strategy
+        const bestStrategy = Object.keys(strategies).reduce((best, current) => {
+            return strategies[current].totalInterest < strategies[best].totalInterest ? current : best;
+        });
+
+        return {
+            strategies,
+            bestStrategy,
+            extraMonthlyAmount,
+            debtCount: debts.length,
+            totalDebt: debts.reduce((sum, d) => sum + d.currentBalance, 0)
         };
-      }
-      byType[debt.loanType].count++;
-      byType[debt.loanType].totalBalance += debt.currentBalance;
-      byType[debt.loanType].totalPrincipal += debt.principalAmount;
-      if (debt.status === 'active') {
-        byType[debt.loanType].monthlyPayment += debt.monthlyPayment;
-      }
-    });
-    
-    // Get upcoming payments (next 30 days)
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    
-    const upcomingPayments = activeDebts
-      .filter(d => d.nextPaymentDate && d.nextPaymentDate <= thirtyDaysFromNow)
-      .sort((a, b) => a.nextPaymentDate - b.nextPaymentDate)
-      .map(d => ({
-        debtId: d._id,
-        name: d.name,
-        lender: d.lender,
-        amount: d.monthlyPayment,
-        dueDate: d.nextPaymentDate,
-        daysUntil: Math.ceil((d.nextPaymentDate - new Date()) / (1000 * 60 * 60 * 24))
-      }));
-    
-    // Calculate payoff progress
-    const payoffProgress = totalPrincipal > 0
-      ? Math.round(((totalPrincipal - totalCurrentBalance) / totalPrincipal) * 100)
-      : 0;
-    
-    return {
-      overview: {
-        totalDebts: debts.length,
-        activeDebts: activeDebts.length,
-        paidOffDebts: paidOffDebts.length,
-        totalPrincipal: Math.round(totalPrincipal * 100) / 100,
-        totalCurrentBalance: Math.round(totalCurrentBalance * 100) / 100,
-        totalPaid: Math.round(totalPaid * 100) / 100,
-        totalInterestPaid: Math.round(totalInterestPaid * 100) / 100,
-        monthlyPayments: Math.round(monthlyPayments * 100) / 100,
-        weightedInterestRate: Math.round(weightedInterestRate * 100) / 100,
-        payoffProgress
-      },
-      byType,
-      upcomingPayments,
-      highPriorityDebts: activeDebts
-        .filter(d => d.priority === 'high' || d.priority === 'critical')
-        .map(d => ({
-          debtId: d._id,
-          name: d.name,
-          balance: d.currentBalance,
-          interestRate: d.interestRate,
-          priority: d.priority
-        }))
-    };
-  }
+    }
 
-  /**
-   * Record a payment and update debt balance
-   */
-  async recordPayment(debtId, userId, paymentData) {
-    const debt = await Debt.findOne({ _id: debtId, user: userId });
-    
-    if (!debt) {
-      throw new Error('Debt not found');
-    }
-    
-    if (debt.status !== 'active') {
-      throw new Error('Cannot make payments on non-active debt');
-    }
-    
-    // Calculate interest portion if not provided
-    let { amount, principalPaid, interestPaid } = paymentData;
-    
-    if (!principalPaid && !interestPaid) {
-      const monthlyInterestRate = (debt.interestRate / 100) / 12;
-      interestPaid = Math.round(debt.currentBalance * monthlyInterestRate * 100) / 100;
-      principalPaid = Math.round((amount - interestPaid) * 100) / 100;
-      
-      // Ensure principal doesn't exceed balance
-      if (principalPaid > debt.currentBalance) {
-        principalPaid = debt.currentBalance;
-        interestPaid = Math.round((amount - principalPaid) * 100) / 100;
-      }
-    }
-    
-    // Add payment to history
-    debt.payments.push({
-      ...paymentData,
-      principalPaid,
-      interestPaid
-    });
-    
-    // Update totals
-    debt.currentBalance = Math.max(0, debt.currentBalance - principalPaid);
-    debt.totalPaid += amount;
-    debt.totalInterestPaid += interestPaid;
-    debt.lastPaymentDate = new Date();
-    
-    // Update next payment date (assuming monthly)
-    if (debt.nextPaymentDate) {
-      const nextDate = new Date(debt.nextPaymentDate);
-      nextDate.setMonth(nextDate.getMonth() + 1);
-      debt.nextPaymentDate = nextDate;
-    }
-    
-    // Check if paid off
-    if (debt.currentBalance <= 0) {
-      debt.status = 'paid_off';
-      debt.currentBalance = 0;
-    }
-    
-    await debt.save();
-    
-    return {
-      debt,
-      payment: debt.payments[debt.payments.length - 1],
-      isPaidOff: debt.status === 'paid_off'
-    };
-  }
+    /**
+     * Simulate a repayment strategy
+     */
+    async _simulateStrategy(debts, strategyName, extraAmount) {
+        let totalInterest = 0;
+        let totalMonths = 0;
+        let totalPayments = 0;
+        const debtProgress = [];
 
-  /**
-   * Get payment recommendations using avalanche or snowball method
-   */
-  async getPayoffRecommendations(userId, strategy = 'avalanche') {
-    const debts = await Debt.find({ 
-      user: new mongoose.Types.ObjectId(userId),
-      status: 'active',
-      isActive: true
-    }).sort({ interestRate: -1 });
-    
-    if (debts.length === 0) {
-      return { strategy, recommendations: [] };
-    }
-    
-    let sortedDebts;
-    if (strategy === 'avalanche') {
-      // Highest interest rate first
-      sortedDebts = [...debts].sort((a, b) => b.interestRate - a.interestRate);
-    } else {
-      // Snowball: Lowest balance first
-      sortedDebts = [...debts].sort((a, b) => a.currentBalance - b.currentBalance);
-    }
-    
-    const recommendations = sortedDebts.map((debt, index) => ({
-      debtId: debt._id,
-      name: debt.name,
-      lender: debt.lender,
-      currentBalance: debt.currentBalance,
-      interestRate: debt.interestRate,
-      monthlyPayment: debt.monthlyPayment,
-      priority: index + 1,
-      estimatedPayoffDate: debt.estimatedPayoffDate,
-      interestSaved: strategy === 'avalanche' 
-        ? this.calculateInterestSaved(debt, sortedDebts, index)
-        : null
-    }));
-    
-    return {
-      strategy,
-      strategyDescription: strategy === 'avalanche' 
-        ? 'Pay off highest interest debts first to minimize total interest paid'
-        : 'Pay off smallest debts first for quick wins and motivation',
-      recommendations
-    };
-  }
+        // Clone debts to avoid mutation
+        const debtsCopy = debts.map(d => ({
+            id: d._id,
+            name: d.name,
+            balance: d.currentBalance,
+            monthlyPayment: d.monthlyPayment,
+            interestRate: d.interestRate
+        }));
 
-  /**
-   * Calculate interest saved by prioritizing a debt
-   */
-  calculateInterestSaved(debt, allDebts, priority) {
-    // Simplified calculation - assumes extra payments go to priority debt
-    const monthlyRate = (debt.interestRate / 100) / 12;
-    const monthsFaster = priority === 0 ? 6 : 0; // Rough estimate
-    return Math.round(debt.currentBalance * monthlyRate * monthsFaster * 100) / 100;
-  }
+        let month = 0;
+        let remainingExtra = extraAmount;
 
-  /**
-   * Get debts needing attention (overdue, high interest, etc.)
-   */
-  async getDebtsNeedingAttention(userId) {
-    const now = new Date();
-    const threeDaysFromNow = new Date();
-    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-    
-    const debts = await Debt.find({ 
-      user: new mongoose.Types.ObjectId(userId),
-      status: 'active',
-      isActive: true
-    });
-    
-    const attentionNeeded = [];
-    
-    debts.forEach(debt => {
-      // Overdue payments
-      if (debt.nextPaymentDate && debt.nextPaymentDate < now) {
-        attentionNeeded.push({
-          debtId: debt._id,
-          name: debt.name,
-          type: 'overdue',
-          severity: 'high',
-          message: `Payment overdue by ${Math.abs(debt.daysUntilPayment)} days`,
-          action: 'Make payment immediately'
+        while (debtsCopy.some(d => d.balance > 0) && month < 600) {
+            month++;
+
+            for (let debt of debtsCopy) {
+                if (debt.balance <= 0) continue;
+
+                const monthlyRate = debt.interestRate / 100 / 12;
+                const interestCharge = debt.balance * monthlyRate;
+
+                // Determine payment amount
+                let payment = debt.monthlyPayment;
+
+                // Apply extra payment to first unpaid debt (strategy dependent)
+                if (remainingExtra > 0 && debt === debtsCopy.find(d => d.balance > 0)) {
+                    payment += remainingExtra;
+                }
+
+                const principalPayment = Math.min(payment - interestCharge, debt.balance);
+
+                debt.balance -= principalPayment;
+                totalInterest += interestCharge;
+                totalPayments += (interestCharge + principalPayment);
+
+                if (debt.balance <= 0) {
+                    debt.balance = 0;
+                    debtProgress.push({
+                        debtId: debt.id,
+                        debtName: debt.name,
+                        paidOffMonth: month
+                    });
+                }
+            }
+        }
+
+        totalMonths = month;
+
+        return {
+            strategyName,
+            totalInterest,
+            totalMonths,
+            totalPayments,
+            debtProgress,
+            averageMonthsPerDebt: totalMonths / debts.length
+        };
+    }
+
+    /**
+     * Get debt-to-income ratio
+     */
+    async calculateDebtToIncome(userId, monthlyIncome) {
+        const totalDebt = await DebtAccount.getTotalDebt(userId, true);
+
+        if (monthlyIncome === 0) {
+            return {
+                ratio: 0,
+                totalMonthlyPayment: totalDebt.totalMonthlyPayment,
+                monthlyIncome: 0,
+                status: 'unknown'
+            };
+        }
+
+        const ratio = (totalDebt.totalMonthlyPayment / monthlyIncome) * 100;
+
+        let status = 'excellent';
+        if (ratio > 43) status = 'high_risk';
+        else if (ratio > 36) status = 'concerning';
+        else if (ratio > 28) status = 'moderate';
+
+        return {
+            ratio,
+            totalMonthlyPayment: totalDebt.totalMonthlyPayment,
+            monthlyIncome,
+            status,
+            recommendation: this._getDTIRecommendation(status)
+        };
+    }
+
+    /**
+     * Get DTI recommendation
+     */
+    _getDTIRecommendation(status) {
+        const recommendations = {
+            'excellent': 'Your debt-to-income ratio is healthy. Continue maintaining good financial habits.',
+            'moderate': 'Your DTI is acceptable but could be improved. Consider paying down high-interest debts.',
+            'concerning': 'Your DTI is high. Focus on reducing debt and avoid taking on new obligations.',
+            'high_risk': 'Your DTI indicates financial stress. Seek debt consolidation or financial counseling.'
+        };
+
+        return recommendations[status] || recommendations.excellent;
+    }
+
+    /**
+     * Calculate payoff acceleration with extra payments
+     */
+    async calculatePayoffAcceleration(debtId, extraMonthlyPayment) {
+        const debt = await DebtAccount.findById(debtId);
+        if (!debt) {
+            throw new Error('Debt not found');
+        }
+
+        // Standard schedule
+        const standardPayoff = debt.calculatePayoffDate(0);
+
+        // Accelerated schedule
+        const acceleratedPayoff = debt.calculatePayoffDate(extraMonthlyPayment);
+
+        const monthsSaved = standardPayoff.months - acceleratedPayoff.months;
+        const interestSaved = standardPayoff.totalInterest - acceleratedPayoff.totalInterest;
+        const totalExtraPayments = extraMonthlyPayment * acceleratedPayoff.months;
+
+        return {
+            debtId: debt._id,
+            debtName: debt.name,
+            currentBalance: debt.currentBalance,
+            extraMonthlyPayment,
+            standard: {
+                months: standardPayoff.months,
+                payoffDate: standardPayoff.payoffDate,
+                totalInterest: standardPayoff.totalInterest
+            },
+            accelerated: {
+                months: acceleratedPayoff.months,
+                payoffDate: acceleratedPayoff.payoffDate,
+                totalInterest: acceleratedPayoff.totalInterest
+            },
+            savings: {
+                monthsSaved,
+                interestSaved,
+                totalExtraPayments,
+                netSavings: interestSaved - totalExtraPayments,
+                roi: totalExtraPayments > 0 ? (interestSaved / totalExtraPayments) * 100 : 0
+            }
+        };
+    }
+
+    /**
+     * Record a debt payment
+     */
+    async recordPayment(debtId, paymentAmount, paymentDate = new Date()) {
+        const debt = await DebtAccount.findById(debtId);
+        if (!debt) {
+            throw new Error('Debt not found');
+        }
+
+        if (debt.status !== 'active') {
+            throw new Error('Cannot record payment for inactive debt');
+        }
+
+        const paymentResult = debt.applyPayment(paymentAmount);
+
+        // Update remaining months
+        if (debt.currentBalance > 0) {
+            const payoffCalc = debt.calculatePayoffDate(0);
+            debt.remainingMonths = payoffCalc.months;
+        } else {
+            debt.remainingMonths = 0;
+        }
+
+        await debt.save();
+
+        return {
+            debtId: debt._id,
+            paymentDate,
+            ...paymentResult,
+            remainingMonths: debt.remainingMonths,
+            status: debt.status
+        };
+    }
+
+    /**
+     * Get debt summary for dashboard
+     */
+    async getDashboardSummary(userId) {
+        const totalDebt = await DebtAccount.getTotalDebt(userId, true);
+        const allDebts = await DebtAccount.find({ userId, status: 'active' });
+
+        // Calculate weighted average interest rate
+        const weightedRate = allDebts.reduce((sum, d) => {
+            return sum + (d.interestRate * d.currentBalance);
+        }, 0) / (totalDebt.totalBalance || 1);
+
+        // Find highest interest debt
+        const highestInterestDebt = allDebts.reduce((max, d) =>
+            d.interestRate > (max?.interestRate || 0) ? d : max
+            , null);
+
+        // Find largest debt
+        const largestDebt = allDebts.reduce((max, d) =>
+            d.currentBalance > (max?.currentBalance || 0) ? d : max
+            , null);
+
+        // Calculate total progress
+        const totalOriginal = allDebts.reduce((sum, d) => sum + d.originalPrincipal, 0);
+        const totalPaid = totalOriginal - totalDebt.totalBalance;
+        const overallProgress = totalOriginal > 0 ? (totalPaid / totalOriginal) * 100 : 0;
+
+        return {
+            totalBalance: totalDebt.totalBalance,
+            totalMonthlyPayment: totalDebt.totalMonthlyPayment,
+            debtCount: totalDebt.count,
+            weightedAverageRate: weightedRate,
+            overallProgress,
+            totalPaidOff: totalPaid,
+            highestInterestDebt: highestInterestDebt ? {
+                id: highestInterestDebt._id,
+                name: highestInterestDebt.name,
+                rate: highestInterestDebt.interestRate,
+                balance: highestInterestDebt.currentBalance
+            } : null,
+            largestDebt: largestDebt ? {
+                id: largestDebt._id,
+                name: largestDebt.name,
+                balance: largestDebt.currentBalance
+            } : null,
+            debts: totalDebt.debts
+        };
+    }
+
+    /**
+     * Get refinancing analysis
+     */
+    async analyzeRefinancing(debtId, newInterestRate, newTermMonths = null) {
+        const debt = await DebtAccount.findById(debtId);
+        if (!debt) {
+            throw new Error('Debt not found');
+        }
+
+        const currentSchedule = await AmortizationSchedule.findOne({
+            debtAccountId: debtId,
+            scheduleType: 'standard'
         });
-      }
-      // Upcoming payments (within 3 days)
-      else if (debt.nextPaymentDate && debt.nextPaymentDate <= threeDaysFromNow) {
-        attentionNeeded.push({
-          debtId: debt._id,
-          name: debt.name,
-          type: 'upcoming',
-          severity: 'medium',
-          message: `Payment due in ${debt.daysUntilPayment} days`,
-          action: 'Prepare payment'
-        });
-      }
-      
-      // High interest rate (above 15%)
-      if (debt.interestRate > 15) {
-        attentionNeeded.push({
-          debtId: debt._id,
-          name: debt.name,
-          type: 'high_interest',
-          severity: 'medium',
-          message: `High interest rate: ${debt.interestRate}%`,
-          action: 'Consider refinancing or paying off early'
-        });
-      }
-      
-      // Low progress after 1 year
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      if (debt.startDate < oneYearAgo && debt.progressPercentage < 10) {
-        attentionNeeded.push({
-          debtId: debt._id,
-          name: debt.name,
-          type: 'low_progress',
-          severity: 'low',
-          message: 'Less than 10% paid off after 1 year',
-          action: 'Review payment strategy'
-        });
-      }
-    });
-    
-    return attentionNeeded.sort((a, b) => {
-      const severityOrder = { high: 0, medium: 1, low: 2 };
-      return severityOrder[a.severity] - severityOrder[b.severity];
-    });
-  }
 
-  /**
-   * Consolidate multiple debts into one
-   */
-  async consolidateDebts(debtIds, userId, consolidationData) {
-    const debts = await Debt.find({
-      _id: { $in: debtIds },
-      user: userId,
-      status: 'active'
-    });
-    
-    if (debts.length < 2) {
-      throw new Error('At least 2 active debts required for consolidation');
+        const term = newTermMonths || debt.remainingMonths;
+        const newPayment = this.calculateMonthlyPayment(debt.currentBalance, newInterestRate, term);
+        const newTotalInterest = this.calculateTotalInterest(debt.currentBalance, newPayment, term);
+
+        const currentTotalInterest = currentSchedule ? currentSchedule.totalInterest :
+            this.calculateTotalInterest(debt.currentBalance, debt.monthlyPayment, debt.remainingMonths);
+
+        const interestSavings = currentTotalInterest - newTotalInterest;
+        const paymentDifference = debt.monthlyPayment - newPayment;
+
+        return {
+            currentLoan: {
+                balance: debt.currentBalance,
+                interestRate: debt.interestRate,
+                monthlyPayment: debt.monthlyPayment,
+                remainingMonths: debt.remainingMonths,
+                totalInterest: currentTotalInterest
+            },
+            refinancedLoan: {
+                balance: debt.currentBalance,
+                interestRate: newInterestRate,
+                monthlyPayment: newPayment,
+                termMonths: term,
+                totalInterest: newTotalInterest
+            },
+            analysis: {
+                interestSavings,
+                paymentDifference,
+                percentageSaved: currentTotalInterest > 0 ? (interestSavings / currentTotalInterest) * 100 : 0,
+                recommendation: interestSavings > 0 ?
+                    'Refinancing could save you money' :
+                    'Current loan terms are better'
+            }
+        };
     }
-    
-    const totalBalance = debts.reduce((sum, d) => sum + d.currentBalance, 0);
-    const totalMonthlyPayment = debts.reduce((sum, d) => sum + d.monthlyPayment, 0);
-    
-    // Mark original debts as refinanced
-    await Debt.updateMany(
-      { _id: { $in: debtIds } },
-      { status: 'refinanced', isActive: false }
-    );
-    
-    // Create new consolidated debt
-    const consolidatedDebt = new Debt({
-      user: userId,
-      name: consolidationData.name || 'Consolidated Loan',
-      lender: consolidationData.lender,
-      loanType: consolidationData.loanType || 'personal',
-      principalAmount: totalBalance,
-      currentBalance: totalBalance,
-      interestRate: consolidationData.interestRate,
-      monthlyPayment: consolidationData.monthlyPayment || totalMonthlyPayment,
-      startDate: new Date(),
-      maturityDate: consolidationData.maturityDate,
-      notes: `Consolidated from: ${debts.map(d => d.name).join(', ')}`,
-      tags: ['consolidated']
-    });
-    
-    await consolidatedDebt.save();
-    
-    return {
-      consolidatedDebt,
-      originalDebts: debts.map(d => d._id),
-      savings: {
-        oldMonthlyPayment: totalMonthlyPayment,
-        newMonthlyPayment: consolidatedDebt.monthlyPayment,
-        monthlySavings: totalMonthlyPayment - consolidatedDebt.monthlyPayment
-      }
-    };
-  }
 }
 
 module.exports = new DebtService();

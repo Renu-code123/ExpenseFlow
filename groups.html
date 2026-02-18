@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Expense Management - ExpenseFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="expensetracker.css">
+  <style>
+    /* Groups Page Specific Styles */
+    .groups-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .groups-section {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      box-shadow: var(--shadow-glass);
+      animation: fadeInUp 1s ease-out 0.4s both;
+    }
+
+    .groups-section h3 {
+      color: var(--text-primary);
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(100, 255, 218, 0.15);
+      padding-bottom: 1rem;
+    }
+
+    .groups-section h3 i {
+      color: var(--accent-primary);
+    }
+
+    .group-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-control label {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-control input,
+    .form-control textarea {
+      padding: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .form-control input:focus,
+    .form-control textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+    }
+
+    .form-control input::placeholder,
+    .form-control textarea::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .form-control textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 0.85rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex: 1;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #64ffda, #48e0c1);
+      color: #041212;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(100, 255, 218, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .groups-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .groups-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .groups-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .groups-list::-webkit-scrollbar-thumb {
+      background: var(--accent-primary);
+      border-radius: 4px;
+    }
+
+    .group-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 1.25rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      animation: slideInLeft 0.3s ease-out;
+    }
+
+    .group-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(100, 255, 218, 0.3);
+      transform: translateX(5px);
+    }
+
+    .group-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .group-card-header h4 {
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .group-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+    }
+
+    .btn-icon:hover {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .group-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .group-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 0.75rem 0;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      color: var(--accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .group-members {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .member-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1px solid rgba(100, 255, 218, 0.3);
+    }
+
+    .members-text {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    /* Member Management Section */
+    .members-section {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      box-shadow: var(--shadow-glass);
+      animation: fadeInUp 1s ease-out 0.6s both;
+      margin-bottom: 2rem;
+    }
+
+    .members-section h3 {
+      color: var(--text-primary);
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(100, 255, 218, 0.15);
+      padding-bottom: 1rem;
+    }
+
+    .members-section h3 i {
+      color: var(--accent-primary);
+    }
+
+    .member-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .member-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .member-item {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      animation: slideInLeft 0.3s ease-out;
+    }
+
+    .member-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(100, 255, 218, 0.2);
+    }
+
+    .member-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    .member-avatar-large {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      border: 2px solid rgba(100, 255, 218, 0.3);
+      font-size: 0.85rem;
+    }
+
+    .member-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .member-name {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .member-email {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .member-role {
+      display: inline-block;
+      background: rgba(100, 255, 218, 0.1);
+      color: var(--accent-primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .member-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Group Details Section */
+    .group-details-section {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      box-shadow: var(--shadow-glass);
+      animation: fadeInUp 1s ease-out 0.8s both;
+      margin-bottom: 2rem;
+    }
+
+    .group-details-section h3 {
+      color: var(--text-primary);
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(100, 255, 218, 0.15);
+      padding-bottom: 1rem;
+    }
+
+    .group-details-section h3 i {
+      color: var(--accent-primary);
+    }
+
+    .group-overview {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .overview-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .overview-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(100, 255, 218, 0.2);
+    }
+
+    .overview-card-icon {
+      font-size: 2rem;
+      color: var(--accent-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .overview-card-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .overview-card-value {
+      color: var(--text-primary);
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .overview-card-detail {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+
+    .expenses-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .expense-item {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      border-left: 4px solid var(--accent-primary);
+    }
+
+    .expense-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(100, 255, 218, 0.2);
+    }
+
+    .expense-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    .expense-name {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .expense-details {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .expense-amount {
+      color: var(--accent-primary);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(100, 255, 218, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(100, 255, 218, 0.15);
+      padding-bottom: 1rem;
+    }
+
+    .modal-header h2 {
+      color: var(--text-primary);
+      font-size: 1.3rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-header h2 i {
+      color: var(--accent-primary);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      color: var(--accent-primary);
+      transform: scale(1.2);
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      border: 1px dashed rgba(100, 255, 218, 0.2);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      color: var(--accent-primary);
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state-text {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .no-group-selected {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-secondary);
+    }
+
+    .no-group-selected-icon {
+      font-size: 3rem;
+      color: var(--accent-primary);
+      margin-bottom: 1rem;
+      opacity: 0.4;
+    }
+
+    .no-group-selected-text {
+      font-size: 1rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .groups-container {
+        grid-template-columns: 1fr;
+      }
+
+      .group-overview {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .groups-section,
+      .members-section,
+      .group-details-section {
+        padding: 1.5rem;
+      }
+
+      .group-stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .groups-container {
+        gap: 1rem;
+      }
+
+      .group-card {
+        padding: 1rem;
+      }
+
+      .group-card-header h4 {
+        font-size: 1rem;
+      }
+
+      .overview-card {
+        padding: 1rem;
+      }
+
+      .overview-card-value {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </a>
+        <div class="nav-menu" id="nav-menu">
+          <a href="index.html#dashboard" class="nav-link">Dashboard</a>
+          <a href="index.html#analytics" class="nav-link">Analytics</a>
+          <a href="index.html#goals" class="nav-link">Goals</a>
+          <a href="groups.html" class="nav-link active">Groups</a>
+          <a href="index.html#settings" class="nav-link">Settings</a>
+        </div>
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="user-profile">
+          <button class="currency-btn" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
+          </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face" alt="User" class="profile-img">
+          <span class="username" id="username">John Doe</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Hero Section -->
+      <div class="hero-section glass">
+        <h1 class="hero-title">Group Expense Management</h1>
+        <p class="hero-subtitle">Create groups, invite members, and split expenses with ease</p>
+      </div>
+
+      <!-- Main Groups Container -->
+      <div class="groups-container">
+        <!-- Create Group Section -->
+        <div class="groups-section">
+          <h3><i class="fas fa-plus-circle"></i> Create New Group</h3>
+          <form class="group-form" id="createGroupForm">
+            <div class="form-control">
+              <label for="groupName">Group Name</label>
+              <input type="text" id="groupName" placeholder="Enter group name" required>
+            </div>
+            <div class="form-control">
+              <label for="groupDescription">Description</label>
+              <textarea id="groupDescription" placeholder="Describe your group's purpose..."></textarea>
+            </div>
+            <div class="form-control">
+              <label for="groupCurrency">Currency</label>
+              <select id="groupCurrency" required>
+                <option value="USD">USD - US Dollar</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="GBP">GBP - British Pound</option>
+                <option value="INR" selected>INR - Indian Rupee</option>
+                <option value="JPY">JPY - Japanese Yen</option>
+                <option value="AUD">AUD - Australian Dollar</option>
+                <option value="CAD">CAD - Canadian Dollar</option>
+              </select>
+            </div>
+            <div class="btn-group">
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-plus"></i> Create Group
+              </button>
+              <button type="reset" class="btn-secondary">
+                <i class="fas fa-redo"></i> Clear
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Groups List Section -->
+        <div class="groups-section">
+          <h3><i class="fas fa-layer-group"></i> Your Groups</h3>
+          <div class="groups-list" id="groupsList">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <i class="fas fa-inbox"></i>
+              </div>
+              <div class="empty-state-title">No Groups Yet</div>
+              <div class="empty-state-text">Create your first group to get started with group expense management</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Members Management Section -->
+      <div class="members-section" id="membersSection" style="display: none;">
+        <h3><i class="fas fa-users"></i> Member Management</h3>
+        
+        <div class="member-form">
+          <h4 style="color: var(--text-secondary); margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">Add New Member</h4>
+          <form id="addMemberForm">
+            <div class="form-row">
+              <div class="form-control">
+                <label for="memberEmail">Member Email</label>
+                <input type="email" id="memberEmail" placeholder="member@example.com" required>
+              </div>
+              <div class="form-control">
+                <label for="memberRole">Role</label>
+                <select id="memberRole" required>
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top: 1rem;">
+              <i class="fas fa-user-plus"></i> Add Member
+            </button>
+          </form>
+        </div>
+
+        <div>
+          <h4 style="color: var(--text-secondary); margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">Current Members</h4>
+          <div class="member-list" id="membersList">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <i class="fas fa-user-slash"></i>
+              </div>
+              <div class="empty-state-title">No Members</div>
+              <div class="empty-state-text">Add members to your group to start collaborating</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group Details and Expenses Section -->
+      <div class="group-details-section" id="groupDetailsSection" style="display: none;">
+        <h3><i class="fas fa-chart-pie"></i> Group Overview & Expenses</h3>
+        
+        <div class="group-overview" id="groupOverview">
+          <!-- Overview cards will be inserted here -->
+        </div>
+
+        <div>
+          <h4 style="color: var(--text-secondary); margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">Recent Group Expenses</h4>
+          <div class="expenses-list" id="expensesList">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <i class="fas fa-receipt"></i>
+              </div>
+              <div class="empty-state-title">No Expenses</div>
+              <div class="empty-state-text">Expenses added to this group will appear here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- No Group Selected Message -->
+  <div id="noGroupMessage" style="text-align: center; padding: 4rem 2rem; display: none;">
+    <div class="no-group-selected-icon">
+      <i class="fas fa-hand-point-left"></i>
+    </div>
+    <div class="no-group-selected-text">
+      <p style="color: var(--text-secondary); font-size: 1rem;">Select a group from the list to view members and expenses</p>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal" id="deleteModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h2>
+        <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Are you sure you want to delete this group? This action cannot be undone.</p>
+        <div class="btn-group" style="margin-top: 1.5rem;">
+          <button class="btn-primary" onclick="confirmDelete()">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+          <button class="btn-secondary" onclick="closeModal('deleteModal')">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <p>Smart money management for everyone. Track, analyze, and optimize your expenses.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="index.html">Dashboard</a></li>
+          <li><a href="index.html#analytics">Analytics</a></li>
+          <li><a href="index.html#goals">Goals</a></li>
+          <li><a href="groups.html">Groups</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Support</h4>
+        <ul class="footer-links">
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-container">
+        <p>&copy; 2024 ExpenseFlow. All rights reserved.</p>
+        <div class="footer-stats">
+          <span><i class="fas fa-check-circle"></i> Secure</span>
+          <span><i class="fas fa-mobile-alt"></i> Mobile Friendly</span>
+          <span><i class="fas fa-lock"></i> Private</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="groups.js"></script>
+</body>
+</html>

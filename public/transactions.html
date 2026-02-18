@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions History - ExpenseFlow</title>
+    <link rel="stylesheet" href="transactions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="nav-title">
+                <i class="fas fa-history"></i> Transaction History
+            </div>
+            <div class="nav-actions">
+                <a href="goals.html" class="nav-link">Goals</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+                <a href="budget.html" class="nav-link">Budget</a>
+                <a href="tag-manager.html" class="nav-link">Tags</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header with Actions -->
+        <header class="page-header">
+            <div class="header-content">
+                <h1>💳 Transaction History</h1>
+                <div class="header-actions">
+                    <button class="import-btn" onclick="openImportModal()"
+                        style="background-color: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-right: 0.5rem;">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                    <button class="add-btn" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i> Add Transaction
+                    </button>
+                    <button class="export-btn" onclick="exportTransactions()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filters & Search -->
+        <section class="filters-section">
+            <div class="search-bar">
+                <div class="search-input-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search transactions..." />
+                </div>
+            </div>
+
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Type</label>
+                    <select id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="expense">Expenses</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="food">Food & Dining</option>
+                        <option value="transport">Transportation</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="utilities">Bills & Utilities</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="salary">Salary</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <select id="dateFilter">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Amount Range</label>
+                    <select id="amountFilter">
+                        <option value="">Any Amount</option>
+                        <option value="0-100">₹0 - ₹100</option>
+                        <option value="100-500">₹100 - ₹500</option>
+                        <option value="500-1000">₹500 - ₹1,000</option>
+                        <option value="1000-5000">₹1,000 - ₹5,000</option>
+                        <option value="5000+">₹5,000+</option>
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="clear-filters-btn" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bulk Actions -->
+        <section class="bulk-actions" id="bulkActions" style="display: none;">
+            <div class="bulk-content">
+                <span class="selected-count">0 transactions selected</span>
+                <div class="bulk-buttons">
+                    <button class="bulk-btn delete" onclick="bulkDelete()">
+                        <i class="fas fa-trash"></i> Delete Selected
+                    </button>
+                    <button class="bulk-btn categorize" onclick="bulkCategorize()">
+                        <i class="fas fa-tags"></i> Categorize
+                    </button>
+                    <button class="bulk-btn export" onclick="bulkExport()">
+                        <i class="fas fa-download"></i> Export Selected
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transactions Table -->
+        <section class="transactions-section">
+            <div class="table-container">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            </th>
+                            <th onclick="sortTable('date')">
+                                Date <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('description')">
+                                Description <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('category')">
+                                Category <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('amount')">
+                                Amount <i class="fas fa-sort"></i>
+                            </th>
+                            <th onclick="sortTable('type')">
+                                Type <i class="fas fa-sort"></i>
+                            </th>
+                            <th>Tags</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <!-- Transactions will be loaded here -->
+                    </tbody>
+                </table>
+
+                <div class="loading-state" id="loadingState">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading transactions...</span>
+                </div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-receipt"></i>
+                    <h3>No transactions found</h3>
+                    <p>Start by adding your first transaction</p>
+                    <button class="add-first-btn" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i> Add Transaction
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pagination -->
+        <section class="pagination-section">
+            <div class="pagination-info">
+                <span id="paginationInfo">Showing 1-10 of 50 transactions</span>
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn" id="prevBtn" onclick="previousPage()">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <div class="page-numbers" id="pageNumbers">
+                    <!-- Page numbers will be generated here -->
+                </div>
+                <button class="page-btn" id="nextBtn" onclick="nextPage()">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add/Edit Transaction Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Transaction</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="transactionForm" class="transaction-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transactionType">Type *</label>
+                        <select id="transactionType" required>
+                            <option value="">Select Type</option>
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionAmount">Amount *</label>
+                        <input type="number" id="transactionAmount" placeholder="0.00" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionDescription">Description *</label>
+                    <input type="text" id="transactionDescription" placeholder="Enter description" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transactionCategory">Category *</label>
+                        <select id="transactionCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="food">Food & Dining</option>
+                            <option value="transport">Transportation</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="utilities">Bills & Utilities</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="salary">Salary</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionDate">Date *</label>
+                        <input type="date" id="transactionDate" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transactionProject">Link to Project</label>
+                        <select id="transactionProject">
+                            <option value="">No Project</option>
+                            <!-- Projects will be loaded dynamicallly -->
+                        </select>
+                    </div>
+                    <div class="form-group"
+                        style="flex-direction: row; align-items: center; gap: 10px; padding-top: 25px;">
+                        <input type="checkbox" id="transactionBillable" style="width: 20px; height: 20px;">
+                        <label for="transactionBillable" style="margin: 0; cursor: pointer;">Billable to Client</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionNotes">Notes</label>
+                    <textarea id="transactionNotes" placeholder="Additional notes (optional)" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Save Draft
+                    </button>
+                    <button type="button" class="btn-approve" onclick="transactionsManager.submitForApproval()">
+                        <i class="fas fa-paper-plane"></i> Submit for Approval
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Transaction Details</h3>
+                <button class="modal-close" onclick="closeDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="transaction-details" id="transactionDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Categorize Modal -->
+    <div id="bulkCategorizeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Bulk Categorize</h3>
+                <button class="modal-close" onclick="closeBulkCategorizeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="bulk-form">
+                <div class="form-group">
+                    <label for="bulkCategory">Select Category</label>
+                    <select id="bulkCategory">
+                        <option value="food">Food & Dining</option>
+                        <option value="transport">Transportation</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="utilities">Bills & Utilities</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="salary">Salary</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeBulkCategorizeModal()">Cancel</button>
+                    <button type="button" class="btn-submit" onclick="applyBulkCategorize()">
+                        <i class="fas fa-tags"></i> Apply Category
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Import Modal -->
+        <div id="importModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Import Transactions</h3>
+                    <button class="modal-close" onclick="closeImportModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="import-body">
+                    <p>Upload a CSV or JSON file to import transactions.</p>
+                    <div class="file-upload-container" onclick="document.getElementById('importFile').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload or drag and drop</p>
+                        <input type="file" id="importFile"
+                            accept=".csv,.json,application/json,text/csv,application/vnd.ms-excel"
+                            style="display: none;" onchange="handleImportFileSelect(event)">
+                    </div>
+                    <div id="filePreview" class="file-preview" style="display: none;"></div>
+                    <div id="importError" class="error-message" style="display: none;"></div>
+                    <div id="importSuccess" class="success-message" style="display: none;"></div>
+                    <div class="template-download">
+                        <small>Need a template? <a href="/templates/transactions.csv" download>Download CSV
+                                Template</a></small>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeImportModal()">Cancel</button>
+                    <button id="btnImportSubmit" class="btn-submit" onclick="submitImport()">
+                        <i class="fas fa-file-import"></i> Import Transactions
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script src="js/import-modal.js"></script>
+        <script src="protect.js"></script>
+        <script src="transactions.js"></script>
+</body>
+
+</html>

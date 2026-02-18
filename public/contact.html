@@ -14,144 +14,13 @@
 
     <!-- SAME CSS FILE -->
     <link rel="stylesheet" href="expensetracker.css">
-    <style>
-        .contact-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
+    <link rel="stylesheet" href="contact.css">
 
-        .contact-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .contact-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .contact-info {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .info-card {
-            background: #1a1a3a;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid #2e2e5e;
-            transition: transform 0.3s ease;
-        }
-
-        .info-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .info-card i {
-            font-size: 1.5rem;
-            color: #64ffda;
-            margin-bottom: 1rem;
-        }
-
-        .info-card h4 {
-            margin-bottom: 0.5rem;
-            color: #fff;
-        }
-
-        .info-card p {
-            color: #8892b0;
-            font-size: 0.9rem;
-        }
-
-        .contact-form-card {
-            background: #1a1a3a;
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid #2e2e5e;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #ccd6f6;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.8rem;
-            background: #0f0f23;
-            border: 1px solid #2e2e5e;
-            border-radius: 8px;
-            color: #fff;
-            font-family: inherit;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #64ffda;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #64ffda 0%, #4facfe 100%);
-            border: none;
-            border-radius: 8px;
-            color: #0a192f;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .submit-btn:hover {
-            opacity: 0.9;
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .status-msg {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .status-msg.success {
-            display: block;
-            background: rgba(100, 255, 218, 0.1);
-            color: #64ffda;
-            border: 1px solid #64ffda;
-        }
-
-        .status-msg.error {
-            display: block;
-            background: rgba(255, 107, 107, 0.1);
-            color: #ff6b6b;
-            border: 1px solid #ff6b6b;
-        }
-    </style>
 </head>
 
 <body>
 
+    <div class="cursor-trail-container" id="cursor-trail"></div>
     <!-- HEADER -->
     <header class="header">
         <nav class="navbar">
@@ -168,6 +37,11 @@
                     <a href="AboutUs.html" class="nav-link">About Us</a>
                     <a href="contact.html" class="nav-link active">Contact</a>
                 </div>
+                <!-- Dark / Light Toggle -->
+<div class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</div>
+
             </div>
         </nav>
     </header>
@@ -260,73 +134,17 @@
         </div>
 
         <div class="footer-bottom">
-            <div class="footer-container">
-                <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
-            </div>
+            <p id="copyright" style="text-align:center;"></p>
+            <script>
+                document.getElementById("copyright").innerHTML =
+                `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+            </script>
         </div>
     </footer>
 
-    <script>
-        document.getElementById('contactForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
 
-            const submitBtn = document.getElementById('submitBtn');
-            const statusMsg = document.getElementById('statusMsg');
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                subject: document.getElementById('subject').value,
-                message: document.getElementById('message').value,
-                userId: localStorage.getItem('userId') // Optional if logged in
-            };
-
-            submitBtn.disabled = true;
-            submitBtn.querySelector('span').textContent = 'Sending...';
-            statusMsg.className = 'status-msg';
-            statusMsg.textContent = '';
-
-            try {
-                const response = await fetch('/api/contact', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                let data;
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.includes("application/json")) {
-                    data = await response.json();
-                } else {
-                    const text = await response.text();
-                    throw new Error(text || `Server returned ${response.status} ${response.statusText}`);
-                }
-
-                if (response.ok) {
-                    statusMsg.classList.add('success');
-                    statusMsg.textContent = data.message;
-                    document.getElementById('contactForm').reset();
-                } else {
-                    throw new Error(data.error || data.message || 'Something went wrong');
-                }
-            } catch (error) {
-                statusMsg.classList.add('error');
-                statusMsg.textContent = error.message;
-                console.error('Submission error:', error);
-
-                if (error.message.includes('Unexpected end of JSON input') ||
-                    error.message.includes('Fetch') ||
-                    error.message.includes('405')) {
-                    statusMsg.textContent += ' (Tip: Make sure you are using port 3000. Access the form via http://localhost:3000/contact.html and ensure "npm run dev" is running in your terminal)';
-                }
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.querySelector('span').textContent = 'Send Message';
-            }
-        });
-    </script>
-
+    <script src="protect.js"></script>
+    <script src="contact.js"></script>
 </body>
 
 </html>

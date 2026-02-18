@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Calculator - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="loanCalculator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
+                <div class="nav-menu" id="nav-menu">
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="accounts.html" class="nav-link">Accounts</a>
+                    <a href="analytics.html" class="nav-link">Analytics</a>
+                    <a href="goals.html" class="nav-link">Goals</a>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">More</a>
+                        <div class="dropdown-menu">
+                            <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
+                            <a href="settings.html" class="dropdown-link">Overview</a>
+                            <a href="contributor.html" class="dropdown-link">Contributors</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle" id="nav-toggle">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+                <div class="user-profile">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+                        alt="User" class="profile-img">
+                    <span class="username" id="navUsername"></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Cursor Trail -->
+    <div class="cursor-trail-container" id="cursor-trail"></div>
+
+    <div class="loan-container">
+        <!-- Page Header -->
+        <header class="loan-header">
+            <div class="header-left">
+                <a href="dashboard.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <h1><i class="fas fa-calculator"></i> Loan Calculator</h1>
+                <div class="header-subtitle">Calculate EMI, interest &amp; amortization schedules</div>
+            </div>
+            <div class="header-right">
+                <button class="action-icon" id="reset-btn" title="Reset All">
+                    <i class="fas fa-rotate-right"></i>
+                </button>
+                <button class="action-icon" id="export-btn" title="Export as PDF">
+                    <i class="fas fa-file-export"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="loan-main">
+            <!-- Loan Type Tabs -->
+            <div class="loan-tabs glass-effect">
+                <button class="tab-btn active" data-type="personal">
+                    <i class="fas fa-user"></i> Personal Loan
+                </button>
+                <button class="tab-btn" data-type="home">
+                    <i class="fas fa-house"></i> Home Loan
+                </button>
+                <button class="tab-btn" data-type="car">
+                    <i class="fas fa-car"></i> Car Loan
+                </button>
+                <button class="tab-btn" data-type="education">
+                    <i class="fas fa-graduation-cap"></i> Education Loan
+                </button>
+                <button class="tab-btn" data-type="business">
+                    <i class="fas fa-briefcase"></i> Business Loan
+                </button>
+            </div>
+
+            <!-- Calculator Input Section -->
+            <div class="calc-grid">
+                <!-- Input Panel -->
+                <div class="input-panel glass-effect">
+                    <h2 class="panel-title"><i class="fas fa-sliders"></i> Loan Details</h2>
+
+                    <div class="input-group">
+                        <label for="loan-amount">
+                            <i class="fas fa-dollar-sign"></i> Loan Amount
+                        </label>
+                        <div class="input-with-display">
+                            <input type="range" id="loan-amount-slider" min="1000" max="10000000" step="1000" value="500000">
+                            <div class="input-row">
+                                <span class="currency-symbol">$</span>
+                                <input type="number" id="loan-amount" value="500000" min="1000" max="10000000" step="1000">
+                            </div>
+                        </div>
+                        <div class="range-labels">
+                            <span>$1K</span>
+                            <span>$10M</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="interest-rate">
+                            <i class="fas fa-percent"></i> Interest Rate (% p.a.)
+                        </label>
+                        <div class="input-with-display">
+                            <input type="range" id="interest-rate-slider" min="0.5" max="30" step="0.1" value="8.5">
+                            <div class="input-row">
+                                <input type="number" id="interest-rate" value="8.5" min="0.5" max="30" step="0.1">
+                                <span class="unit">%</span>
+                            </div>
+                        </div>
+                        <div class="range-labels">
+                            <span>0.5%</span>
+                            <span>30%</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="loan-tenure">
+                            <i class="fas fa-calendar-alt"></i> Loan Tenure
+                        </label>
+                        <div class="input-with-display">
+                            <input type="range" id="loan-tenure-slider" min="1" max="30" step="1" value="5">
+                            <div class="input-row">
+                                <input type="number" id="loan-tenure" value="5" min="1" max="30" step="1">
+                                <div class="tenure-toggle">
+                                    <button class="tenure-btn active" data-unit="years">Years</button>
+                                    <button class="tenure-btn" data-unit="months">Months</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="range-labels">
+                            <span>1</span>
+                            <span>30</span>
+                        </div>
+                    </div>
+
+                    <button class="calculate-btn" id="calculate-btn">
+                        <i class="fas fa-calculator"></i> Calculate EMI
+                    </button>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="results-panel">
+                    <!-- EMI Card -->
+                    <div class="emi-card glass-effect">
+                        <div class="emi-highlight">
+                            <span class="emi-label">Monthly EMI</span>
+                            <span class="emi-value" id="emi-value">$10,237</span>
+                        </div>
+                        <div class="emi-pulse"></div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="summary-cards">
+                        <div class="summary-card glass-effect">
+                            <div class="card-icon principal-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="card-info">
+                                <span class="card-label">Principal Amount</span>
+                                <span class="card-value" id="principal-value">$500,000</span>
+                            </div>
+                        </div>
+                        <div class="summary-card glass-effect">
+                            <div class="card-icon interest-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="card-info">
+                                <span class="card-label">Total Interest</span>
+                                <span class="card-value" id="interest-value">$114,220</span>
+                            </div>
+                        </div>
+                        <div class="summary-card glass-effect">
+                            <div class="card-icon total-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="card-info">
+                                <span class="card-label">Total Payment</span>
+                                <span class="card-value" id="total-value">$614,220</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="chart-container glass-effect">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> Payment Breakdown</h3>
+                            <div class="chart-toggle">
+                                <button class="chart-btn active" data-chart="doughnut">
+                                    <i class="fas fa-chart-pie"></i>
+                                </button>
+                                <button class="chart-btn" data-chart="bar">
+                                    <i class="fas fa-chart-bar"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot principal-dot"></span>
+                                <span>Principal</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot interest-dot"></span>
+                                <span>Interest</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yearly Breakdown Chart -->
+            <div class="yearly-chart-section glass-effect">
+                <h3><i class="fas fa-chart-area"></i> Yearly Payment Breakdown</h3>
+                <div class="yearly-chart-wrapper">
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Amortization Schedule -->
+            <div class="amortization-section glass-effect">
+                <div class="amort-header">
+                    <h3><i class="fas fa-table"></i> Amortization Schedule</h3>
+                    <div class="amort-controls">
+                        <select id="amort-view" class="amort-select">
+                            <option value="yearly">Yearly View</option>
+                            <option value="monthly">Monthly View</option>
+                        </select>
+                        <button class="action-icon" id="download-schedule" title="Download Schedule">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="amort-table" id="amort-table">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>EMI</th>
+                                <th>Principal</th>
+                                <th>Interest</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="amort-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Loan Comparison -->
+            <div class="comparison-section glass-effect">
+                <h3><i class="fas fa-code-compare"></i> Quick Comparison</h3>
+                <p class="comparison-subtitle">Compare how different rates or tenures affect your EMI</p>
+                <div class="comparison-grid" id="comparison-grid">
+                    <div class="comparison-card">
+                        <div class="comp-label">Current</div>
+                        <div class="comp-rate" id="comp-rate-1">8.5%</div>
+                        <div class="comp-tenure" id="comp-tenure-1">5 Years</div>
+                        <div class="comp-emi" id="comp-emi-1">$10,237</div>
+                        <div class="comp-total" id="comp-total-1">Total: $614,220</div>
+                    </div>
+                    <div class="comparison-card">
+                        <div class="comp-label">Lower Rate</div>
+                        <div class="comp-rate" id="comp-rate-2">7.5%</div>
+                        <div class="comp-tenure" id="comp-tenure-2">5 Years</div>
+                        <div class="comp-emi" id="comp-emi-2">$10,012</div>
+                        <div class="comp-total" id="comp-total-2">Total: $600,720</div>
+                        <div class="comp-savings savings" id="comp-savings-2">Save $13,500</div>
+                    </div>
+                    <div class="comparison-card">
+                        <div class="comp-label">Longer Tenure</div>
+                        <div class="comp-rate" id="comp-rate-3">8.5%</div>
+                        <div class="comp-tenure" id="comp-tenure-3">10 Years</div>
+                        <div class="comp-emi" id="comp-emi-3">$6,193</div>
+                        <div class="comp-total" id="comp-total-3">Total: $743,160</div>
+                        <div class="comp-savings extra" id="comp-savings-3">Pay $128,940 more</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips Section -->
+            <div class="tips-section glass-effect">
+                <h3><i class="fas fa-lightbulb"></i> Smart Loan Tips</h3>
+                <div class="tips-grid">
+                    <div class="tip-card">
+                        <div class="tip-icon"><i class="fas fa-arrow-trend-down"></i></div>
+                        <h4>Prepayment</h4>
+                        <p>Making extra payments towards principal can significantly reduce total interest and shorten your loan tenure.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon"><i class="fas fa-magnifying-glass-dollar"></i></div>
+                        <h4>Compare Rates</h4>
+                        <p>Even a 0.5% difference in interest rate can save you thousands over the loan tenure. Always shop around.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon"><i class="fas fa-shield-halved"></i></div>
+                        <h4>Credit Score</h4>
+                        <p>Maintain a credit score of 750+ to get the best loan rates and faster approvals from lenders.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+                        <h4>EMI-to-Income</h4>
+                        <p>Keep your total EMI obligations under 40% of your monthly income for healthy financial management.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
+                <p class="footer-description">
+                    Smart money management made simple. Track, analyze, and optimize
+                    your financial habits.
+                </p>
+                <div class="social-links">
+                    <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
+                    <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Github">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Email">
+                        <i class="far fa-envelope"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="AboutUs.html">About Us</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-container">
+                <p id="copyright" style="text-align:center;"></p>
+                <script>
+                    document.getElementById("copyright").innerHTML =
+                        `&copy; ${new Date().getFullYear()} Expense Flow. All rights reserved.`;
+                </script>
+                <div class="footer-stats">
+                    <span>🏆 Trusted by 10,000+ users</span>
+                    <span>💰 ₹50M+ tracked</span>
+                    <span>📊 99.9% uptime</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="loanCalculator.js"></script>
+    <script>
+        // Mobile nav toggle
+        const navToggle = document.getElementById('nav-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        if (navToggle && navMenu) {
+            navToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+                navToggle.classList.toggle('active');
+            });
+        }
+
+        // Dropdown toggle
+        const dropdown = document.querySelector('.dropdown-toggle');
+        if (dropdown) {
+            dropdown.addEventListener('click', (e) => {
+                e.preventDefault();
+                dropdown.parentElement.classList.toggle('active');
+            });
+        }
+    </script>
+</body>
+</html>

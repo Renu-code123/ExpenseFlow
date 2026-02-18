@@ -1,167 +1,139 @@
-const webpush = require('web-push');
-const twilio = require('twilio');
-const axios = require('axios');
-const { Notification, NotificationPreferences } = require('../models/Notification');
-const emailService = require('./emailService');
+const Notification = require('../models/Notification');
+const NotificationPreference = require('../models/NotificationPreference');
+const adapters = require('./notificationAdapters');
+const templates = require('../templates/notificationTemplates');
 
-let ioInstance = null;
-
-// Configure web push only if VAPID keys are provided and valid
-if (process.env.VAPID_PUBLIC_KEY &&
-    process.env.VAPID_PRIVATE_KEY &&
-    process.env.VAPID_SUBJECT &&
-    process.env.VAPID_PUBLIC_KEY.length > 10) {
-  try {
-    webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT,
-      process.env.VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
-    console.log('Web push configured successfully');
-  } catch (error) {
-    console.warn('Web push configuration failed:', error.message);
-  }
-}
-
-// Configure Twilio only if credentials are provided
-let twilioClient = null;
-if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-  twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-}
-
+/**
+ * Programmable Notification Hub
+ * Issue #646: Centralized logic for multi-channel message distribution
+ */
 class NotificationService {
-  // Set the io instance for dependency injection
-  setIo(io) {
-    ioInstance = io;
+  constructor() {
+    this.io = null;
   }
 
-  setIo(io) {
-    ioInstance = io;
+  setSocketIO(io) {
+    this.io = io;
   }
-  
-  // Send notification through multiple channels
-  async sendNotification(userId, notificationData) {
+
+  /**
+   * Dispatch a notification to multiple channels based on user preferences
+   * @param {string} userId - Target user ID
+   * @param {string} templateKey - key from notificationTemplates.js
+   * @param {Object} data - Context data for the template
+   */
+  async dispatch(userId, templateKey, data) {
     try {
-      // Get user preferences
-      const preferences = await NotificationPreferences.findOne({ user: userId });
+      // 1. Render content
+      const content = templates.render(templateKey, data);
+
+      // 2. Fetch user preferences
+      let preferences = await NotificationPreference.findOne({ userId });
       if (!preferences) {
-        await this.createDefaultPreferences(userId);
+        preferences = await NotificationPreference.create({ userId });
       }
 
-      // Create notification record
+      // 3. Persist notification in DB (In-App is always persisted)
       const notification = new Notification({
-        user: userId,
-        ...notificationData,
-        channels: this.determineChannels(notificationData.type, preferences)
+        userId,
+        title: content.title,
+        message: content.message,
+        type: templateKey.split('_')[0],
+        priority: content.priority,
+        metadata: data
       });
 
+      // 4. Distribute to channels
+      const channelPromises = [];
+
+      // In-App Channel
+      if (preferences.channels.in_app) {
+        notification.channels.push({ name: 'in_app' });
+        channelPromises.push(
+          adapters.InAppAdapter(this.io).send(userId, { ...content, id: notification._id })
+            .then(res => this._updateChannelStatus(notification, 'in_app', res))
+        );
+      }
+
+      // Email Channel
+      if (preferences.channels.email) {
+        notification.channels.push({ name: 'email' });
+        // Assuming user object is pre-fetched or email is in data
+        const userEmail = data.userEmail || await this._getUserEmail(userId);
+        channelPromises.push(
+          adapters.EmailAdapter.send(userEmail, content)
+            .then(res => this._updateChannelStatus(notification, 'email', res))
+        );
+      }
+
+      // Webhook Channel
+      if (preferences.channels.webhook && preferences.webhookUrl) {
+        notification.channels.push({ name: 'webhook' });
+        channelPromises.push(
+          adapters.WebhookAdapter.send(preferences.webhookUrl, content)
+            .then(res => this._updateChannelStatus(notification, 'webhook', res))
+        );
+      }
+
+      await Promise.all(channelPromises);
       await notification.save();
-
-      // Send through enabled channels
-      const deliveryPromises = [];
-
-      if (notification.channels.includes('in_app')) {
-        deliveryPromises.push(this.sendInAppNotification(notification));
-      }
-
-      if (notification.channels.includes('email') && preferences?.channels.email.enabled) {
-        deliveryPromises.push(this.sendEmailNotification(notification, preferences));
-      }
-
-      if (notification.channels.includes('push') && preferences?.channels.push.enabled) {
-        deliveryPromises.push(this.sendPushNotification(notification, preferences));
-      }
-
-      if (notification.channels.includes('sms') && preferences?.channels.sms.enabled) {
-        deliveryPromises.push(this.sendSMSNotification(notification, preferences));
-      }
-
-      if (notification.channels.includes('webhook') && preferences?.channels.webhook.enabled) {
-        deliveryPromises.push(this.sendWebhookNotification(notification, preferences));
-      }
-
-      // Wait for all deliveries
-      await Promise.allSettled(deliveryPromises);
 
       return notification;
     } catch (error) {
-      console.error('Notification service error:', error);
+      console.error('[NotificationService] Dispatch failed:', error);
       throw error;
     }
   }
 
-  // Send in-app notification via Socket.IO
-  async sendInAppNotification(notification) {
-    try {
-      const io = ioInstance;
-      if (io) {
-        io.to(`user_${notification.user}`).emit('notification', {
-          id: notification._id,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          priority: notification.priority,
-          data: notification.data,
-          timestamp: notification.createdAt
-        });
-      }
+  /**
+   * Mark a single notification as read
+   */
+  async markAsRead(notificationId, userId) {
+    return await Notification.findOneAndUpdate(
+      { _id: notificationId, userId },
+      { status: 'read' },
+      { new: true }
+    );
+  }
 
-      // Mark as delivered
-      notification.delivered.in_app = true;
-      notification.deliveredAt.in_app = new Date();
-      await notification.save();
+  /**
+   * Mark all notifications for a user as read
+   */
+  async markAllRead(userId) {
+    return await Notification.updateMany(
+      { userId, status: 'unread' },
+      { status: 'read' }
+    );
+  }
 
-      return true;
-    } catch (error) {
-      console.error('In-app notification error:', error);
-      return false;
+  /**
+   * Get user notification history with pagination
+   */
+  async getHistory(userId, options = {}) {
+    const { page = 1, limit = 20, status } = options;
+    const query = { userId };
+    if (status) query.status = status;
+
+    return await Notification.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+  }
+
+  _updateChannelStatus(notification, channelName, result) {
+    const channel = notification.channels.find(c => c.name === channelName);
+    if (channel) {
+      channel.status = result.success ? 'sent' : 'failed';
+      channel.deliveredAt = result.success ? new Date() : null;
+      if (!result.success) channel.error = result.error;
     }
   }
 
-  init() {
-    try {
-      this.emailTransporter = nodemailer.createTransporter({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-      console.log('Notification service initialized');
-    } catch (error) {
-      console.log('Email service not configured');
-    }
-  }
-
-  async sendEmail(to, subject, text, html) {
-    if (!this.emailTransporter) {
-      console.log('Email not configured, skipping notification');
-      return { success: false, message: 'Email not configured' };
-    }
-
-    try {
-      const result = await this.emailTransporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to,
-        subject,
-        text,
-        html
-      });
-      return { success: true, messageId: result.messageId };
-    } catch (error) {
-      console.error('Email send error:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  async sendPushNotification(subscription, payload) {
-    console.log('Push notifications not available in simplified version');
-    return { success: false, message: 'Push notifications not available' };
-  }
-
-  async sendSMS(to, message) {
-    console.log('SMS not available in simplified version');
-    return { success: false, message: 'SMS not available' };
+  async _getUserEmail(userId) {
+    // In real app, fetch from User model cache or DB
+    const User = require('../models/User');
+    const user = await User.findById(userId).select('email');
+    return user ? user.email : null;
   }
 }
 

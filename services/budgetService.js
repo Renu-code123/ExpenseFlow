@@ -1,143 +1,355 @@
-// Budget service with real implementation
-const Budget = require('../models/Budget');
-const Goal = require('../models/Goal');
-const Expense = require('../models/Expense');
-const logger = require('../utils/logger');
+/**
+ * Budget Service
+ * Handles budget operations with AI-driven self-healing capabilities
+ */
+
+const budgetRepository = require('../repositories/budgetRepository');
+const expenseRepository = require('../repositories/expenseRepository');
+const budgetIntelligenceService = require('./budgetIntelligenceService');
+const intelligenceService = require('./intelligenceService');
+const mongoose = require('mongoose');
+
+const eventDispatcher = require('./eventDispatcher');
 
 class BudgetService {
+  constructor() {
+    this._initializeEventListeners();
+  }
+
+  _initializeEventListeners() {
+    eventDispatcher.on('transaction:validated', async ({ transaction, userId }) => {
+      try {
+        const amount = transaction.convertedAmount || transaction.amount;
+        // Impact budget & goals only for validated transactions
+        if (transaction.type === 'expense') {
+          await this.checkBudgetAlerts(userId);
+        }
+        await this.updateGoalProgress(
+          userId,
+          transaction.type === 'expense' ? -amount : amount,
+          transaction.category
+        );
+        console.log(`[BudgetService] Updated impact for transaction ${transaction._id}`);
+      } catch (err) {
+        console.error('[BudgetService] Failed to process transaction event:', err);
+      }
+    });
+  }
+
+  /**
+   * Check budget alerts for a user
+   */
   async checkBudgetAlerts(userId) {
     try {
-      logger.info(`Checking budget alerts for user ${userId}`);
-
-      // Get all active budgets for the user
-      const budgets = await Budget.find({
-        user: userId,
-        isActive: true,
-        endDate: { $gte: new Date() }
-      });
-
+      const budgets = await budgetRepository.findActiveByUser(userId);
       const alerts = [];
+      const now = new Date();
 
       for (const budget of budgets) {
-        // Calculate spent amount for this budget period
-        const spent = await this._calculateSpentAmount(userId, budget);
+        const usagePercent = budget.usagePercent;
 
-        // Update the spent field in the budget
-        budget.spent = spent;
-        budget.lastCalculated = new Date();
-        await budget.save();
-
-        // Check if alert threshold is exceeded
-        const spentPercentage = (spent / budget.amount) * 100;
-        if (spentPercentage >= budget.alertThreshold) {
+        // Standard threshold alerts
+        if (usagePercent >= 100) {
           alerts.push({
+            type: 'exceeded',
+            severity: 'critical',
             budgetId: budget._id,
-            name: budget.name,
             category: budget.category,
-            spent: spent,
-            budgetAmount: budget.amount,
-            percentage: Math.round(spentPercentage),
-            threshold: budget.alertThreshold,
-            remaining: Math.max(0, budget.amount - spent),
-            period: budget.period
+            name: budget.name,
+            amount: budget.amount,
+            spent: budget.spent,
+            usagePercent: Math.round(usagePercent * 10) / 10,
+            message: `Budget "${budget.name}" has been exceeded! Spent ${budget.spent} of ${budget.amount}`
+          });
+        } else if (usagePercent >= budget.alertThreshold) {
+          alerts.push({
+            type: 'warning',
+            severity: 'high',
+            budgetId: budget._id,
+            category: budget.category,
+            name: budget.name,
+            amount: budget.amount,
+            spent: budget.spent,
+            usagePercent: Math.round(usagePercent * 10) / 10,
+            message: `Budget "${budget.name}" is at ${Math.round(usagePercent)}% usage`
+          });
+        }
+
+        // Predictive burn rate alerts (Early Warning System)
+        try {
+          const exhaustionPrediction = await intelligenceService.predictBudgetExhaustion(userId, budget._id);
+
+          if (exhaustionPrediction.willExceedBudget && exhaustionPrediction.status !== 'safe') {
+            alerts.push({
+              type: 'predictive',
+              severity: exhaustionPrediction.severity,
+              budgetId: budget._id,
+              category: budget.category,
+              name: budget.name,
+              amount: budget.amount,
+              spent: exhaustionPrediction.spent,
+              remaining: exhaustionPrediction.remaining,
+              usagePercent: exhaustionPrediction.percentage,
+              dailyBurnRate: exhaustionPrediction.dailyBurnRate,
+              predictedExhaustionDate: exhaustionPrediction.predictedExhaustionDate,
+              daysUntilExhaustion: exhaustionPrediction.daysUntilExhaustion,
+              projectedEndAmount: exhaustionPrediction.projectedEndAmount,
+              message: exhaustionPrediction.message
+            });
+          }
+        } catch (predictionError) {
+          console.error(`[BudgetService] Prediction error for budget ${budget._id}:`, predictionError);
+        }
+
+        // AI-driven anomaly alerts
+        if (budget.intelligence.anomalyCount > 0) {
+          const recentAnomalies = budget.intelligence.anomalies.filter(
+            a => new Date(a.detectedAt) > new Date(now - 7 * 24 * 60 * 60 * 1000)
+          );
+
+          if (recentAnomalies.length > 0) {
+            alerts.push({
+              type: 'anomaly',
+              severity: 'medium',
+              budgetId: budget._id,
+              category: budget.category,
+              name: budget.name,
+              anomalyCount: recentAnomalies.length,
+              message: `${recentAnomalies.length} unusual transaction(s) detected in "${budget.name}" this week`
+            });
+          }
+        }
+
+        // Prediction-based alerts
+        if (budget.intelligence.predictedSpend > budget.amount) {
+          const predicted = budget.intelligence.predictedSpend;
+          const confidence = budget.intelligence.predictionConfidence;
+
+          if (confidence >= 60) {
+            alerts.push({
+              type: 'prediction',
+              severity: 'medium',
+              budgetId: budget._id,
+              category: budget.category,
+              name: budget.name,
+              predictedSpend: predicted,
+              confidence,
+              message: `AI predicts "${budget.name}" will exceed budget (${confidence}% confidence)`
+            });
+          }
+        }
+
+        // Pending reallocation suggestions
+        const pendingReallocations = budget.intelligence.reallocations.filter(
+          r => r.status === 'pending'
+        );
+
+        if (pendingReallocations.length > 0) {
+          alerts.push({
+            type: 'reallocation',
+            severity: 'info',
+            budgetId: budget._id,
+            category: budget.category,
+            name: budget.name,
+            suggestions: pendingReallocations.length,
+            message: `${pendingReallocations.length} fund reallocation suggestion(s) available for "${budget.name}"`
           });
         }
       }
 
-      logger.info(`Found ${alerts.length} budget alerts for user ${userId}`);
+      // Sort by severity
+      const severityOrder = { critical: 1, high: 2, medium: 3, low: 4, info: 5 };
+      alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
       return { alerts };
     } catch (error) {
-      logger.error(`Error checking budget alerts for user ${userId}:`, error);
-      throw error;
+      console.error('[BudgetService] Check alerts error:', error);
+      return { alerts: [], error: error.message };
     }
   }
 
+  /**
+   * Update goal progress and spending history
+   */
   async updateGoalProgress(userId, amount, category) {
     try {
-      logger.info(`Updating goal progress for user ${userId}: ${amount} in ${category}`);
-
-      // Find active goals that match the category or are general
-      const goals = await Goal.find({
+      // Find active budget for this category
+      const budget = await budgetRepository.findOne({
         user: userId,
-        status: 'active',
-        isActive: true,
-        $or: [
-          { category: category },
-          { category: 'general' }
-        ]
+        category,
+        isActive: true
       });
 
-      const updates = [];
+      if (!budget) {
+        return { success: false, message: 'No active budget for category' };
+      }
 
-      for (const goal of goals) {
-        // Update current amount
-        const previousAmount = goal.currentAmount;
-        goal.currentAmount += amount;
+      // Update spent amount
+      budget.spent = (budget.spent || 0) + amount;
+      budget.lastCalculated = new Date();
 
-        // Check milestones
-        const progressPercentage = (goal.currentAmount / goal.targetAmount) * 100;
-        const achievedMilestones = [];
+      // Add to spending history
+      const currentPeriod = this.getCurrentPeriod(budget.period);
+      budget.addSpendingRecord(amount, currentPeriod);
 
-        for (const milestone of goal.milestones) {
-          if (!milestone.achieved && progressPercentage >= milestone.percentage) {
-            milestone.achieved = true;
-            milestone.achievedDate = new Date();
-            achievedMilestones.push(milestone);
-          }
-        }
+      // Trigger intelligence update
+      await budgetRepository.updateById(budget._id, budget);
+      await budgetIntelligenceService.processBudgetIntelligence(budget);
 
-        // Check if goal is completed
-        if (goal.currentAmount >= goal.targetAmount && goal.status === 'active') {
-          goal.status = 'completed';
-        }
+      // Analyze transaction for anomalies
+      const anomalyCheck = await budgetIntelligenceService.analyzeTransaction(userId, {
+        amount,
+        category,
+        description: 'Expense update',
+        _id: new mongoose.Types.ObjectId()
+      });
 
-        await goal.save();
+      return {
+        success: true,
+        budget: {
+          category: budget.category,
+          spent: budget.spent,
+          amount: budget.amount,
+          remaining: budget.remaining,
+          usagePercent: budget.usagePercent
+        },
+        anomaly: anomalyCheck.isAnomaly ? anomalyCheck : null
+      };
+    } catch (error) {
+      console.error('[BudgetService] Update progress error:', error);
+      return { success: false, error: error.message };
+    }
+  }
 
-        updates.push({
-          goalId: goal._id,
-          title: goal.title,
-          previousAmount: previousAmount,
-          newAmount: goal.currentAmount,
-          targetAmount: goal.targetAmount,
-          progress: Math.round(progressPercentage),
-          achievedMilestones: achievedMilestones.length,
-          status: goal.status
+  /**
+   * Get current period string based on budget period type
+   */
+  getCurrentPeriod(periodType) {
+    const now = new Date();
+    switch (periodType) {
+      case 'weekly':
+        const weekNum = Math.ceil((now.getDate() - now.getDay() + 7) / 7);
+        return `${now.getFullYear()}-W${weekNum}`;
+      case 'yearly':
+        return `${now.getFullYear()}`;
+      case 'monthly':
+      default:
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+  }
+
+  /**
+   * Recalculate all budget spending from transactions
+   */
+  async recalculateBudgets(userId) {
+    try {
+      const budgets = await budgetRepository.findActiveByUser(userId);
+      const results = [];
+
+      for (const budget of budgets) {
+        const spent = await expenseRepository.aggregate([
+          {
+            $match: {
+              user: new mongoose.Types.ObjectId(userId),
+              category: budget.category,
+              type: 'expense',
+              date: { $gte: budget.startDate, $lte: budget.endDate }
+            }
+          },
+          { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
+
+        budget.spent = spent[0]?.total || 0;
+        budget.lastCalculated = new Date();
+        await budgetRepository.updateById(budget._id, budget);
+
+        results.push({
+          category: budget.category,
+          spent: budget.spent,
+          amount: budget.amount
         });
       }
 
-      logger.info(`Updated ${updates.length} goals for user ${userId}`);
-      return { success: true, updates };
+      // Sync spending history
+      await budgetIntelligenceService.syncSpendingHistory(userId);
+
+      // Update intelligence for all budgets
+      await budgetIntelligenceService.updateBudgetIntelligence(userId);
+
+      return {
+        success: true,
+        budgets: results
+      };
     } catch (error) {
-      logger.error(`Error updating goal progress for user ${userId}:`, error);
+      console.error('[BudgetService] Recalculate error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Create a new budget with intelligence initialization
+   */
+  async createBudget(userId, budgetData) {
+    try {
+      const budget = await budgetRepository.create({
+        user: userId,
+        ...budgetData,
+        originalAmount: budgetData.amount,
+        intelligence: {
+          autoHealEnabled: budgetData.autoHealEnabled !== false,
+          healingThreshold: budgetData.healingThreshold || 2
+        }
+      });
+
+      // Sync historical data if available
+      await budgetIntelligenceService.syncSpendingHistory(userId);
+      await budgetIntelligenceService.processBudgetIntelligence(budget);
+
+      return { success: true, budget };
+    } catch (error) {
+      console.error('[BudgetService] Create budget error:', error);
       throw error;
     }
   }
 
-  // Helper method to calculate spent amount for a budget
-  async _calculateSpentAmount(userId, budget) {
+  /**
+   * Get budgets with intelligence data
+   */
+  async getBudgetsWithIntelligence(userId) {
     try {
-      const matchConditions = {
-        user: userId,
-        date: {
-          $gte: budget.startDate,
-          $lte: budget.endDate
+      const budgets = await budgetRepository.findAll(
+        { user: userId, isActive: true },
+        { sort: { category: 1 } }
+      );
+
+      return budgets.map(budget => ({
+        _id: budget._id,
+        name: budget.name,
+        category: budget.category,
+        amount: budget.amount,
+        originalAmount: budget.originalAmount,
+        spent: budget.spent,
+        remaining: budget.remaining,
+        usagePercent: Math.round(budget.usagePercent * 10) / 10,
+        period: budget.period,
+        alertThreshold: budget.alertThreshold,
+        startDate: budget.startDate,
+        endDate: budget.endDate,
+        intelligence: {
+          movingAverage: budget.intelligence.movingAverage,
+          standardDeviation: budget.intelligence.standardDeviation,
+          volatilityIndex: budget.intelligence.volatilityIndex,
+          trendDirection: budget.intelligence.trendDirection,
+          predictedSpend: budget.intelligence.predictedSpend,
+          predictionConfidence: budget.intelligence.predictionConfidence,
+          anomalyCount: budget.intelligence.anomalyCount,
+          autoHealEnabled: budget.intelligence.autoHealEnabled,
+          pendingReallocations: budget.intelligence.reallocations.filter(r => r.status === 'pending').length
         }
-      };
-
-      // Add category filter if not 'all'
-      if (budget.category !== 'all') {
-        matchConditions.category = budget.category;
-      }
-
-      const result = await Expense.aggregate([
-        { $match: matchConditions },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-      ]);
-
-      return result.length > 0 ? result[0].total : 0;
+      }));
     } catch (error) {
-      logger.error(`Error calculating spent amount for budget ${budget._id}:`, error);
-      return 0;
+      console.error('[BudgetService] Get budgets error:', error);
+      throw error;
     }
   }
 }

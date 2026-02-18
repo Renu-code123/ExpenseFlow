@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Auth System</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #0f0f23;
+        color: white;
+        padding: 2rem;
+      }
+      .debug-panel {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      button {
+        margin: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        background: #64ffda;
+        color: #0f0f23;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      button:hover {
+        background: #4fd4b8;
+      }
+      .status {
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 8px;
+        border-left: 4px solid;
+      }
+      .status.success {
+        border-color: #00e676;
+        background: rgba(0, 230, 118, 0.1);
+      }
+      .status.error {
+        border-color: #ff5722;
+        background: rgba(255, 87, 34, 0.1);
+      }
+      .status.info {
+        border-color: #64ffda;
+        background: rgba(100, 255, 218, 0.1);
+      }
+      #debug-output {
+        background: #000;
+        color: #0f0;
+        padding: 1rem;
+        border-radius: 8px;
+        font-family: monospace;
+        white-space: pre-line;
+        max-height: 300px;
+        overflow-y: auto;
+        margin: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔧 Authentication Debug Panel</h1>
+
+    <div class="debug-panel">
+      <h3>Element Detection Tests</h3>
+      <button onclick="testElements()">Test All Elements</button>
+      <button onclick="testAuthPrompt()">Test Auth Prompt</button>
+      <button onclick="testLoginModal()">Test Login Modal</button>
+      <button onclick="clearAuthState()">Clear Auth State</button>
+    </div>
+
+    <div class="debug-panel">
+      <h3>Modal Control Tests</h3>
+      <button onclick="openLoginModal()">Open Login Modal</button>
+      <button onclick="closeLoginModal()">Close Login Modal</button>
+      <button onclick="showAuthPrompt()">Show Auth Prompt</button>
+      <button onclick="hideAuthPrompt()">Hide Auth Prompt</button>
+    </div>
+
+    <div class="debug-panel">
+      <h3>Authentication Tests</h3>
+      <button onclick="simulateLogin()">Simulate Login</button>
+      <button onclick="simulateLogout()">Simulate Logout</button>
+      <button onclick="checkAuthState()">Check Auth State</button>
+    </div>
+
+    <div id="status-area"></div>
+    <div id="debug-output"></div>
+
+    <script>
+      function log(message, type = "info") {
+        const output = document.getElementById("debug-output");
+        const timestamp = new Date().toLocaleTimeString();
+        output.textContent += `[${timestamp}] ${message}\n`;
+        output.scrollTop = output.scrollHeight;
+
+        showStatus(message, type);
+      }
+
+      function showStatus(message, type = "info") {
+        const statusArea = document.getElementById("status-area");
+        const status = document.createElement("div");
+        status.className = `status ${type}`;
+        status.textContent = message;
+        statusArea.appendChild(status);
+
+        setTimeout(() => status.remove(), 5000);
+      }
+
+      function testElements() {
+        log("Testing element detection...");
+
+        const elements = [
+          "authPrompt",
+          "loginModal",
+          "signupModal",
+          "authButtons",
+          "userInfo",
+          "protectedContent",
+        ];
+
+        elements.forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) {
+            log(`✅ Found ${id}`, "success");
+          } else {
+            log(`❌ Missing ${id}`, "error");
+          }
+        });
+      }
+
+      function testAuthPrompt() {
+        const authPrompt = document.getElementById("authPrompt");
+        if (authPrompt) {
+          const isVisible = authPrompt.classList.contains("show");
+          log(`Auth Prompt - Classes: ${authPrompt.className}`);
+          log(`Auth Prompt - Visible: ${isVisible}`);
+          log(`Auth Prompt - Style: ${authPrompt.style.cssText}`);
+
+          const computed = window.getComputedStyle(authPrompt);
+          log(`Auth Prompt - Computed opacity: ${computed.opacity}`);
+          log(`Auth Prompt - Computed visibility: ${computed.visibility}`);
+          log(`Auth Prompt - Computed z-index: ${computed.zIndex}`);
+        } else {
+          log("❌ Auth Prompt element not found!", "error");
+        }
+      }
+
+      function testLoginModal() {
+        const loginModal = document.getElementById("loginModal");
+        if (loginModal) {
+          const isActive = loginModal.classList.contains("active");
+          log(`Login Modal - Classes: ${loginModal.className}`);
+          log(`Login Modal - Active: ${isActive}`);
+
+          const computed = window.getComputedStyle(loginModal);
+          log(`Login Modal - Computed opacity: ${computed.opacity}`);
+          log(`Login Modal - Computed visibility: ${computed.visibility}`);
+          log(`Login Modal - Computed z-index: ${computed.zIndex}`);
+        } else {
+          log("❌ Login Modal element not found!", "error");
+        }
+      }
+
+      function clearAuthState() {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userInfo");
+        log("🗑️ Cleared authentication state", "info");
+      }
+
+      // Mock functions that should exist in main app
+      function openLoginModal() {
+        log("🔓 Attempting to open login modal...");
+        const modal = document.getElementById("loginModal");
+        const authPrompt = document.getElementById("authPrompt");
+
+        if (modal) {
+          if (authPrompt) authPrompt.classList.remove("show");
+          modal.classList.add("active");
+          document.body.classList.add("modal-active");
+          log("✅ Login modal opened", "success");
+        } else {
+          log("❌ Login modal not found!", "error");
+        }
+      }
+
+      function closeLoginModal() {
+        log("🔒 Attempting to close login modal...");
+        const modal = document.getElementById("loginModal");
+
+        if (modal) {
+          modal.classList.remove("active");
+          document.body.classList.remove("modal-active");
+          log("✅ Login modal closed", "success");
+        } else {
+          log("❌ Login modal not found!", "error");
+        }
+      }
+
+      function showAuthPrompt() {
+        log("👤 Attempting to show auth prompt...");
+        const authPrompt = document.getElementById("authPrompt");
+
+        if (authPrompt) {
+          authPrompt.classList.add("show");
+          log("✅ Auth prompt shown", "success");
+        } else {
+          log("❌ Auth prompt not found!", "error");
+        }
+      }
+
+      function hideAuthPrompt() {
+        log("🚫 Attempting to hide auth prompt...");
+        const authPrompt = document.getElementById("authPrompt");
+
+        if (authPrompt) {
+          authPrompt.classList.remove("show");
+          log("✅ Auth prompt hidden", "success");
+        } else {
+          log("❌ Auth prompt not found!", "error");
+        }
+      }
+
+      function simulateLogin() {
+        const fakeUser = { username: "TestUser", email: "test@example.com" };
+        const fakeToken = "fake-jwt-token-" + Date.now();
+
+        localStorage.setItem("authToken", fakeToken);
+        localStorage.setItem("userInfo", JSON.stringify(fakeUser));
+
+        log(`🎉 Simulated login for ${fakeUser.username}`, "success");
+      }
+
+      function simulateLogout() {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userInfo");
+        log("👋 Simulated logout", "info");
+      }
+
+      function checkAuthState() {
+        const token = localStorage.getItem("authToken");
+        const userInfo = localStorage.getItem("userInfo");
+
+        if (token && userInfo) {
+          const user = JSON.parse(userInfo);
+          log(`✅ Authenticated as ${user.username || user.email}`, "success");
+        } else {
+          log("❌ Not authenticated", "error");
+        }
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", function () {
+        log("🚀 Debug panel loaded");
+        log("Use buttons above to test the authentication system");
+        testElements();
+      });
+    </script>
+
+    <!-- Authentication Prompt for Unauthenticated Users -->
+    <div id="authPrompt" class="auth-prompt">
+      <div class="auth-prompt-content">
+        <div class="auth-prompt-icon">
+          <i class="fas fa-lock"></i>
+        </div>
+        <h2>Login Required</h2>
+        <p>
+          Please sign in to access all the amazing features of ExpenseFlow and
+          start managing your finances effectively.
+        </p>
+        <div class="auth-prompt-buttons">
+          <button class="auth-prompt-btn primary" onclick="openLoginModal()">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </button>
+          <button class="auth-prompt-btn secondary" onclick="openSignupModal()">
+            <i class="fas fa-user-plus"></i>
+            Sign Up
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Modal Overlay -->
+    <div id="loginModal" class="login-modal-overlay">
+      <div class="login-modal">
+        <button class="login-modal-close" onclick="closeLoginModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="login-modal-content">
+          <div
+            style="text-align: center; font-size: 2rem; margin-bottom: 0.5rem"
+          >
+            <i class="fas fa-lock"></i>
+          </div>
+          <h2>Login to ExpenseFlow</h2>
+          <form id="loginFormModal">
+            <div class="form-group">
+              <label for="loginEmailModal">Email:</label>
+              <input
+                type="email"
+                id="loginEmailModal"
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+            <div class="form-group">
+              <label for="loginPasswordModal">Password:</label>
+              <input
+                type="password"
+                id="loginPasswordModal"
+                required
+                placeholder="Enter your password"
+              />
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signup Modal Overlay -->
+    <div id="signupModal" class="login-modal-overlay">
+      <div class="login-modal">
+        <button class="login-modal-close" onclick="closeSignupModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="login-modal-content">
+          <div
+            style="text-align: center; font-size: 2rem; margin-bottom: 0.5rem"
+          >
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <h2>Sign Up for ExpenseFlow</h2>
+          <form id="signupFormModal">
+            <div class="form-group">
+              <label for="signupUsernameModal">Username:</label>
+              <input
+                type="text"
+                id="signupUsernameModal"
+                required
+                placeholder="Choose a username"
+              />
+            </div>
+            <div class="form-group">
+              <label for="signupEmailModal">Email:</label>
+              <input
+                type="email"
+                id="signupEmailModal"
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+            <div class="form-group">
+              <label for="signupPasswordModal">Password:</label>
+              <input
+                type="password"
+                id="signupPasswordModal"
+                required
+                placeholder="Create a password"
+              />
+            </div>
+            <button type="submit" class="login-btn">Sign Up</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mock elements for testing -->
+    <div id="authButtons" style="display: none"></div>
+    <div id="userInfo" style="display: none"></div>
+    <div id="protectedContent" style="display: none"></div>
+
+    <style>
+      /* Modal styles for debug page */
+      .auth-prompt {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(15, 15, 35, 0.95) 0%,
+          rgba(26, 26, 46, 0.95) 100%
+        );
+        backdrop-filter: blur(10px);
+        z-index: 1500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s ease;
+        padding: 2rem;
+      }
+
+      .auth-prompt.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .auth-prompt-content {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        border: 1px solid rgba(100, 255, 218, 0.15);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      }
+
+      .auth-prompt-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        font-size: 2rem;
+        color: white;
+      }
+
+      .auth-prompt h2 {
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      .auth-prompt p {
+        color: #cfd3ff;
+        margin-bottom: 2rem;
+      }
+
+      .auth-prompt-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+      }
+
+      .auth-prompt-btn {
+        padding: 0.9rem 2rem;
+        border-radius: 14px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .auth-prompt-btn.primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+      }
+
+      .auth-prompt-btn.secondary {
+        background: rgba(100, 255, 218, 0.1);
+        color: #64ffda;
+        border: 1px solid rgba(100, 255, 218, 0.3);
+      }
+
+      .login-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 15, 35, 0.8);
+        backdrop-filter: blur(12px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2500;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .login-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .login-modal {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(14px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 420px;
+        width: 90%;
+        color: #ffffff;
+        position: relative;
+        border: 1px solid rgba(100, 255, 218, 0.1);
+      }
+
+      .login-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        color: #cfd3ff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .login-modal-content h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #fff;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #cfd3ff;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        outline: none;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        box-sizing: border-box;
+      }
+
+      .login-btn {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 14px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        color: #ffffff;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+      }
+    </style>
+  </body>
+</html>

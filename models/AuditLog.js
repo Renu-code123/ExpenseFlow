@@ -1,61 +1,115 @@
 const mongoose = require('mongoose');
 
+/**
+ * AuditLog Model
+ * Immutable audit trail records with cryptographic integrity verification
+ */
 const auditLogSchema = new mongoose.Schema({
-  workspaceId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace'
+  logId: {
+    type: String,
+    unique: true,
+    required: true,
+    index: true
+  },
+  timestamp: {
+    type: Date,
+    required: true,
+    default: Date.now,
+    index: true
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
+  userName: String,
+  userEmail: String,
   action: {
     type: String,
     required: true,
-    enum: [
-      'expense_created', 'expense_updated', 'expense_deleted', 'expense_approved', 'expense_rejected',
-      'budget_created', 'budget_updated', 'budget_deleted',
-      'member_added', 'member_removed', 'member_role_changed',
-      'workspace_created', 'workspace_updated', 'workspace_deleted',
-      'approval_submitted', 'approval_processed', 'approval_delegated',
-      'report_generated', 'data_exported', 'settings_changed'
-    ]
+    enum: ['create', 'read', 'update', 'delete', 'login', 'logout', 'export', 'import', 'approve', 'reject'],
+    index: true
   },
   entityType: {
     type: String,
     required: true,
-    enum: ['expense', 'budget', 'workspace', 'user', 'approval', 'report']
+    index: true
   },
   entityId: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true
+    index: true
   },
+  entityName: String,
   changes: {
     before: mongoose.Schema.Types.Mixed,
-    after: mongoose.Schema.Types.Mixed
+    after: mongoose.Schema.Types.Mixed,
+    fields: [String]
   },
   metadata: {
     ipAddress: String,
     userAgent: String,
+    requestId: String,
     sessionId: String,
     apiEndpoint: String,
-    requestId: String
+    httpMethod: String,
+    statusCode: Number
   },
   severity: {
     type: String,
     enum: ['low', 'medium', 'high', 'critical'],
-    default: 'medium'
+    default: 'medium',
+    index: true
   },
-  tags: [String]
+  category: {
+    type: String,
+    enum: ['security', 'data', 'system', 'compliance', 'user_action'],
+    default: 'user_action',
+    index: true
+  },
+  tags: [String],
+  hash: {
+    type: String,
+    required: true
+  },
+  previousHash: String,
+  isCompressed: {
+    type: Boolean,
+    default: false
+  },
+  isArchived: {
+    type: Boolean,
+    default: false
+  },
+  retentionDate: Date
 }, {
-  timestamps: true
+  timestamps: false,
+  strict: true
 });
 
-auditLogSchema.index({ workspaceId: 1, createdAt: -1 });
-auditLogSchema.index({ userId: 1, createdAt: -1 });
-auditLogSchema.index({ action: 1, createdAt: -1 });
-auditLogSchema.index({ entityType: 1, entityId: 1 });
-auditLogSchema.index({ severity: 1, createdAt: -1 });
+// Prevent modifications after creation (immutable)
+auditLogSchema.pre('save', function (next) {
+  if (!this.isNew) {
+    return next(new Error('Audit logs are immutable and cannot be modified'));
+  }
+  next();
+});
+
+// Prevent updates
+auditLogSchema.pre('findOneAndUpdate', function (next) {
+  next(new Error('Audit logs cannot be updated'));
+});
+
+// Prevent deletions (only archival allowed)
+auditLogSchema.pre('remove', function (next) {
+  next(new Error('Audit logs cannot be deleted'));
+});
+
+// Indexes for efficient querying
+auditLogSchema.index({ userId: 1, timestamp: -1 });
+auditLogSchema.index({ entityType: 1, entityId: 1, timestamp: -1 });
+auditLogSchema.index({ action: 1, timestamp: -1 });
+auditLogSchema.index({ category: 1, severity: 1, timestamp: -1 });
+auditLogSchema.index({ tags: 1 });
 
 module.exports = mongoose.model('AuditLog', auditLogSchema);

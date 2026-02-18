@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Frontend Application (Nginx)
+  frontend:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: always
+
+  # Backend Application (Node.js/Express)
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "3001:3000" # Expose on 3001 to avoid conflict with frontend on host
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/expenseflow
+      - NODE_ENV=development
+      - FRONTEND_URL=http://localhost:3000
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    restart: always
+
+  # Database (MongoDB)
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
+volumes:
+  mongo-data:

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Payroll Management - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Payroll Management</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Payroll Header -->
+        <div class="payroll-header">
+            <div class="header-main">
+                <h1>Enterprise Payroll Command Center</h1>
+                <p>Automated salary processing, statutory compliance, and employee benefits management</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openGeneratePayrollModal()">
+                    <i class="fas fa-play-circle"></i> Generate Payroll
+                </button>
+                <button class="btn-secondary" onclick="openSalaryStructureModal()">
+                    <i class="fas fa-user-plus"></i> Add Employee
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(100, 255, 218, 0.15);">
+                    <i class="fas fa-users" style="color: #64ffda;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Active Employees</label>
+                    <h2 id="active-employees">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(72, 219, 251, 0.15);">
+                    <i class="fas fa-money-bill-wave" style="color: #48dbfb;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Monthly Payout</label>
+                    <h2 id="monthly-payout">₹0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 159, 67, 0.15);">
+                    <i class="fas fa-receipt" style="color: #ff9f43;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Tax Deducted</label>
+                    <h2 id="tax-deducted">₹0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 107, 107, 0.15);">
+                    <i class="fas fa-clock" style="color: #ff6b6b;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Pending Approvals</label>
+                    <h2 id="pending-approvals">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="payroll-grid">
+            <!-- Left: Payroll Runs -->
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Payroll Runs</h3>
+                    <div class="filter-tabs">
+                        <button class="tab-btn active" onclick="filterRuns('all')">All</button>
+                        <button class="tab-btn" onclick="filterRuns('pending')">Pending</button>
+                        <button class="tab-btn" onclick="filterRuns('completed')">Completed</button>
+                    </div>
+                </div>
+                <div id="payroll-runs-list" class="payroll-runs-list">
+                    <div class="loading-placeholder">Loading payroll runs...</div>
+                </div>
+            </section>
+
+            <!-- Right: Employee Structures -->
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-id-card"></i> Employee Salary Structures</h3>
+                    <input type="search" placeholder="Search employees..." id="employee-search" class="search-input">
+                </div>
+                <div id="employees-list" class="employees-list">
+                    <!-- Loaded via JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Payroll Trends Chart -->
+        <section class="glass-card section-card mt-20">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-area"></i> Payroll Trends (Last 6 Months)</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="payrollTrendsChart"></canvas>
+            </div>
+        </section>
+    </div>
+
+    <!-- Generate Payroll Modal -->
+    <div id="generate-payroll-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Generate Payroll</h3>
+                <span class="close-modal" onclick="closeGeneratePayrollModal()">&times;</span>
+            </div>
+            <form id="generate-payroll-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Month</label>
+                        <select id="payroll-month" required>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Year</label>
+                        <select id="payroll-year" required>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">
+                        <i class="fas fa-cogs"></i> Generate Payroll
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Salary Structure Modal -->
+    <div id="salary-structure-modal" class="modal hidden">
+        <div class="modal-content glass-card modal-large">
+            <div class="modal-header">
+                <h3>Create Salary Structure</h3>
+                <span class="close-modal" onclick="closeSalaryStructureModal()">&times;</span>
+            </div>
+            <form id="salary-structure-form">
+                <div class="form-section">
+                    <h4>Employee Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Employee ID</label>
+                            <input type="text" id="emp-id" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Employee Name</label>
+                            <input type="text" id="emp-name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Designation</label>
+                            <input type="text" id="emp-designation">
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <input type="text" id="emp-department">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Salary Components</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CTC (Annual)</label>
+                            <input type="number" id="emp-ctc" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tax Regime</label>
+                            <select id="emp-tax-regime">
+                                <option value="new">New Regime</option>
+                                <option value="old">Old Regime</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="components-container">
+                        <!-- Components added dynamically -->
+                    </div>
+                    <button type="button" class="btn-secondary btn-sm" onclick="addComponent()">
+                        <i class="fas fa-plus"></i> Add Component
+                    </button>
+                </div>
+
+                <div class="form-section">
+                    <h4>Bank Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Account Number</label>
+                            <input type="text" id="emp-account">
+                        </div>
+                        <div class="form-group">
+                            <label>IFSC Code</label>
+                            <input type="text" id="emp-ifsc">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Create Salary Structure</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payroll Details Modal -->
+    <div id="payroll-details-modal" class="modal hidden">
+        <div class="modal-content glass-card modal-large">
+            <div class="modal-header">
+                <h3>Payroll Run Details</h3>
+                <span class="close-modal" onclick="closePayrollDetailsModal()">&times;</span>
+            </div>
+            <div id="payroll-details-content">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/payroll-controller.js"></script>
+</body>
+
+</html>

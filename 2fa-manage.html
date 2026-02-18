@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA Management - ExpenseFlow</title>
+    <link rel="stylesheet" href="2fa-manage.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Two-Factor Authentication</h1>
+            <p>Manage your account security</p>
+        </div>
+
+        <div class="content">
+            <!-- 2FA Status Section -->
+            <div class="card" id="status-card">
+                <div class="card-header">
+                    <h2>2FA Status</h2>
+                </div>
+                <div class="card-body">
+                    <div class="status-info" id="status-info">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enable/Disable 2FA Section -->
+            <div class="card" id="enable-disable-card" style="display: none;">
+                <div class="card-header">
+                    <h2>Enable Two-Factor Authentication</h2>
+                </div>
+                <div class="card-body">
+                    <p>Protect your account with two-factor authentication. Choose how you want to verify your identity when logging in.</p>
+                    <button class="btn btn-primary" onclick="startTwoFASetup()">Start Setup</button>
+                </div>
+            </div>
+
+            <!-- Disable 2FA Section -->
+            <div class="card" id="disable-card" style="display: none;">
+                <div class="card-header">
+                    <h2>Disable Two-Factor Authentication</h2>
+                </div>
+                <div class="card-body">
+                    <p class="warning">⚠️ Disabling 2FA will reduce your account security. Your account will no longer require 2FA verification during login.</p>
+                    <button class="btn btn-danger" onclick="showDisableConfirm()">Disable 2FA</button>
+                </div>
+            </div>
+
+            <!-- Backup Codes Section -->
+            <div class="card" id="backup-codes-card" style="display: none;">
+                <div class="card-header">
+                    <h2>Backup Codes</h2>
+                </div>
+                <div class="card-body">
+                    <p>Use backup codes to access your account if you lose access to your 2FA device.</p>
+                    <div id="backup-codes-info"></div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="downloadBackupCodes()">📥 Download</button>
+                        <button class="btn btn-secondary" onclick="printBackupCodes()">🖨️ Print</button>
+                        <button class="btn btn-secondary" onclick="regenerateBackupCodes()">🔄 Regenerate</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2FA Method Section -->
+            <div class="card" id="method-card" style="display: none;">
+                <div class="card-header">
+                    <h2>2FA Method</h2>
+                </div>
+                <div class="card-body">
+                    <div class="method-info" id="method-info"></div>
+                    <button class="btn btn-secondary" onclick="switchTwoFAMethod()">Change Method</button>
+                </div>
+            </div>
+
+            <!-- Trusted Devices Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Trusted Devices</h2>
+                </div>
+                <div class="card-body">
+                    <p>Devices you've verified on this network. Verified devices can skip 2FA verification.</p>
+                    <div id="devices-list" class="devices-list">
+                        <div class="loading">Loading devices...</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="addNewDevice()">+ Add Device</button>
+                </div>
+            </div>
+
+            <!-- Recovery Settings Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Recovery Options</h2>
+                </div>
+                <div class="card-body">
+                    <div class="recovery-option">
+                        <h3>Recovery Email</h3>
+                        <p>An additional email address to receive recovery codes</p>
+                        <div id="recovery-email-info"></div>
+                        <button class="btn btn-secondary" onclick="setRecoveryEmail()">Set Recovery Email</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Security Activity</h2>
+                </div>
+                <div class="card-body">
+                    <div id="activity-log" class="activity-log">
+                        <div class="loading">Loading activity...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disable Confirmation Modal -->
+    <div id="disable-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Disable 2FA</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="warning">⚠️ <strong>Warning:</strong> Disabling 2FA will make your account less secure.</p>
+                <p>Are you sure you want to disable two-factor authentication?</p>
+                <div class="form-group">
+                    <label for="disable-password">Enter your password to confirm:</label>
+                    <input type="password" id="disable-password" placeholder="Your password" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDisable()">Disable 2FA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verify Device Modal -->
+    <div id="verify-device-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Verify Device</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Check your email for a verification code, then enter it below:</p>
+                <div class="form-group">
+                    <label for="verify-code">Verification Code:</label>
+                    <input type="text" id="verify-code" placeholder="000000" maxlength="6" />
+                </div>
+                <div id="verify-error" class="error-message"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmVerifyDevice()">Verify</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recovery Email Modal -->
+    <div id="recovery-email-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Set Recovery Email</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Set an additional email address to receive recovery codes:</p>
+                <div class="form-group">
+                    <label for="recovery-email">Recovery Email:</label>
+                    <input type="email" id="recovery-email" placeholder="your.backup@email.com" />
+                </div>
+                <div id="recovery-error" class="error-message"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmRecoveryEmail()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="2fa-manage.js"></script>
+</body>
+</html>

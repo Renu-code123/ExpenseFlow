@@ -34,11 +34,11 @@ function formatAnalyticsCurrency(value, options = {}) {
 // ========================
 
 async function getAuthHeaders() {
-  const token = localStorage.getItem('authToken');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : ''
-  };
+  // Accept either 'token' or legacy 'authToken' key used by auth integration
+  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
 }
 
 /**
@@ -46,7 +46,7 @@ async function getAuthHeaders() {
  */
 async function fetchSpendingTrends(period = 'monthly', months = 6) {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) return { data: [] };
 
     const response = await fetch(
@@ -671,7 +671,7 @@ async function loadAnalyticsDashboard() {
   const dashboardContainer = document.getElementById('analytics-dashboard');
   if (!dashboardContainer) return;
 
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token');
   if (!token) return;
 
   try {
@@ -738,6 +738,616 @@ if (document.readyState === 'loading') {
   initAnalyticsDashboard();
 }
 
+// ========================
+// Health Score & Gamification UI (Issue #421)
+// ========================
+
+let gamificationData = {
+  healthScore: null,
+  profile: null,
+  badges: null,
+  leaderboard: null
+};
+
+/**
+ * Fetch complete health score data
+ */
+async function fetchHealthScore() {
+  try {
+    const response = await fetch(`${ANALYTICS_API_URL}/gamification/health-score`, {
+      headers: await getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch health score');
+    const data = await response.json();
+    gamificationData.healthScore = data.data;
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching health score:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch gamification profile
+ */
+async function fetchGamificationProfile() {
+  try {
+    const response = await fetch(`${ANALYTICS_API_URL}/gamification/profile`, {
+      headers: await getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch profile');
+    const data = await response.json();
+    gamificationData.profile = data.data;
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching gamification profile:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch all badges
+ */
+async function fetchBadges() {
+  try {
+    const response = await fetch(`${ANALYTICS_API_URL}/gamification/badges`, {
+      headers: await getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch badges');
+    const data = await response.json();
+    gamificationData.badges = data.data;
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching badges:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch leaderboard
+ */
+async function fetchLeaderboard(type = 'health') {
+  try {
+    const response = await fetch(`${ANALYTICS_API_URL}/gamification/leaderboard?type=${type}&limit=10`, {
+      headers: await getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch leaderboard');
+    const data = await response.json();
+    gamificationData.leaderboard = data.data;
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update financial profile
+ */
+async function updateFinancialProfile(profileData) {
+  try {
+    const response = await fetch(`${ANALYTICS_API_URL}/gamification/financial-profile`, {
+      method: 'PUT',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(profileData)
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+    const data = await response.json();
+    showAnalyticsNotification('Financial profile updated!', 'success');
+    return data.data;
+  } catch (error) {
+    console.error('Error updating financial profile:', error);
+    showAnalyticsNotification('Failed to update profile', 'error');
+    throw error;
+  }
+}
+
+/**
+ * Render Health Score Dashboard
+ */
+function renderHealthScoreDashboard(healthData) {
+  const container = document.getElementById('health-score-dashboard');
+  if (!container) return;
+
+  const { score, grade, components, communityComparison, insights } = healthData;
+  
+  // Get score color based on grade
+  const scoreColors = {
+    'A+': '#00e676', 'A': '#00c853', 'B+': '#4caf50', 'B': '#8bc34a',
+    'C+': '#ffc107', 'C': '#ff9800', 'D': '#ff5722', 'F': '#f44336'
+  };
+  const scoreColor = scoreColors[grade] || '#ffc107';
+
+  container.innerHTML = `
+    <div class="health-score-main">
+      <!-- Big Score Circle -->
+      <div class="score-circle-container">
+        <div class="score-circle" style="--score-color: ${scoreColor}; --score-progress: ${score}%">
+          <svg class="score-ring" viewBox="0 0 120 120">
+            <circle class="score-ring-bg" cx="60" cy="60" r="54"/>
+            <circle class="score-ring-progress" cx="60" cy="60" r="54" 
+                    stroke-dasharray="${score * 3.39} 339" 
+                    style="stroke: ${scoreColor}"/>
+          </svg>
+          <div class="score-value">
+            <span class="score-number">${score}</span>
+            <span class="score-grade">${grade}</span>
+          </div>
+        </div>
+        <h3 class="score-title">Financial Health Score</h3>
+        <p class="score-subtitle">
+          <i class="fas fa-users"></i> 
+          ${communityComparison.rank} of users
+        </p>
+      </div>
+
+      <!-- Component Breakdown -->
+      <div class="score-components">
+        <h4><i class="fas fa-chart-bar"></i> Score Breakdown</h4>
+        ${renderScoreComponent('Savings Rate', components.savingsRate, '💰', 20)}
+        ${renderScoreComponent('Budget Discipline', components.budgetDiscipline, '📊', 25)}
+        ${renderScoreComponent('Debt-to-Income', components.debtToIncome, '💳', 20)}
+        ${renderScoreComponent('Emergency Fund', components.emergencyFund, '🛡️', 15)}
+        ${renderScoreComponent('Investment', components.investmentConsistency, '📈', 20)}
+      </div>
+    </div>
+
+    <!-- Community Comparison -->
+    <div class="community-comparison">
+      <h4><i class="fas fa-trophy"></i> Community Comparison</h4>
+      <div class="comparison-cards">
+        ${communityComparison.comparisons.map(comp => `
+          <div class="comparison-card ${comp.positive ? 'positive' : 'negative'}">
+            <span class="comparison-component">${comp.component}</span>
+            <span class="comparison-message">${comp.message}</span>
+          </div>
+        `).join('')}
+        ${communityComparison.comparisons.length === 0 ? `
+          <div class="comparison-card neutral">
+            <span>Keep improving to beat the average!</span>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+
+    <!-- Insights -->
+    <div class="health-insights">
+      <h4><i class="fas fa-lightbulb"></i> Personalized Insights</h4>
+      
+      ${insights.strengths.length > 0 ? `
+        <div class="insights-section strengths">
+          <h5>💪 Your Strengths</h5>
+          ${insights.strengths.map(s => `
+            <div class="insight-item strength">
+              <span class="insight-icon">${s.icon}</span>
+              <span class="insight-text">${s.message}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${insights.improvements.length > 0 ? `
+        <div class="insights-section improvements">
+          <h5>📈 Areas to Improve</h5>
+          ${insights.improvements.map(i => `
+            <div class="insight-item improvement priority-${i.priority}">
+              <span class="insight-icon">${i.icon}</span>
+              <div class="insight-content">
+                <span class="insight-text">${i.message}</span>
+                <span class="priority-badge ${i.priority}">${i.priority}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- History Chart -->
+    <div class="health-history">
+      <h4><i class="fas fa-chart-line"></i> Score History</h4>
+      <canvas id="health-history-chart"></canvas>
+    </div>
+  `;
+
+  // Render history chart if data exists
+  if (healthData.history && healthData.history.length > 0) {
+    renderHealthHistoryChart(healthData.history);
+  }
+}
+
+/**
+ * Render individual score component bar
+ */
+function renderScoreComponent(name, data, icon, weight) {
+  const score = data.score;
+  const barColor = score >= 70 ? '#00e676' : score >= 50 ? '#ffc107' : '#ff5722';
+  
+  return `
+    <div class="component-item">
+      <div class="component-header">
+        <span class="component-icon">${icon}</span>
+        <span class="component-name">${name}</span>
+        <span class="component-weight">${weight}%</span>
+      </div>
+      <div class="component-bar">
+        <div class="component-progress" style="width: ${score}%; background: ${barColor}"></div>
+      </div>
+      <div class="component-footer">
+        <span class="component-score">${score}/100</span>
+        <span class="component-status">${data.details?.status || ''}</span>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Render health history chart
+ */
+function renderHealthHistoryChart(history) {
+  const canvas = document.getElementById('health-history-chart');
+  if (!canvas || !history.length) return;
+
+  const labels = history.map(h => {
+    const d = new Date(h.date);
+    return `${d.toLocaleString('default', { month: 'short' })}`;
+  });
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Health Score',
+        data: history.map(h => h.score),
+        borderColor: '#64ffda',
+        backgroundColor: 'rgba(100, 255, 218, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#64ffda',
+        pointBorderColor: '#fff',
+        pointRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          grid: { color: 'rgba(255,255,255,0.1)' },
+          ticks: { color: '#b4b4b4' }
+        },
+        x: {
+          grid: { color: 'rgba(255,255,255,0.1)' },
+          ticks: { color: '#b4b4b4' }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Render Gamification Profile (Level, XP, Badges)
+ */
+function renderGamificationProfile(profile) {
+  const container = document.getElementById('gamification-profile');
+  if (!container) return;
+
+  const xpProgress = profile.xpToNextLevel > 0 
+    ? (profile.currentLevelXp / profile.xpToNextLevel) * 100 
+    : 0;
+
+  container.innerHTML = `
+    <div class="profile-header">
+      <div class="level-display">
+        <div class="level-badge">
+          <span class="level-number">Lv.${profile.level}</span>
+        </div>
+        <div class="level-info">
+          <h3 class="level-name">${profile.levelName}</h3>
+          <div class="xp-bar">
+            <div class="xp-progress" style="width: ${xpProgress}%"></div>
+          </div>
+          <span class="xp-text">${profile.currentLevelXp} / ${profile.xpToNextLevel} XP</span>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-item">
+          <span class="stat-value">${profile.totalPoints.toLocaleString()}</span>
+          <span class="stat-label">Total XP</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">${profile.streakDays}</span>
+          <span class="stat-label">Day Streak 🔥</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">${profile.badgeCount}</span>
+          <span class="stat-label">Badges</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Render Badges Grid
+ */
+function renderBadgesGrid(badges) {
+  const container = document.getElementById('badges-grid');
+  if (!container) return;
+
+  // Separate earned and unearned
+  const earned = badges.filter(b => b.earned);
+  const unearned = badges.filter(b => !b.earned);
+
+  const tierColors = {
+    bronze: '#CD7F32',
+    silver: '#C0C0C0',
+    gold: '#FFD700',
+    platinum: '#E5E4E2',
+    diamond: '#B9F2FF'
+  };
+
+  container.innerHTML = `
+    <div class="badges-section earned-badges">
+      <h4><i class="fas fa-medal"></i> Earned Badges (${earned.length})</h4>
+      <div class="badges-list">
+        ${earned.map(badge => `
+          <div class="badge-card earned" style="border-color: ${tierColors[badge.tier]}">
+            <span class="badge-icon">${badge.icon}</span>
+            <span class="badge-name">${badge.name}</span>
+            <span class="badge-tier" style="color: ${tierColors[badge.tier]}">${badge.tier}</span>
+            <small class="badge-date">${new Date(badge.earnedAt).toLocaleDateString()}</small>
+          </div>
+        `).join('')}
+        ${earned.length === 0 ? '<p class="no-badges">Complete challenges to earn badges!</p>' : ''}
+      </div>
+    </div>
+
+    <div class="badges-section locked-badges">
+      <h4><i class="fas fa-lock"></i> Locked Badges (${unearned.length})</h4>
+      <div class="badges-list">
+        ${unearned.map(badge => `
+          <div class="badge-card locked">
+            <span class="badge-icon locked-icon">🔒</span>
+            <span class="badge-name">${badge.name}</span>
+            <span class="badge-tier">${badge.tier}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Render Leaderboard
+ */
+function renderLeaderboard(leaderboard) {
+  const container = document.getElementById('leaderboard');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="leaderboard-header">
+      <h4><i class="fas fa-trophy"></i> Community Leaderboard</h4>
+      <div class="leaderboard-tabs">
+        <button class="lb-tab active" onclick="switchLeaderboard('health')">Health Score</button>
+        <button class="lb-tab" onclick="switchLeaderboard('points')">Total XP</button>
+      </div>
+    </div>
+    <div class="leaderboard-list">
+      ${leaderboard.map((user, idx) => `
+        <div class="lb-item ${idx < 3 ? 'top-' + (idx + 1) : ''}">
+          <span class="lb-rank">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1)}</span>
+          <span class="lb-name">${user.name}</span>
+          <span class="lb-score">${user.healthScore}</span>
+          <span class="lb-grade">${user.healthGrade}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+/**
+ * Switch leaderboard type
+ */
+async function switchLeaderboard(type) {
+  const tabs = document.querySelectorAll('.lb-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const leaderboard = await fetchLeaderboard(type);
+  renderLeaderboard(leaderboard);
+}
+
+/**
+ * Render Financial Profile Form
+ */
+function renderFinancialProfileForm(currentProfile = {}) {
+  const container = document.getElementById('financial-profile-form');
+  if (!container) return;
+
+  container.innerHTML = `
+    <h4><i class="fas fa-user-cog"></i> Your Financial Profile</h4>
+    <p class="form-subtitle">Update these values for accurate health score calculation</p>
+    <form id="profile-update-form" class="profile-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monthly Income</label>
+          <input type="number" name="monthlyIncome" value="${currentProfile.monthlyIncome || ''}" placeholder="e.g., 50000">
+        </div>
+        <div class="form-group">
+          <label>Monthly Debt Payments</label>
+          <input type="number" name="monthlyDebtPayment" value="${currentProfile.monthlyDebtPayment || ''}" placeholder="e.g., 5000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Emergency Fund (Current)</label>
+          <input type="number" name="emergencyFundCurrent" value="${currentProfile.emergencyFundCurrent || ''}" placeholder="e.g., 100000">
+        </div>
+        <div class="form-group">
+          <label>Emergency Fund (Target)</label>
+          <input type="number" name="emergencyFundTarget" value="${currentProfile.emergencyFundTarget || ''}" placeholder="e.g., 300000">
+        </div>
+      </div>
+      <button type="submit" class="btn-update-profile">
+        <i class="fas fa-save"></i> Save Profile
+      </button>
+    </form>
+  `;
+
+  // Handle form submission
+  container.querySelector('#profile-update-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {};
+    for (const [key, value] of formData.entries()) {
+      if (value) data[key] = parseFloat(value);
+    }
+    await updateFinancialProfile(data);
+    await loadHealthDashboard(); // Refresh scores
+  });
+}
+
+/**
+ * Load complete Health & Achievements dashboard
+ */
+async function loadHealthDashboard() {
+  const container = document.getElementById('health-achievements-section');
+  if (!container) return;
+
+  const token = localStorage.getItem('authToken');
+  if (!token) return;
+
+  try {
+    container.classList.add('loading');
+
+    // Fetch all gamification data in parallel
+    const [healthScore, profile, badges, leaderboard] = await Promise.all([
+      fetchHealthScore().catch(() => null),
+      fetchGamificationProfile().catch(() => null),
+      fetchBadges().catch(() => null),
+      fetchLeaderboard().catch(() => null)
+    ]);
+
+    // Render all components
+    if (healthScore) renderHealthScoreDashboard(healthScore);
+    if (profile) renderGamificationProfile(profile);
+    if (badges) renderBadgesGrid(badges);
+    if (leaderboard) renderLeaderboard(leaderboard);
+    
+    // Render financial profile form with current values
+    renderFinancialProfileForm(healthScore?.components?.debtToIncome?.details || {});
+
+    container.classList.remove('loading');
+  } catch (error) {
+    console.error('Error loading health dashboard:', error);
+    showAnalyticsNotification('Failed to load health dashboard', 'error');
+    container.classList.remove('loading');
+  }
+}
+
+/**
+ * Generate social share preview
+ */
+function generateSharePreview(healthData, profile) {
+  return {
+    title: `My Financial Health Score: ${healthData.score} (${healthData.grade})`,
+    description: `I'm Level ${profile.level} (${profile.levelName}) with ${profile.badgeCount} badges! Check your financial health on ExpenseFlow.`,
+    image: null, // Could generate a canvas image
+    url: window.location.origin
+  };
+}
+
+/**
+ * Share health score
+ */
+async function shareHealthScore() {
+  if (!gamificationData.healthScore || !gamificationData.profile) {
+    showAnalyticsNotification('Calculate your health score first!', 'warning');
+    return;
+  }
+
+  const shareData = generateSharePreview(gamificationData.healthScore, gamificationData.profile);
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: shareData.title,
+        text: shareData.description,
+        url: shareData.url
+      });
+    } catch (err) {
+      console.log('Share cancelled');
+    }
+  } else {
+    // Fallback: copy to clipboard
+    const text = `${shareData.title}\n${shareData.description}\n${shareData.url}`;
+    navigator.clipboard.writeText(text);
+    showAnalyticsNotification('Copied to clipboard!', 'success');
+  }
+}
+
+/**
+ * Initialize Health & Achievements tab
+ */
+function initHealthAchievements() {
+  const healthTab = document.getElementById('health-tab');
+  if (healthTab) {
+    healthTab.addEventListener('click', (e) => {
+      e.preventDefault();
+      showHealthSection();
+      loadHealthDashboard();
+    });
+  }
+
+  // Share button
+  const shareBtn = document.getElementById('share-health-btn');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', shareHealthScore);
+  }
+
+  // Refresh button
+  const refreshBtn = document.getElementById('refresh-health-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', loadHealthDashboard);
+  }
+}
+
+/**
+ * Show health section and hide others
+ */
+function showHealthSection() {
+  // Hide all main sections
+  const sections = ['dashboard', 'analytics', 'goals', 'settings', 'health'];
+  sections.forEach(id => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.style.display = id === 'health' ? 'block' : 'none';
+    }
+  });
+
+  // Update active nav link
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#health') {
+      link.classList.add('active');
+    }
+  });
+}
+
+// Initialize health achievements when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHealthAchievements);
+} else {
+  initHealthAchievements();
+}
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -748,6 +1358,13 @@ if (typeof module !== 'undefined' && module.exports) {
     fetchSpendingVelocity,
     fetchComparison,
     fetchAnalyticsSummary,
-    loadAnalyticsDashboard
+    loadAnalyticsDashboard,
+    // Gamification exports
+    fetchHealthScore,
+    fetchGamificationProfile,
+    fetchBadges,
+    fetchLeaderboard,
+    loadHealthDashboard,
+    shareHealthScore
   };
 }

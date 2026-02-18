@@ -41,6 +41,11 @@ const receiptSchema = new mongoose.Schema({
     extractedAmount: Number,
     extractedDate: Date,
     confidence: Number
+  },
+  folder: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DocumentFolder',
+    default: null
   }
 }, {
   timestamps: true

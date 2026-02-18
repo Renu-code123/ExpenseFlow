@@ -5,186 +5,418 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#64ffda">
-  <meta name="description" content="Learn about the goals and purpose of ExpenseFlow - your smart expense tracking companion">
-  <meta name="keywords" content="expense tracker, budget, finance, money management, goals, financial awareness">
-  <meta name="author" content="ExpenseFlow">
+  <title>Goals - ExpenseFlow</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <!-- PWA Meta Tags -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
-  <meta name="msapplication-TileColor" content="#0f0f23">
-  <meta name="msapplication-navbutton-color" content="#64ffda">
-
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon"
-    href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDIiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhclswXSkiLz4KPHBhdGggZD0iTTQ4IDY0SDQ4LjA0OEgxNDRWMTI4SDk2VjE0NEgxNDRDMTUyLjgzNyAxNDQgMTYwIDEzNi44MzcgMTYwIDEyOFY2NEM1OCA1Ni4xNjMgNTIuMDQzIDQ4IDQ4IEg0OEM0MC4wNzEgNDggMzIgNTYuMDcxIDMyIDY0VjEyOEMzMiAxMzUuOTI5IDQwLjA3MSAxNDQgNDggMTQ0SDgwVjEyOEg0OFY2NFoiIGZpbGw9IiM2NGZmZGEiLz4KPHBhdGggZD0iTTY0IDgwSDgwVjk2SDY0VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8cGF0aCBkPSJNOTYgODBIMTI4Vjk2SDk2VjgwWiIgZmlsbD0iIzY0ZmZkYSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDBfbGluZWFyWzBdIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K">
-
-  <title>ExpenseFlow - Our Goals & Purpose</title>
   <link rel="stylesheet" href="expensetracker.css">
+  <link rel="stylesheet" href="index.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* =========================
-   MOBILE RESPONSIVE STYLES
-   ========================= */
-    @media (max-width: 768px) {
-      .container {
-        padding: 1rem;
-      }
-
-      .nav-menu {
-        position: absolute;
-        top: 70px;
-        left: 0;
-        width: 100%;
-        background: #0f0f23;
-        flex-direction: column;
-        align-items: center;
-        display: none;
-      }
-
-      .nav-menu.active {
-        display: flex;
-      }
-
-      .nav-link {
-        padding: 1rem;
-        width: 100%;
-        text-align: center;
-      }
-
-      .nav-toggle {
-        display: block;
-        cursor: pointer;
-      }
-
-      .goals-content {
-        padding: 1rem;
-      }
-
-      .goal-card {
-        margin-bottom: 1.5rem;
-      }
-    }
-
-    .goals-hero {
-      text-align: center;
-      padding: 4rem 2rem 2rem;
-      background: linear-gradient(135deg, rgba(100, 255, 218, 0.1) 0%, rgba(255, 107, 157, 0.1) 100%);
-      margin-top: 80px;
-    }
-
-    .goals-hero h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      background: var(--primary-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .goals-hero p {
-      font-size: 1.2rem;
-      color: var(--text-secondary);
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .goals-content {
+    /* Goals Specific Styles */
+    .goals-container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 2rem;
     }
 
+    .goals-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .goals-header h1 {
+      font-size: 2.5rem;
+      color: #64ffda;
+      margin-bottom: 0.5rem;
+    }
+
+    .goals-header p {
+      color: #a0a0c0;
+      font-size: 1.1rem;
+    }
+
+    .add-goal-btn {
+      background: linear-gradient(135deg, #64ffda, #667eea);
+      color: #0f0f23;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 auto 2rem;
+      transition: all 0.3s ease;
+    }
+
+    .add-goal-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+    }
+
     .goals-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 2rem;
       margin-bottom: 3rem;
     }
 
     .goal-card {
-      background: var(--bg-glass);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
       padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(100, 255, 218, 0.1);
       transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .goal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #64ffda, #667eea);
     }
 
     .goal-card:hover {
       transform: translateY(-5px);
-      box-shadow: var(--shadow-hover);
-      border-color: var(--accent-primary);
+      box-shadow: 0 12px 40px rgba(100, 255, 218, 0.2);
+      border-color: rgba(100, 255, 218, 0.3);
     }
 
-    .goal-card .icon {
-      font-size: 3rem;
-      color: var(--accent-primary);
-      margin-bottom: 1rem;
+    .goal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
     }
 
-    .goal-card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: var(--text-primary);
+    .goal-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      background: linear-gradient(135deg, rgba(100, 255, 218, 0.2), rgba(102, 126, 234, 0.2));
     }
 
-    .goal-card p {
-      color: var(--text-secondary);
+    .goal-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      background: rgba(100, 255, 218, 0.1);
+      border: 1px solid rgba(100, 255, 218, 0.2);
+      color: #64ffda;
+      width: 35px;
+      height: 35px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+      background: #64ffda;
+      color: #0f0f23;
+    }
+
+    .goal-title {
+      font-size: 1.4rem;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .goal-description {
+      color: #a0a0c0;
+      margin-bottom: 1.5rem;
       line-height: 1.6;
     }
 
-    .back-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--primary-gradient);
-      color: white;
-      padding: 1rem 2rem;
-      border-radius: 50px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      margin-top: 2rem;
+    .goal-progress {
+      margin-bottom: 1.5rem;
     }
 
-    .back-button:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
     }
 
-    .mission-section {
+    .progress-current {
+      color: #64ffda;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .progress-target {
+      color: #a0a0c0;
+      font-size: 1rem;
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: rgba(100, 255, 218, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #64ffda, #667eea);
+      border-radius: 6px;
+      transition: width 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+      );
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .progress-percentage {
       text-align: center;
-      margin-bottom: 3rem;
+      color: #64ffda;
+      font-weight: 600;
+      margin-top: 0.5rem;
     }
 
-    .mission-section h2 {
-      font-size: 2rem;
+    .goal-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .detail-item {
+      background: rgba(100, 255, 218, 0.05);
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(100, 255, 218, 0.1);
+    }
+
+    .detail-label {
+      color: #a0a0c0;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .goal-status {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+
+    .status-active {
+      background: rgba(100, 255, 218, 0.2);
+      color: #64ffda;
+    }
+
+    .status-completed {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status-paused {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid rgba(100, 255, 218, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .modal-header h2 {
+      color: #64ffda;
+      font-size: 1.8rem;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: #a0a0c0;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close-modal:hover {
+      color: #64ffda;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      color: #ffffff;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 1rem;
+      background: rgba(100, 255, 218, 0.05);
+      border: 1px solid rgba(100, 255, 218, 0.2);
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: #64ffda;
+      background: rgba(100, 255, 218, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #64ffda, #667eea);
+      color: #0f0f23;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .empty-state i {
+      font-size: 5rem;
+      color: rgba(100, 255, 218, 0.3);
+      margin-bottom: 1.5rem;
+    }
+
+    .empty-state h3 {
+      color: #ffffff;
+      font-size: 1.5rem;
       margin-bottom: 1rem;
-      color: var(--text-primary);
     }
 
-    .mission-section p {
-      font-size: 1.1rem;
-      color: var(--text-secondary);
-      max-width: 800px;
-      margin: 0 auto;
-      line-height: 1.7;
+    .empty-state p {
+      color: #a0a0c0;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .goals-container {
+        padding: 1rem;
+      }
+
+      .goals-header h1 {
+        font-size: 1.8rem;
+      }
+
+      .goals-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .goal-details {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
 
 <body>
-  <!-- Header -->
+   <!-- Header -->
   <header class="header">
     <nav class="navbar">
       <div class="nav-container">
@@ -193,110 +425,628 @@
           <span>ExpenseFlow</span>
         </div>
         <div class="nav-menu" id="nav-menu">
-          <a href="dashboard.html" class="nav-link">Dashboard</a>
-          <a href="analytics.html" class="nav-link">Analytics</a>
+          <a href="dashboard.html" class="nav-link ">Dashboard</a>
+          <a href="accounts.html" class="nav-link">Accounts</a>
+          <a href="analytics.html" class="nav-link ">Analytics</a>
           <a href="goals.html" class="nav-link active">Goals</a>
-          <a href="settings.html" class="nav-link">Settings</a>
-          <a href="Monthlysummary.html" class="nav-link">Monthly/Yearly Summary</a>
-          <a href="./contributor.html" class="nav-link">Contributors</a>
+
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle">More</a>
+            <div class="dropdown-menu">
+              <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
+              <a href="settings.html" class="dropdown-link">Overview</a>
+              <a href="./contributor.html" class="dropdown-link">Contributors</a>
+            </div>
+          </div>
         </div>
+        
         <div class="nav-toggle" id="nav-toggle">
           <span class="bar"></span>
           <span class="bar"></span>
           <span class="bar"></span>
         </div>
+        <div class="user-profile">
+          <div id="workspace-selector" class="workspace-selector"></div>
+          <select id="language-switcher" class="language-select" aria-label="Language">
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="fr">FR</option>
+          </select>
+          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
+          </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username" id="navUsername"></span>
+          <div id="redirect">
+            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+          </div>
+        </div>
       </div>
     </nav>
   </header>
 
-  <!-- Main Content -->
-  <main>
-    <section class="goals-hero">
-      <h1><i class="fas fa-bullseye"></i> Our Goals & Purpose</h1>
-      <p>Discover what drives ExpenseFlow and how we're helping users take control of their financial future</p>
-    </section>
-
-    <div class="goals-content">
-      <section class="mission-section">
-        <h2>Our Mission</h2>
-        <p>ExpenseFlow is designed to simplify personal finance management by providing a clean, intuitive, and distraction-free interface. We help users track expenses and income efficiently while gaining better visibility into their spending habits.</p>
-      </section>
-
-      <div class="goals-grid">
-        <div class="goal-card">
-          <div class="icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <h3>Financial Awareness</h3>
-          <p>Help users build better financial habits by providing clear insights into their spending patterns and financial health.</p>
-        </div>
-
-        <div class="goal-card">
-          <div class="icon">
-            <i class="fas fa-graduation-cap"></i>
-          </div>
-          <h3>Educational Tool</h3>
-          <p>Serve as a practical tool for students and beginners learning about personal finance management and budgeting.</p>
-        </div>
-
-        <div class="goal-card">
-          <div class="icon">
-            <i class="fas fa-code"></i>
-          </div>
-          <h3>Developer Learning</h3>
-          <p>Provide a beginner-friendly project for developers to understand real-world UI logic, backend integration, and full-stack development.</p>
-        </div>
-
-        <div class="goal-card">
-          <div class="icon">
-            <i class="fas fa-shield-alt"></i>
-          </div>
-          <h3>Security & Privacy</h3>
-          <p>Ensure user data is protected with robust security measures, input sanitization, and privacy-first design principles.</p>
-        </div>
-
-        <div class="goal-card">
-          <div class="icon">
-            <i class="fas fa-mobile-alt"></i>
-          </div>
-          <h3>Accessibility</h3>
-          <p>Make financial management accessible to everyone with a responsive design that works seamlessly across all devices.</p>
-        </div>
-
-        <div class="goal-card">
-          <div class="icon">
-            <i class="fas fa-infinity"></i>
-          </div>
-          <h3>Continuous Innovation</h3>
-          <p>Build a scalable foundation for future enhancements, from AI-powered features to advanced analytics and integrations.</p>
-        </div>
+  <main class="main-content">
+    <div class="goals-container">
+      <!-- Header -->
+      <div class="goals-header">
+        <h1><i class="fas fa-bullseye"></i> Financial Goals</h1>
+        <p>Set and track your savings goals to achieve financial freedom</p>
       </div>
 
-      <div style="text-align: center;">
-        <a href="dashboard.html" class="back-button">
-          <i class="fas fa-arrow-left"></i>
-          Back to Dashboard
-        </a>
+      <!-- Add Goal Button -->
+      <button class="add-goal-btn" onclick="openGoalModal()">
+        <i class="fas fa-plus"></i>
+        Create New Goal
+      </button>
+
+      <!-- Goals Grid -->
+      <div class="goals-grid" id="goalsGrid">
+        <!-- Sample Goal Card 1 -->
+        <div class="goal-card">
+          <div class="goal-header">
+            <div class="goal-icon">🏠</div>
+            <div class="goal-actions">
+              <button class="action-btn" onclick="editGoal(1)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="action-btn" onclick="deleteGoal(1)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <h3 class="goal-title">Dream House Down Payment</h3>
+          <p class="goal-description">Saving for a 20% down payment on my dream home</p>
+          
+          <div class="goal-progress">
+            <div class="progress-info">
+              <span class="progress-current">₹8,50,000</span>
+              <span class="progress-target">of ₹15,00,000</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 56.7%"></div>
+            </div>
+            <div class="progress-percentage">56.7% Complete</div>
+          </div>
+
+          <div class="goal-details">
+            <div class="detail-item">
+              <div class="detail-label">Deadline</div>
+              <div class="detail-value">Dec 2026</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Monthly Target</div>
+              <div class="detail-value">₹45,000</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Time Left</div>
+              <div class="detail-value">11 months</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">On Track</div>
+              <div class="detail-value">✅ Yes</div>
+            </div>
+          </div>
+
+          <span class="goal-status status-active">Active</span>
+        </div>
+
+        <!-- Sample Goal Card 2 -->
+        <div class="goal-card">
+          <div class="goal-header">
+            <div class="goal-icon">✈️</div>
+            <div class="goal-actions">
+              <button class="action-btn" onclick="editGoal(2)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="action-btn" onclick="deleteGoal(2)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <h3 class="goal-title">Europe Vacation</h3>
+          <p class="goal-description">Two weeks exploring European cities</p>
+          
+          <div class="goal-progress">
+            <div class="progress-info">
+              <span class="progress-current">₹2,10,000</span>
+              <span class="progress-target">of ₹2,50,000</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 84%"></div>
+            </div>
+            <div class="progress-percentage">84% Complete</div>
+          </div>
+
+          <div class="goal-details">
+            <div class="detail-item">
+              <div class="detail-label">Deadline</div>
+              <div class="detail-value">Jun 2026</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Monthly Target</div>
+              <div class="detail-value">₹12,500</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Time Left</div>
+              <div class="detail-value">5 months</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">On Track</div>
+              <div class="detail-value">✅ Yes</div>
+            </div>
+          </div>
+
+          <span class="goal-status status-active">Active</span>
+        </div>
+
+        <!-- Sample Goal Card 3 -->
+        <div class="goal-card">
+          <div class="goal-header">
+            <div class="goal-icon">💼</div>
+            <div class="goal-actions">
+              <button class="action-btn" onclick="editGoal(3)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="action-btn" onclick="deleteGoal(3)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <h3 class="goal-title">Emergency Fund</h3>
+          <p class="goal-description">6 months of living expenses for emergencies</p>
+          
+          <div class="goal-progress">
+            <div class="progress-info">
+              <span class="progress-current">₹3,00,000</span>
+              <span class="progress-target">of ₹3,00,000</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 100%"></div>
+            </div>
+            <div class="progress-percentage">100% Complete 🎉</div>
+          </div>
+
+          <div class="goal-details">
+            <div class="detail-item">
+              <div class="detail-label">Deadline</div>
+              <div class="detail-value">Dec 2025</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Monthly Target</div>
+              <div class="detail-value">₹25,000</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Completed</div>
+              <div class="detail-value">Jan 2026</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Status</div>
+              <div class="detail-value">🏆 Achieved</div>
+            </div>
+          </div>
+
+          <span class="goal-status status-completed">Completed</span>
+        </div>
       </div>
     </div>
   </main>
 
-  <script>
-    // Mobile menu toggle
-    const navToggle = document.getElementById('nav-toggle');
-    const navMenu = document.getElementById('nav-menu');
+  <!-- Add/Edit Goal Modal -->
+  <div class="modal" id="goalModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-bullseye"></i> Create New Goal</h2>
+        <button class="close-modal" onclick="closeGoalModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
 
-    navToggle.addEventListener('click', () => {
-      navMenu.classList.toggle('active');
+      <form id="goalForm" onsubmit="saveGoal(event)">
+        <div class="form-group">
+          <label class="form-label">Goal Name</label>
+          <input type="text" class="form-input" placeholder="e.g., New Car, Vacation, Emergency Fund" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" placeholder="Describe your goal..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Target Amount (₹)</label>
+          <input type="number" class="form-input" placeholder="100000" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Current Savings (₹)</label>
+          <input type="number" class="form-input" placeholder="0" value="0">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Target Date</label>
+          <input type="date" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select">
+            <option value="savings">💰 Savings</option>
+            <option value="investment">📈 Investment</option>
+            <option value="purchase">🛍️ Purchase</option>
+            <option value="travel">✈️ Travel</option>
+            <option value="education">📚 Education</option>
+            <option value="emergency">🏥 Emergency</option>
+            <option value="other">📌 Other</option>
+          </select>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-save"></i> Create Goal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Modal functions
+    function openGoalModal() {
+      document.getElementById('goalModal').classList.add('active');
+    }
+
+    function closeGoalModal() {
+      document.getElementById('goalModal').classList.remove('active');
+      document.getElementById('goalForm').reset();
+    }
+
+    function saveGoal(event) {
+      event.preventDefault();
+      // Add goal saving logic here
+      alert('Goal created successfully!');
+      closeGoalModal();
+    }
+
+    function editGoal(goalId) {
+      // Add edit logic here
+      console.log('Editing goal:', goalId);
+      openGoalModal();
+    }
+
+    function deleteGoal(goalId) {
+      if (confirm('Are you sure you want to delete this goal?')) {
+        // Add delete logic here
+        console.log('Deleting goal:', goalId);
+      }
+    }
+
+    // Close modal on outside click
+    window.onclick = function(event) {
+      const modal = document.getElementById('goalModal');
+      if (event.target === modal) {
+        closeGoalModal();
+      }
+    }
+
+    // Mobile menu toggle
+    document.getElementById('nav-toggle').addEventListener('click', function() {
+      document.getElementById('nav-menu').classList.toggle('active');
     });
 
-    // Close mobile menu when clicking a link
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', () => {
-        navMenu.classList.remove('active');
+    // Animate progress bars on load
+    window.addEventListener('load', function() {
+      const progressBars = document.querySelectorAll('.progress-fill');
+      progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+          bar.style.width = width;
+        }, 100);
       });
     });
   </script>
 </body>
 
+</html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals & Savings - ExpenseFlow</title>
+    <link rel="stylesheet" href="goals.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="nav-title">
+                <i class="fas fa-target"></i> Goals & Savings
+            </div>
+            <div class="nav-actions">
+                <a href="transactions.html" class="nav-link">Transactions</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="header-content">
+                <h1>🎯 Financial Goals & Savings</h1>
+                <div class="header-actions">
+                    <button class="add-goal-btn" onclick="openGoalModal()">
+                        <i class="fas fa-plus"></i> Add Goal
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <section class="summary-section">
+            <div class="summary-cards">
+                <div class="summary-card total-goals">
+                    <div class="card-icon">🎯</div>
+                    <div class="card-content">
+                        <h3>Total Goals</h3>
+                        <p class="stat-value" id="totalGoals">5</p>
+                        <span class="stat-detail">3 Active, 2 Completed</span>
+                    </div>
+                </div>
+                
+                <div class="summary-card total-saved">
+                    <div class="card-icon">💰</div>
+                    <div class="card-content">
+                        <h3>Total Saved</h3>
+                        <p class="stat-value" id="totalSaved">₹1,25,000</p>
+                        <span class="stat-detail">Across all goals</span>
+                    </div>
+                </div>
+                
+                <div class="summary-card target-amount">
+                    <div class="card-icon">🏆</div>
+                    <div class="card-content">
+                        <h3>Target Amount</h3>
+                        <p class="stat-value" id="targetAmount">₹2,50,000</p>
+                        <span class="stat-detail">50% achieved</span>
+                    </div>
+                </div>
+                
+                <div class="summary-card monthly-savings">
+                    <div class="card-icon">📈</div>
+                    <div class="card-content">
+                        <h3>Monthly Savings</h3>
+                        <p class="stat-value" id="monthlySavings">₹15,000</p>
+                        <span class="stat-detail">Average per month</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Goals Grid -->
+        <section class="goals-section">
+            <div class="section-header">
+                <h2>📋 Your Financial Goals</h2>
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-filter="all">All Goals</button>
+                    <button class="tab-btn" data-filter="active">Active</button>
+                    <button class="tab-btn" data-filter="completed">Completed</button>
+                    <button class="tab-btn" data-filter="paused">Paused</button>
+                </div>
+            </div>
+            
+            <div class="goals-grid" id="goalsGrid">
+                <!-- Goals will be loaded here -->
+            </div>
+            
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-bullseye"></i>
+                <h3>No goals found</h3>
+                <p>Start by creating your first financial goal</p>
+                <button class="add-first-goal-btn" onclick="openGoalModal()">
+                    <i class="fas fa-plus"></i> Create Goal
+                </button>
+            </div>
+        </section>
+
+        <!-- Achievements Section -->
+        <section class="achievements-section">
+            <div class="section-header">
+                <h2>🏆 Achievements & Milestones</h2>
+            </div>
+            
+            <div class="achievements-grid">
+                <div class="achievement-card earned">
+                    <div class="achievement-icon">🥇</div>
+                    <div class="achievement-content">
+                        <h4>First Goal</h4>
+                        <p>Created your first financial goal</p>
+                        <span class="achievement-date">Earned on Jan 15, 2024</span>
+                    </div>
+                </div>
+                
+                <div class="achievement-card earned">
+                    <div class="achievement-icon">💯</div>
+                    <div class="achievement-content">
+                        <h4>Goal Achiever</h4>
+                        <p>Completed your first goal</p>
+                        <span class="achievement-date">Earned on Feb 20, 2024</span>
+                    </div>
+                </div>
+                
+                <div class="achievement-card">
+                    <div class="achievement-icon">🎯</div>
+                    <div class="achievement-content">
+                        <h4>Consistent Saver</h4>
+                        <p>Save for 30 consecutive days</p>
+                        <span class="achievement-progress">Progress: 18/30 days</span>
+                    </div>
+                </div>
+                
+                <div class="achievement-card">
+                    <div class="achievement-icon">💎</div>
+                    <div class="achievement-content">
+                        <h4>Big Saver</h4>
+                        <p>Save ₹1,00,000 in total</p>
+                        <span class="achievement-progress">Progress: ₹75,000/₹1,00,000</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Savings Insights -->
+        <section class="insights-section">
+            <div class="section-header">
+                <h2>💡 Savings Insights</h2>
+            </div>
+            
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon">📊</div>
+                    <div class="insight-content">
+                        <h4>Savings Rate</h4>
+                        <p>You're saving 25% of your income. Great job!</p>
+                        <div class="insight-chart">
+                            <div class="chart-bar" style="width: 25%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-icon">⏰</div>
+                    <div class="insight-content">
+                        <h4>Goal Timeline</h4>
+                        <p>At current rate, you'll reach your vacation goal in 8 months</p>
+                        <div class="timeline-progress">
+                            <div class="timeline-bar" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-icon">💡</div>
+                    <div class="insight-content">
+                        <h4>Recommendation</h4>
+                        <p>Increase monthly savings by ₹2,000 to reach goals 3 months earlier</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add/Edit Goal Modal -->
+    <div id="goalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create New Goal</h3>
+                <button class="modal-close" onclick="closeGoalModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="goalForm" class="goal-form">
+                <div class="form-group">
+                    <label for="goalName">Goal Name *</label>
+                    <input type="text" id="goalName" placeholder="e.g., Emergency Fund, Vacation, New Car" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="goalAmount">Target Amount *</label>
+                        <input type="number" id="goalAmount" placeholder="₹50,000" step="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="goalCategory">Category</label>
+                        <select id="goalCategory">
+                            <option value="emergency">Emergency Fund</option>
+                            <option value="vacation">Vacation</option>
+                            <option value="car">Vehicle</option>
+                            <option value="house">House/Property</option>
+                            <option value="education">Education</option>
+                            <option value="retirement">Retirement</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="goalDeadline">Target Date</label>
+                        <input type="date" id="goalDeadline">
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyContribution">Monthly Contribution</label>
+                        <input type="number" id="monthlyContribution" placeholder="₹5,000" step="100">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="goalDescription">Description</label>
+                    <textarea id="goalDescription" placeholder="Describe your goal and why it's important to you" rows="3"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeGoalModal()">Cancel</button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Create Goal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Goal Details Modal -->
+    <div id="goalDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detailsModalTitle">Goal Details</h3>
+                <button class="modal-close" onclick="closeGoalDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="goal-details" id="goalDetailsContent">
+                <!-- Goal details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Contribution Modal -->
+    <div id="contributionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Contribution</h3>
+                <button class="modal-close" onclick="closeContributionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="contributionForm" class="contribution-form">
+                <div class="form-group">
+                    <label for="contributionAmount">Amount *</label>
+                    <input type="number" id="contributionAmount" placeholder="₹1,000" step="10" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contributionDate">Date</label>
+                    <input type="date" id="contributionDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contributionNote">Note</label>
+                    <input type="text" id="contributionNote" placeholder="Optional note">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeContributionModal()">Cancel</button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-plus"></i> Add Contribution
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="protect.js"></script>
+    <script src="goals.js"></script>
+</body>
 </html>

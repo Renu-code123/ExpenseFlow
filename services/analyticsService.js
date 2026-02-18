@@ -1,12 +1,30 @@
-const Expense = require('../models/Expense');
-const Budget = require('../models/Budget');
+const expenseRepository = require('../repositories/expenseRepository');
+const budgetRepository = require('../repositories/budgetRepository');
 const AnalyticsCache = require('../models/AnalyticsCache');
 const mongoose = require('mongoose');
+
+const CACHE_KEYS = {
+    SPENDING_TRENDS: 'spending_trends',
+    CATEGORY_BREAKDOWN: 'category_breakdown',
+    MONTHLY_COMPARISON: 'monthly_comparison',
+    INSIGHTS: 'insights',
+    PREDICTIONS: 'predictions'
+};
+
+const CACHE_TTL = {
+    SHORT: 5,       // 5 minutes
+    MEDIUM: 15,     // 15 minutes
+    LONG: 60,       // 1 hour
+    XLONG: 1440     // 1 day
+};
 
 class AnalyticsService {
     constructor() {
         this.defaultCurrency = process.env.DEFAULT_CURRENCY || 'INR';
         this.defaultLocale = process.env.DEFAULT_LOCALE || 'en-US';
+        // Z-Score configuration
+        this.Z_SCORE_THRESHOLD = 2.0;
+        this.MINIMUM_DATA_POINTS = 5;
     }
 
     formatCurrency(amount, locale = this.defaultLocale, currency = this.defaultCurrency) {
@@ -21,6 +39,284 @@ class AnalyticsService {
             return `${currency} ${Number(amount || 0).toFixed(2)}`;
         }
     }
+
+    /**
+     * Calculate Z-Score for anomaly detection
+     */
+    calculateZScore(value, mean, stdDev) {
+        if (stdDev === 0) return 0;
+        return (value - mean) / stdDev;
+    }
+
+    /**
+     * Calculate standard deviation
+     */
+    calculateStandardDeviation(values) {
+        if (values.length < 2) return 0;
+        const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+        const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+        const avgSquaredDiff = squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length;
+        return Math.sqrt(avgSquaredDiff);
+    }
+
+    /**
+     * Get Z-Score based anomaly detection for spending
+     */
+    async getZScoreAnomalies(userId, options = {}) {
+        const {
+            months = 6,
+            threshold = this.Z_SCORE_THRESHOLD,
+            useCache = true
+        } = options;
+
+        const cacheParams = { months, threshold };
+
+        if (useCache) {
+            const cached = await AnalyticsCache.getCache('zscore_anomalies', userId, cacheParams);
+            if (cached) return cached;
+        }
+
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - months);
+
+        // Get all expenses grouped by category and date
+        const expenses = await expenseRepository.findAll({
+            user: userId,
+            type: 'expense',
+            date: { $gte: startDate }
+        }, { sort: { date: 1 } });
+
+        // Group by category
+        const categoryData = {};
+        expenses.forEach(expense => {
+            if (!categoryData[Transaction.category]) {
+                categoryData[Transaction.category] = [];
+            }
+            categoryData[Transaction.category].push({
+                id: Transaction._id,
+                amount: Transaction.amount,
+                date: Transaction.date,
+                description: Transaction.description
+            });
+        });
+
+        const anomalies = [];
+        const categoryStats = {};
+
+        // Calculate statistics and detect anomalies per category
+        for (const [category, transactions] of Object.entries(categoryData)) {
+            const amounts = transactions.map(t => t.amount);
+
+            if (amounts.length < this.MINIMUM_DATA_POINTS) {
+                categoryStats[category] = {
+                    mean: amounts.length > 0 ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0,
+                    stdDev: 0,
+                    count: amounts.length,
+                    insufficientData: true
+                };
+                continue;
+            }
+
+            const mean = amounts.reduce((sum, val) => sum + val, 0) / amounts.length;
+            const stdDev = this.calculateStandardDeviation(amounts);
+            const volatility = stdDev / (mean || 1) * 100;
+
+            categoryStats[category] = {
+                mean: Math.round(mean * 100) / 100,
+                stdDev: Math.round(stdDev * 100) / 100,
+                count: amounts.length,
+                volatility: Math.round(volatility * 10) / 10,
+                min: Math.min(...amounts),
+                max: Math.max(...amounts)
+            };
+
+            // Detect anomalies
+            transactions.forEach(transaction => {
+                const zScore = this.calculateZScore(transaction.amount, mean, stdDev);
+
+                if (Math.abs(zScore) >= threshold) {
+                    anomalies.push({
+                        transactionId: transaction.id,
+                        category,
+                        amount: transaction.amount,
+                        date: transaction.date,
+                        description: transaction.description,
+                        zScore: Math.round(zScore * 100) / 100,
+                        deviation: Math.round((transaction.amount - mean) * 100) / 100,
+                        deviationPercent: Math.round(((transaction.amount - mean) / mean) * 100),
+                        severity: Math.abs(zScore) >= 3 ? 'critical' : Math.abs(zScore) >= 2.5 ? 'high' : 'medium',
+                        direction: zScore > 0 ? 'overspend' : 'underspend'
+                    });
+                }
+            });
+        }
+
+        // Sort anomalies by severity and date
+        anomalies.sort((a, b) => {
+            const severityOrder = { critical: 1, high: 2, medium: 3 };
+            if (severityOrder[a.severity] !== severityOrder[b.severity]) {
+                return severityOrder[a.severity] - severityOrder[b.severity];
+            }
+            return new Date(b.date) - new Date(a.date);
+        });
+
+        const result = {
+            anomalies,
+            categoryStats,
+            summary: {
+                totalTransactions: expenses.length,
+                totalAnomalies: anomalies.length,
+                anomalyRate: expenses.length > 0
+                    ? Math.round((anomalies.length / expenses.length) * 1000) / 10
+                    : 0,
+                criticalCount: anomalies.filter(a => a.severity === 'critical').length,
+                highCount: anomalies.filter(a => a.severity === 'high').length,
+                mediumCount: anomalies.filter(a => a.severity === 'medium').length,
+                mostVolatileCategory: Object.entries(categoryStats)
+                    .filter(([_, stats]) => !stats.insufficientData)
+                    .sort((a, b) => (b[1].volatility || 0) - (a[1].volatility || 0))[0]?.[0] || null
+            },
+            analysisConfig: {
+                months,
+                threshold,
+                minDataPoints: this.MINIMUM_DATA_POINTS
+            },
+            generatedAt: new Date()
+        };
+
+        if (useCache) {
+            await AnalyticsCache.setCache('zscore_anomalies', userId, cacheParams, result, 30);
+        }
+
+        return result;
+    }
+
+    /**
+     * Get spending volatility analysis
+     */
+    async getVolatilityAnalysis(userId, options = {}) {
+        const { months = 6, useCache = true } = options;
+
+        if (useCache) {
+            const cached = await AnalyticsCache.getCache('volatility_analysis', userId, { months });
+            if (cached) return cached;
+        }
+
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - months);
+
+        // Get monthly spending by category
+        const monthlyData = await expenseRepository.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(userId),
+                    type: 'expense',
+                    date: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        category: '$category',
+                        year: { $year: '$date' },
+                        month: { $month: '$date' }
+                    },
+                    total: { $sum: '$amount' },
+                    count: { $sum: 1 },
+                    avgTransaction: { $avg: '$amount' }
+                }
+            },
+            { $sort: { '_id.year': 1, '_id.month': 1 } }
+        ]);
+
+        // Group by category and calculate volatility
+        const categoryVolatility = {};
+        const categoryMonthly = {};
+
+        monthlyData.forEach(item => {
+            const { category } = item._id;
+            if (!categoryMonthly[category]) {
+                categoryMonthly[category] = [];
+            }
+            categoryMonthly[category].push({
+                period: `${item._id.year}-${String(item._id.month).padStart(2, '0')}`,
+                total: item.total,
+                count: item.count,
+                avg: item.avgTransaction
+            });
+        });
+
+        for (const [category, monthlyAmounts] of Object.entries(categoryMonthly)) {
+            const totals = monthlyAmounts.map(m => m.total);
+            const mean = totals.reduce((a, b) => a + b, 0) / totals.length;
+            const stdDev = this.calculateStandardDeviation(totals);
+            const cv = mean > 0 ? (stdDev / mean) * 100 : 0; // Coefficient of variation
+
+            // Calculate trend
+            let trend = 'stable';
+            if (totals.length >= 3) {
+                const recentAvg = totals.slice(-2).reduce((a, b) => a + b, 0) / 2;
+                const olderAvg = totals.slice(0, -2).reduce((a, b) => a + b, 0) / Math.max(1, totals.length - 2);
+                const change = ((recentAvg - olderAvg) / olderAvg) * 100;
+                if (change > 10) trend = 'increasing';
+                else if (change < -10) trend = 'decreasing';
+            }
+
+            categoryVolatility[category] = {
+                monthlyData: monthlyAmounts,
+                statistics: {
+                    mean: Math.round(mean * 100) / 100,
+                    stdDev: Math.round(stdDev * 100) / 100,
+                    volatilityIndex: Math.round(cv * 10) / 10,
+                    min: Math.min(...totals),
+                    max: Math.max(...totals),
+                    range: Math.max(...totals) - Math.min(...totals)
+                },
+                trend,
+                periodsCovered: monthlyAmounts.length,
+                riskLevel: cv > 50 ? 'high' : cv > 25 ? 'medium' : 'low'
+            };
+        }
+
+        // Overall portfolio volatility
+        const allMonthlyTotals = Object.values(categoryMonthly).flat();
+        const monthlyTotals = {};
+        allMonthlyTotals.forEach(item => {
+            if (!monthlyTotals[item.period]) monthlyTotals[item.period] = 0;
+            monthlyTotals[item.period] += item.total;
+        });
+
+        const totalValues = Object.values(monthlyTotals);
+        const overallMean = totalValues.reduce((a, b) => a + b, 0) / totalValues.length;
+        const overallStdDev = this.calculateStandardDeviation(totalValues);
+        const overallCV = overallMean > 0 ? (overallStdDev / overallMean) * 100 : 0;
+
+        const result = {
+            categoryVolatility,
+            overall: {
+                mean: Math.round(overallMean * 100) / 100,
+                stdDev: Math.round(overallStdDev * 100) / 100,
+                volatilityIndex: Math.round(overallCV * 10) / 10,
+                riskLevel: overallCV > 40 ? 'high' : overallCV > 20 ? 'medium' : 'low',
+                periodsCovered: totalValues.length
+            },
+            rankings: Object.entries(categoryVolatility)
+                .map(([cat, data]) => ({
+                    category: cat,
+                    volatility: data.statistics.volatilityIndex,
+                    trend: data.trend,
+                    riskLevel: data.riskLevel
+                }))
+                .sort((a, b) => b.volatility - a.volatility),
+            generatedAt: new Date()
+        };
+
+        if (useCache) {
+            await AnalyticsCache.setCache('volatility_analysis', userId, { months }, result, 60);
+        }
+
+        return result;
+    }
     /**
      * Get spending trends over time (daily, weekly, monthly)
      */
@@ -33,7 +329,8 @@ class AnalyticsService {
 
         // Check cache
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('spending_trends', userId, { period, months });
+            const cached = await AnalyticsCache.getCache(CACHE_KEYS.SPENDING_TRENDS
+                , userId, { period, months });
             if (cached) return cached;
         }
 
@@ -60,7 +357,7 @@ class AnalyticsService {
                 groupFormat = { $dateToString: { format: '%Y-%m', date: '$date' } };
         }
 
-        const trends = await Expense.aggregate([
+        const trends = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -127,7 +424,8 @@ class AnalyticsService {
 
         // Cache result
         if (useCache) {
-            await AnalyticsCache.setCache('spending_trends', userId, { period, months }, result, 60);
+            await AnalyticsCache.setCache(CACHE_KEYS.SPENDING_TRENDS
+                , userId, { period, months }, result, CACHE_TTL.MEDIUM);
         }
 
         return result;
@@ -183,7 +481,7 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('category_breakdown', userId, cacheParams);
+            const cached = await AnalyticsCache.getCache(CACHE_KEYS.CATEGORY_BREAKDOWN, userId, cacheParams);
             if (cached) return cached;
         }
 
@@ -198,7 +496,7 @@ class AnalyticsService {
             matchQuery.date.$lte = new Date(endDate);
         }
 
-        const breakdown = await Expense.aggregate([
+        const breakdown = await expenseRepository.aggregate([
             { $match: matchQuery },
             {
                 $group: {
@@ -231,7 +529,7 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache('category_breakdown', userId, cacheParams, result, 30);
+            await AnalyticsCache.setCache(CACHE_KEYS.CATEGORY_BREAKDOWN, userId, cacheParams, result, CACHE_TTL.SHORT);
         }
 
         return result;
@@ -244,15 +542,15 @@ class AnalyticsService {
         const { months = 3, useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('monthly_comparison', userId, { months });
+            const cached = await AnalyticsCache.getCache(CACHE_KEYS.MONTHLY_COMPARISON, userId, { months });
             if (cached) return cached;
         }
 
         const now = new Date();
         const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
-        
+
         // Optimize: Use a single aggregation to get all monthly stats instead of multiple queries in a loop
-        const allStats = await Expense.aggregate([
+        const allStats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -272,26 +570,9 @@ class AnalyticsService {
             }
         ]);
 
-        const getMonthData = (year, month) => {
-            const monthStats = allStats.filter(s => s._id.year === year && s._id.month === (month + 1));
-            const income = monthStats.find(s => s._id.type === 'income');
-            const expense = monthStats.find(s => s._id.type === 'expense');
-            const totalIncome = income?.total || 0;
-            const totalExpense = expense?.total || 0;
-            return {
-                totalIncome,
-                totalExpense,
-                incomeCount: income?.count || 0,
-                expenseCount: expense?.count || 0,
-                net: totalIncome - totalExpense,
-                savingsRate: totalIncome ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0
-            };
-        };
-
-        const comparisons = [];
         for (let i = 0; i < months; i++) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const pd = new Date(now.getFullYear(), now.getMonth() - i - 1, 1);
+            const { start: monthStart, end: monthEnd } = this.getMonthRange(i);
+            const { start: prevMonthStart, end: prevMonthEnd } = this.getMonthRange(i + 1);
 
             const currentMonth = getMonthData(d.getFullYear(), d.getMonth());
             const previousMonth = getMonthData(pd.getFullYear(), pd.getMonth());
@@ -321,7 +602,7 @@ class AnalyticsService {
         const result = { comparisons };
 
         if (useCache) {
-            await AnalyticsCache.setCache('monthly_comparison', userId, { months }, result, 60);
+            await AnalyticsCache.setCache(CACHE_KEYS.MONTHLY_COMPARISON, userId, { months }, result, CACHE_TTL.MEDIUM);
         }
 
         return result;
@@ -331,7 +612,7 @@ class AnalyticsService {
      * Get stats for a specific month
      */
     async getMonthStats(userId, startDate, endDate) {
-        const stats = await Expense.aggregate([
+        const stats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -369,7 +650,7 @@ class AnalyticsService {
         const { useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('insights', userId, {});
+            const cached = await AnalyticsCache.getCache(CACHE_KEYS.INSIGHTS, userId, {});
             if (cached) return cached;
         }
 
@@ -379,7 +660,7 @@ class AnalyticsService {
         // Get last 3 months of data using aggregation for better performance
         const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
 
-        const [aggregateData] = await Expense.aggregate([
+        const [aggregateData] = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -504,14 +785,15 @@ class AnalyticsService {
 
         // Insight 4: Unusual expenses - fetch separately with limit to avoid fetching everything
         const avgExpense = totalExpense / expenseCount;
-        const unusualExpenses = await Expense.find({
+        const unusualExpenses = await expenseRepository.findAll({
             user: userId,
             type: 'expense',
             date: { $gte: threeMonthsAgo },
             amount: { $gt: avgExpense * 3 }
-        })
-        .sort({ amount: -1 })
-        .limit(3);
+        }, {
+            sort: { amount: -1 },
+            limit: 3
+        });
 
         if (unusualExpenses.length > 0) {
             insights.push({
@@ -538,7 +820,7 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache('insights', userId, {}, result, 120);
+            await AnalyticsCache.setCache(CACHE_KEYS.INSIGHTS, userId, {}, result, CACHE_TTL.LONG);
         }
 
         return result;
@@ -551,7 +833,7 @@ class AnalyticsService {
         const { useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('predictions', userId, {});
+            const cached = await AnalyticsCache.getCache(CACHE_KEYS.PREDICTIONS, userId, {});
             if (cached) return cached;
         }
 
@@ -559,7 +841,7 @@ class AnalyticsService {
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-        const monthlyData = await Expense.aggregate([
+        const monthlyData = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -615,7 +897,7 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache('predictions', userId, {}, result, 180);
+            await AnalyticsCache.setCache(CACHE_KEYS.PREDICTIONS, userId, {}, result, CACHE_TTL.XLONG);
         }
 
         return result;
@@ -625,7 +907,7 @@ class AnalyticsService {
      * Predict spending by category
      */
     async predictCategorySpending(userId, startDate) {
-        const categoryData = await Expense.aggregate([
+        const categoryData = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -643,7 +925,7 @@ class AnalyticsService {
             }
         ]);
 
-        const months = Math.ceil((new Date() - startDate) / (30 * 24 * 60 * 60 * 1000));
+        const months = Math.ceil((new Date() - startDate) / (CACHE_TTL.SHORT * 24 * CACHE_TTL.MEDIUM * CACHE_TTL.MEDIUM * 1000));
 
         return categoryData.map(cat => ({
             category: cat._id,
@@ -669,7 +951,7 @@ class AnalyticsService {
 
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const currentMonthExpenses = await Expense.aggregate([
+        const currentMonthExpenses = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),

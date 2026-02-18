@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FX Revaluation Dashboard - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">FX Revaluation & Gain/Loss Tracker</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="fx-header">
+            <div class="header-main">
+                <h1>Multi-Currency Revaluation Engine</h1>
+                <p>Automated foreign exchange revaluation with unrealized gain/loss tracking</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="runRevaluation()">
+                    <i class="fas fa-sync"></i> Run Revaluation
+                </button>
+                <button class="btn-secondary" onclick="generateComplianceReport()">
+                    <i class="fas fa-file-alt"></i> Compliance Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(100, 255, 218, 0.15);">
+                    <i class="fas fa-arrow-trend-up" style="color: #64ffda;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Unrealized Gain</label>
+                    <h2 id="unrealized-gain">₹0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 107, 107, 0.15);">
+                    <i class="fas fa-arrow-trend-down" style="color: #ff6b6b;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Unrealized Loss</label>
+                    <h2 id="unrealized-loss">₹0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(72, 219, 251, 0.15);">
+                    <i class="fas fa-balance-scale" style="color: #48dbfb;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Net Position</label>
+                    <h2 id="net-position">₹0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 159, 67, 0.15);">
+                    <i class="fas fa-coins" style="color: #ff9f43;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Active Positions</label>
+                    <h2 id="active-positions">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="fx-grid">
+            <!-- Left: Unrealized Positions -->
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-line"></i> Unrealized Positions</h3>
+                    <select id="currency-filter" class="filter-select" onchange="filterPositions()">
+                        <option value="">All Currencies</option>
+                    </select>
+                </div>
+                <div id="positions-list" class="positions-list">
+                    <div class="loading-placeholder">Loading positions...</div>
+                </div>
+            </section>
+
+            <!-- Right: Charts & Analytics -->
+            <div class="right-panel">
+                <section class="glass-card section-card mb-20">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Currency Exposure</h3>
+                    </div>
+                    <div class="chart-container-small">
+                        <canvas id="exposureChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="glass-card section-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Value at Risk</h3>
+                    </div>
+                    <div id="var-display" class="var-display">
+                        <!-- Loaded via JS -->
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Revaluation History -->
+        <section class="glass-card section-card mt-20">
+            <div class="card-header">
+                <h3><i class="fas fa-history"></i> Revaluation History</h3>
+            </div>
+            <div id="revaluation-history" class="revaluation-history">
+                <!-- Loaded via JS -->
+            </div>
+        </section>
+
+        <!-- Gain/Loss Trend Chart -->
+        <div class="analytics-row mt-20">
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-area"></i> Gain/Loss Trend (12 Months)</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </section>
+
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-sliders"></i> Sensitivity Analysis</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="sensitivityChart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Top Positions -->
+        <div class="top-positions-row mt-20">
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-trophy"></i> Top Gains</h3>
+                </div>
+                <div id="top-gains" class="top-positions-list">
+                    <!-- Loaded via JS -->
+                </div>
+            </section>
+
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-exclamation-circle"></i> Top Losses</h3>
+                </div>
+                <div id="top-losses" class="top-positions-list">
+                    <!-- Loaded via JS -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Compliance Report Modal -->
+    <div id="compliance-modal" class="modal hidden">
+        <div class="modal-content glass-card modal-large">
+            <div class="modal-header">
+                <h3>Generate Compliance Report</h3>
+                <span class="close-modal" onclick="closeComplianceModal()">&times;</span>
+            </div>
+            <form id="compliance-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="report-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="date" id="report-end-date" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Generate Report</button>
+                </div>
+            </form>
+            <div id="compliance-report-content" class="hidden">
+                <!-- Report content loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Position Details Modal -->
+    <div id="position-details-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Position Details</h3>
+                <span class="close-modal" onclick="closePositionModal()">&times;</span>
+            </div>
+            <div id="position-details-content">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/fx-revaluation-controller.js"></script>
+</body>
+
+</html>
