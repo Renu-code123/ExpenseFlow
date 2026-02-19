@@ -867,6 +867,355 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =====================
+   EXPORT FUNCTIONALITY
+====================== */
+
+  // Export Modal Elements
+  const exportModal = document.getElementById('export-modal');
+  const exportModalCloseBtn = document.getElementById('export-modal-close');
+  const exportCancelBtn = document.getElementById('export-cancel-btn');
+  const exportSubmitBtn = document.getElementById('export-submit-btn');
+  const openExportModalBtn = document.getElementById('open-export-modal');
+  
+  // Quick Export Buttons
+  const quickExportCsvBtn = document.getElementById('export-csv');
+  const quickExportPdfBtn = document.getElementById('export-pdf');
+  
+  // Export Form Elements
+  const exportFormatRadios = document.getElementsByName('export-format');
+  const exportStartDate = document.getElementById('export-start-date');
+  const exportEndDate = document.getElementById('export-end-date');
+  const exportCategoryFilter = document.getElementById('export-category-filter');
+  const exportTypeFilter = document.getElementById('export-type-filter');
+  const exportPreview = document.getElementById('export-preview');
+  
+  /**
+   * Open Export Modal
+   */
+  function openExportModal() {
+    if (!exportModal) return;
+    
+    exportModal.classList.add('active');
+    
+    // Set default date range (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    if (exportStartDate) exportStartDate.value = thirtyDaysAgo.toISOString().split('T')[0];
+    if (exportEndDate) exportEndDate.value = today.toISOString().split('T')[0];
+    
+    // Load preview
+    updateExportPreview();
+  }
+  
+  /**
+   * Close Export Modal
+   */
+  function closeExportModal() {
+    if (!exportModal) return;
+    exportModal.classList.remove('active');
+  }
+  
+  /**
+   * Get selected export format
+   */
+  function getSelectedFormat() {
+    const selected = Array.from(exportFormatRadios).find(radio => radio.checked);
+    return selected ? selected.value : 'csv';
+  }
+  
+  /**
+   * Get export filters
+   */
+  function getExportFilters() {
+    return {
+      startDate: exportStartDate ? exportStartDate.value : null,
+      endDate: exportEndDate ? exportEndDate.value : null,
+      category: exportCategoryFilter ? exportCategoryFilter.value : 'all',
+      type: exportTypeFilter ? exportTypeFilter.value : 'all'
+    };
+  }
+  
+  /**
+   * Update Export Preview
+   */
+  async function updateExportPreview() {
+    if (!exportPreview) return;
+    
+    try {
+      exportPreview.innerHTML = '<div class="export-preview-loading"><i class="fas fa-spinner fa-spin"></i> Loading preview...</div>';
+      
+      const filters = getExportFilters();
+      
+      const response = await fetch(`${API_BASE_URL}/expenses/report/preview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(filters)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load preview');
+      }
+      
+      const data = await response.json();
+      const preview = data.data;
+      
+      // Display preview
+      exportPreview.innerHTML = `
+        <div class="export-preview-content">
+          <div class="preview-stats">
+            <div class="preview-stat">
+              <span class="preview-label">Total Transactions:</span>
+              <span class="preview-value">${preview.count || 0}</span>
+            </div>
+            <div class="preview-stat">
+              <span class="preview-label">Total Income:</span>
+              <span class="preview-value" style="color: var(--success-color);">
+                ₹${preview.totalIncome ? preview.totalIncome.toFixed(2) : '0.00'}
+              </span>
+            </div>
+            <div class="preview-stat">
+              <span class="preview-label">Total Expenses:</span>
+              <span class="preview-value" style="color: var(--danger-color);">
+                ₹${preview.totalExpense ? preview.totalExpense.toFixed(2) : '0.00'}
+              </span>
+            </div>
+            <div class="preview-stat">
+              <span class="preview-label">Net Balance:</span>
+              <span class="preview-value" style="color: ${(preview.totalIncome - preview.totalExpense) >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">
+                ₹${preview.netBalance ? preview.netBalance.toFixed(2) : '0.00'}
+              </span>
+            </div>
+          </div>
+          ${preview.count === 0 ? '<p class="preview-empty">No transactions found for the selected filters.</p>' : ''}
+        </div>
+      `;
+      
+    } catch (error) {
+      console.error('Preview load error:', error);
+      exportPreview.innerHTML = '<div class="export-preview-error">Failed to load preview. Please try again.</div>';
+    }
+  }
+  
+  /**
+   * Export Data (Main Function)
+   */
+  async function exportData(format = null) {
+    try {
+      // Show loading state
+      const exportBtn = exportSubmitBtn || document.createElement('button');
+      const originalText = exportBtn.innerHTML;
+      exportBtn.disabled = true;
+      exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+      
+      // Get format and filters
+      const selectedFormat = format || getSelectedFormat();
+      const filters = getExportFilters();
+      
+      // Make API request
+      const response = await fetch(`${API_BASE_URL}/expenses/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          format: selectedFormat,
+          ...filters
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      // Get the file blob
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Set filename based on format
+      const timestamp = new Date().toISOString().split('T')[0];
+      if (selectedFormat === 'csv') {
+        a.download = `expenses-${timestamp}.csv`;
+      } else if (selectedFormat === 'pdf') {
+        a.download = `expense-report-${timestamp}.pdf`;
+      } else if (selectedFormat === 'excel' || selectedFormat === 'xlsx') {
+        a.download = `expenses-${timestamp}.xlsx`;
+      }
+      
+      // Trigger download
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      // Show success notification
+      showNotification(`Successfully exported as ${selectedFormat.toUpperCase()}`, 'success');
+      
+      // Close modal if it was open
+      if (format === null) {
+        closeExportModal();
+      }
+      
+      // Restore button state
+      if (exportBtn) {
+        exportBtn.disabled = false;
+        exportBtn.innerHTML = originalText;
+      }
+      
+    } catch (error) {
+      console.error('Export error:', error);
+      showNotification('Export failed. Please try again.', 'error');
+      
+      // Restore button state
+      if (exportSubmitBtn) {
+        exportSubmitBtn.disabled = false;
+        exportSubmitBtn.innerHTML = '<i class="fas fa-download"></i> <span>Export</span>';
+      }
+    }
+  }
+  
+  /**
+   * Quick Export CSV (without modal)
+   */
+  async function quickExportCSV() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/expenses/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          format: 'csv',
+          startDate: null, // All time
+          endDate: null,
+          category: 'all',
+          type: 'all'
+        })
+      });
+      
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `expenses-all-${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      showNotification('CSV exported successfully!', 'success');
+    } catch (error) {
+      console.error('Quick CSV export failed:', error);
+      showNotification('Failed to export CSV', 'error');
+    }
+  }
+  
+  /**
+   * Quick Export PDF (without modal)
+   */
+  async function quickExportPDF() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/expenses/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          format: 'pdf',
+          startDate: null, // All time
+          endDate: null,
+          category: 'all',
+          type: 'all'
+        })
+      });
+      
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `expense-report-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      showNotification('PDF exported successfully!', 'success');
+    } catch (error) {
+      console.error('Quick PDF export failed:', error);
+      showNotification('Failed to export PDF', 'error');
+    }
+  }
+  
+  // Export Modal Event Listeners
+  if (openExportModalBtn) {
+    openExportModalBtn.addEventListener('click', openExportModal);
+  }
+  
+  if (exportModalCloseBtn) {
+    exportModalCloseBtn.addEventListener('click', closeExportModal);
+  }
+  
+  if (exportCancelBtn) {
+    exportCancelBtn.addEventListener('click', closeExportModal);
+  }
+  
+  if (exportSubmitBtn) {
+    exportSubmitBtn.addEventListener('click', () => exportData());
+  }
+  
+  // Quick Export Event Listeners
+  if (quickExportCsvBtn) {
+    quickExportCsvBtn.addEventListener('click', quickExportCSV);
+  }
+  
+  if (quickExportPdfBtn) {
+    quickExportPdfBtn.addEventListener('click', quickExportPDF);
+  }
+  
+  // Filter change listeners for live preview
+  if (exportStartDate) {
+    exportStartDate.addEventListener('change', updateExportPreview);
+  }
+  
+  if (exportEndDate) {
+    exportEndDate.addEventListener('change', updateExportPreview);
+  }
+  
+  if (exportCategoryFilter) {
+    exportCategoryFilter.addEventListener('change', updateExportPreview);
+  }
+  
+  if (exportTypeFilter) {
+    exportTypeFilter.addEventListener('change', updateExportPreview);
+  }
+  
+  // Close modal on outside click
+  if (exportModal) {
+    exportModal.addEventListener('click', (e) => {
+      if (e.target === exportModal) {
+        closeExportModal();
+      }
+    });
+  }
+
+  /* =====================
      INITIALIZATION
   ====================== */
   async function Init() {
