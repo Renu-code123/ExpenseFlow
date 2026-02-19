@@ -197,6 +197,12 @@ const transactionSchema = new mongoose.Schema({
     encryptedFields: {
         type: [String],
         default: [] // List of keys that are currently encrypted: ['description', 'notes']
+    },
+    // NEW: Features for Multi-Stage Validation
+    validationMetadata: {
+        purityScore: { type: Number, default: 100 },
+        validationId: String, // requestId from the pipeline
+        remediatedAt: Date
     }
 }, {
     timestamps: true
