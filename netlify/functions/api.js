@@ -16,7 +16,9 @@ const paymentRoutes = require('../../routes/payments');
 const timeEntryRoutes = require('../../routes/time-entries');
 const budgetRoutes = require('../../routes/budgets');
 const goalRoutes = require('../../routes/goals');
+const goalAnalyticsRoutes = require('../../routes/goals-analytics');
 const analyticsRoutes = require('../../routes/analytics');
+
 const currencyRoutes = require('../../routes/currency');
 const notificationRoutes = require('../../routes/notifications');
 const receiptRoutes = require('../../routes/receipts');
@@ -77,7 +79,9 @@ app.use('/payments', paymentRoutes);
 app.use('/time-entries', timeEntryRoutes);
 app.use('/budgets', budgetRoutes);
 app.use('/goals', goalRoutes);
+app.use('/goals', goalAnalyticsRoutes);
 app.use('/analytics', analyticsRoutes);
+
 app.use('/currency', currencyRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/receipts', receiptRoutes);

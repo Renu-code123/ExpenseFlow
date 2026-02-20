@@ -24,7 +24,9 @@ const receiptRoutes = require('./receipts');
 const budgetRoutes = require('./budgets');
 const envelopeRoutes = require('./envelopes');
 const goalRoutes = require('./goals');
+const goalAnalyticsRoutes = require('./goals-analytics');
 const debtRoutes = require('./debts');
+
 const reimbursementRoutes = require('./reimbursements');
 const analyticsRoutes = require('./analytics');
 const currencyRoutes = require('./currency');
@@ -66,7 +68,11 @@ function configureRoutes(app) {
   // Goal routes
   app.use('/api/goals', require('./goals'));
 
+  // Goal analytics routes (predictive engine)
+  app.use('/api/goals', require('./goals-analytics'));
+
   // Debt routes
+
   app.use('/api/debts', expenseLimiter, require('./debts'));
 
   // Reimbursement routes

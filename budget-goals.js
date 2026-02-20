@@ -309,20 +309,113 @@ class BudgetGoalsManager {
       if (!response.ok) throw new Error('Failed to load goals');
       const goals = await response.json();
 
-      this.displayGoals(goals);
+      // Load predictive analytics for goals
+      const analytics = await this.loadGoalsAnalytics();
+      
+      this.displayGoals(goals, analytics);
     } catch (error) {
       console.error('Goals loading error:', error);
     }
   }
 
-  // Display goals
-  displayGoals(goals) {
+  // Load goals predictive analytics
+  async loadGoalsAnalytics() {
+    try {
+      const response = await fetch(`${this.apiUrl}/goals/analytics`, {
+        headers: { 'Authorization': `Bearer ${this.authToken}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to load goals analytics');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Goals analytics error:', error);
+      return null;
+    }
+  }
+
+
+  // Display goals with predictive analytics
+  displayGoals(goals, analytics = null) {
     const container = document.getElementById('goals-list');
     container.innerHTML = '';
+
+    // Create a map of goal forecasts for quick lookup
+    const forecastMap = new Map();
+    if (analytics && analytics.goals) {
+      analytics.goals.forEach(g => {
+        forecastMap.set(g.goalId.toString(), g);
+      });
+    }
 
     goals.forEach(goal => {
       const progress = (goal.currentAmount / goal.targetAmount) * 100;
       const daysLeft = Math.ceil((new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24));
+      
+      // Get predictive data for this goal
+      const forecast = forecastMap.get(goal._id.toString());
+      const hasPrediction = forecast && forecast.estimatedCompletionDate;
+      
+      // Build predictive UI
+      let predictiveHTML = '';
+      if (hasPrediction) {
+        const estDate = new Date(forecast.estimatedCompletionDate);
+        const isOnTrack = forecast.onTrack;
+        const confidence = Math.round((forecast.confidence || 0) * 100);
+        const trend = forecast.trend || { direction: 'stable' };
+        
+        const trendIcon = trend.direction === 'improving' ? '📈' : 
+                         trend.direction === 'declining' ? '📉' : '➡️';
+        const trendClass = trend.direction === 'improving' ? 'trend-up' : 
+                          trend.direction === 'declining' ? 'trend-down' : 'trend-stable';
+        
+        const statusClass = isOnTrack ? 'on-track' : 'behind-schedule';
+        const statusIcon = isOnTrack ? '✅' : '⚠️';
+        
+        predictiveHTML = `
+          <div class="predictive-analytics">
+            <div class="prediction-header">
+              <span class="prediction-status ${statusClass}">
+                ${statusIcon} ${isOnTrack ? 'On Track' : 'Behind Schedule'}
+              </span>
+              <span class="confidence-badge" title="Prediction confidence: ${confidence}%">
+                ${confidence}% confidence
+              </span>
+            </div>
+            <div class="prediction-details">
+              <div class="prediction-item">
+                <span class="prediction-label">📅 Est. Completion:</span>
+                <span class="prediction-value ${statusClass}">
+                  ${estDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+              <div class="prediction-item">
+                <span class="prediction-label">💰 Monthly Savings:</span>
+                <span class="prediction-value">${this.formatCurrency(forecast.monthlySavingsRate || 0)}/mo</span>
+              </div>
+              <div class="prediction-item">
+                <span class="prediction-label">📊 Trend:</span>
+                <span class="prediction-value ${trendClass}">
+                  ${trendIcon} ${trend.direction}
+                </span>
+              </div>
+            </div>
+            ${forecast.recommendation ? `
+              <div class="prediction-recommendation">
+                💡 ${forecast.recommendation}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      } else if (analytics && !analytics.velocity.hasEnoughData) {
+        predictiveHTML = `
+          <div class="predictive-analytics no-data">
+            <div class="prediction-message">
+              📊 <em>Continue tracking transactions to see predictive analytics for this goal</em>
+            </div>
+          </div>
+        `;
+      }
 
       const goalItem = document.createElement('div');
       goalItem.className = 'goal-item';
@@ -341,11 +434,13 @@ class BudgetGoalsManager {
           <span>${this.formatCurrency(goal.currentAmount)} / ${this.formatCurrency(goal.targetAmount)}</span>
           <span class="days-left">${daysLeft > 0 ? `${daysLeft} days left` : 'Overdue'}</span>
         </div>
+        ${predictiveHTML}
       `;
 
       container.appendChild(goalItem);
     });
   }
+
 
   // Load budget alerts
   async loadBudgetAlerts() {
@@ -657,6 +752,124 @@ class BudgetGoalsManager {
       .progress-fill { height: 100%; background: linear-gradient(90deg, #4f46e5, #9333ea); border-radius: 8px; }
       .goal-item { background: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; border-left: 8px solid #4f46e5; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
       .goal-item h4 { font-size: 1.25rem; margin-bottom: 10px; color: #1e293b; }
+
+      /* Predictive Analytics Styles */
+      .predictive-analytics {
+        margin-top: 15px;
+        padding: 15px;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 12px;
+        border-left: 4px solid #4f46e5;
+      }
+      
+      .predictive-analytics.no-data {
+        border-left-color: #94a3b8;
+        background: #f8fafc;
+      }
+      
+      .prediction-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .prediction-status {
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      
+      .prediction-status.on-track {
+        background: #dcfce7;
+        color: #166534;
+      }
+      
+      .prediction-status.behind-schedule {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      
+      .confidence-badge {
+        font-size: 0.75rem;
+        color: #64748b;
+        background: #e2e8f0;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+      }
+      
+      .prediction-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      
+      .prediction-item {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      
+      .prediction-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      
+      .prediction-value {
+        font-size: 0.95rem;
+        color: #0f172a;
+        font-weight: 700;
+      }
+      
+      .prediction-value.on-track {
+        color: #166534;
+      }
+      
+      .prediction-value.behind-schedule {
+        color: #dc2626;
+      }
+      
+      .prediction-value.trend-up {
+        color: #16a34a;
+      }
+      
+      .prediction-value.trend-down {
+        color: #dc2626;
+      }
+      
+      .prediction-value.trend-stable {
+        color: #64748b;
+      }
+      
+      .prediction-recommendation {
+        font-size: 0.85rem;
+        color: #374151;
+        background: #eff6ff;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border-left: 3px solid #3b82f6;
+        margin-top: 8px;
+        line-height: 1.4;
+      }
+      
+      .prediction-message {
+        font-size: 0.9rem;
+        color: #64748b;
+        text-align: center;
+        padding: 10px;
+      }
+
 
       /* Monthly Budget Card Styles */
       .budget-card { background: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 2px solid #e2e8f0; transition: all 0.3s ease; }
