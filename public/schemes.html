@@ -15,6 +15,62 @@
   <link rel="stylesheet" href="expensetracker.css">
   <style>
     /* =========================
+   THEME VARIABLES SYSTEM
+========================= */
+
+:root {
+  --bg-main: #ffffff;
+  --bg-card: #ffffff;
+  --bg-navbar: #ffffff;
+  --bg-footer: #f9fafb;
+
+  --text-main: #111827;
+  --text-secondary: #374151;
+
+  --accent: #6366f1;
+}
+
+/* DARK MODE VARIABLES */
+body.dark-mode {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --bg-navbar: #111827;
+  --bg-footer: #111827;
+
+  --text-main: #f1f5f9;
+  --text-secondary: #cbd5e1;
+
+  --accent: #818cf8;
+}
+    /* =========================
+   GLOBAL COLOR OVERRIDE
+========================= */
+
+body {
+  background: var(--bg-main) !important;
+  color: var(--text-main) !important;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.navbar {
+  background: var(--bg-navbar) !important;
+}
+
+.footer {
+  background: var(--bg-footer) !important;
+  color: var(--text-secondary) !important;
+}
+
+.balance-card {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+body.dark-mode .balance-card {
+  border: 1px solid rgba(255,255,255,0.08);
+}
+    /* =========================
    HELP CENTER – SAFE UI ENHANCEMENTS
    (NO PARENT LAYOUT CHANGES)
 ========================= */
@@ -549,7 +605,79 @@
   transform: translateY(-5px) scale(1.1);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
 }
+/* =========================
+   DARK MODE TOGGLE
+========================= */
 
+body {
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* Toggle Button */
+.theme-toggle {
+  margin-left: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #6366f1;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.2) rotate(-10deg);
+}
+
+/* DARK MODE STYLES */
+body.dark-mode {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+/* Cards */
+body.dark-mode .balance-card {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: rgba(255,255,255,0.08);
+}
+
+/* Card hover yellow override */
+body.dark-mode .balance-card:hover {
+  background: linear-gradient(135deg, #1e293b, #273449);
+}
+
+/* Text inside cards */
+body.dark-mode .balance-card h4,
+body.dark-mode .balance-card p {
+  color: #f1f5f9;
+}
+
+/* Navbar */
+body.dark-mode .navbar {
+  background: #111827;
+}
+
+/* Footer */
+body.dark-mode .footer {
+  background: #111827;
+  color: #cbd5e1;
+}
+
+/* Status colors (slightly adjusted for dark) */
+body.dark-mode .status.open {
+  background: #064e3b;
+  color: #34d399;
+}
+
+body.dark-mode .status.closing {
+  background: #78350f;
+  color: #facc15;
+}
+
+body.dark-mode .status.closed {
+  background: #7f1d1d;
+  color: #f87171;
+}
   </style>
 </head>
 
@@ -569,7 +697,11 @@
         <a href="#l" class="nav-link">Analytics</a>
         <a href="finance-tips.html" class="nav-link">Finance Tips</a>
         <a href="government-schemes.html" class="nav-link active">Govt Schemes</a>
+        
       </div>
+      <button id="themeToggle" class="theme-toggle">
+  <i class="fas fa-moon"></i>
+</button>
     </div>
   </nav>
 </header>
@@ -895,7 +1027,31 @@ scrollBtn.addEventListener("click", () => {
     behavior: "smooth"
   });
 });
+/* =========================
+   DARK / LIGHT MODE TOGGLE
+========================= */
 
+const toggleBtn = document.getElementById("themeToggle");
+const icon = toggleBtn.querySelector("i");
+
+// Load saved mode
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark-mode");
+  icon.classList.replace("fa-moon", "fa-sun");
+}
+
+// Toggle function
+toggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+
+  if (document.body.classList.contains("dark-mode")) {
+    localStorage.setItem("theme", "dark");
+    icon.classList.replace("fa-moon", "fa-sun");
+  } else {
+    localStorage.setItem("theme", "light");
+    icon.classList.replace("fa-sun", "fa-moon");
+  }
+});
 </script>
 
 </body>

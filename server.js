@@ -78,6 +78,8 @@ async function connectDatabase() {
         require('./jobs/taxonomyAuditor').start();
         require('./jobs/conflictCleaner').start();
         require('./jobs/logRotator').start();
+        require('./jobs/searchIndexer').start();
+
 
         // Start resilient orchestrator
         require('./services/jobOrchestrator').start();

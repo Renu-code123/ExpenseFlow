@@ -1,38 +1,37 @@
 const AppEventBus = require('../utils/AppEventBus');
 const EVENTS = require('../config/eventRegistry');
-const logger = require('../utils/structuredLogger');
+const orchestrator = require('../services/notificationOrchestrator');
+
 
 /**
  * Email Notification Listeners
- * Issue #711: Handles all outbound communication side-effects.
+ * Issue #711 & #721: Refactored to use central Omnichannel Orchestrator.
  */
 class EmailListeners {
     init() {
-        console.log('[EmailListeners] Initializing subscription hooks...');
+        console.log('[EmailListeners] Initializing decoupled hooks...');
 
         // Subscribe to User Registration
-        AppEventBus.subscribe(EVENTS.USER.REGISTERED, this.handleUserRegistration);
+        AppEventBus.subscribe(EVENTS.USER.REGISTERED, this.handleUserRegistration.bind(this));
 
         // Subscribe to Security Events
-        AppEventBus.subscribe(EVENTS.SECURITY.LOGIN_FAILURE, this.handleSecurityAlert);
+        AppEventBus.subscribe(EVENTS.SECURITY.LOGIN_FAILURE, this.handleSecurityAlert.bind(this));
     }
 
     async handleUserRegistration(user) {
-        logger.info(`[EmailService] Sending welcome email to user: ${user.email}`);
-
-        // In a real implementation:
-        // await emailProvider.sendTemplate(user.email, 'welcome_v1', { name: user.name });
-
-        return Promise.resolve();
+        // Now using the omnichannel engine
+        return orchestrator.dispatch('welcome-onboarding', user._id, {
+            name: user.name,
+            email: user.email
+        });
     }
 
     async handleSecurityAlert(payload) {
-        logger.warn(`[EmailService] Sending security alert for suspicious login`, {
+        return orchestrator.dispatch('suspicious-login-detected', payload.userId || 'anonymous', {
             ip: payload.ip,
-            email: payload.email
+            device: payload.userAgent || 'Unknown Device',
+            location: payload.location || 'Unknown'
         });
-
-        return Promise.resolve();
     }
 }
 

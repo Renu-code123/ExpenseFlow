@@ -203,6 +203,14 @@ const transactionSchema = new mongoose.Schema({
         purityScore: { type: Number, default: 100 },
         validationId: String, // requestId from the pipeline
         remediatedAt: Date
+    },
+    // NEW: Features for Semantic Indexing & Multi-Faceted Search
+    searchMetadata: {
+        tags: [{ type: String }],
+        merchantSentiment: { type: String, enum: ['positive', 'neutral', 'negative'], default: 'neutral' },
+        businessType: String,
+        isRecurringInferred: { type: Boolean, default: false },
+        indexedAt: Date
     }
 }, {
     timestamps: true
