@@ -1,50 +1,54 @@
-const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
 const logger = require('../utils/structuredLogger');
+const jobOrchestrator = require('../services/jobOrchestrator');
 
 /**
  * Log Rotator Job
- * Issue #713: Prevents log files from consuming infinite disk space.
+ * Issue #713 & #719: Refactored for Resilient Orchestration.
  */
 class LogRotator {
     constructor() {
         this.logDir = path.join(process.cwd(), 'logs');
+        if (!fs.existsSync(this.logDir)) {
+            fs.mkdirSync(this.logDir, { recursive: true });
+        }
     }
 
+    /**
+     * Now hooks into the resilient orchestrator
+     */
     start() {
-        console.log('[LogRotator] Initializing log rotation worker...');
-
-        // Run every night at midnight
-        cron.schedule('0 0 * * *', () => {
-            this.rotate();
-        });
+        jobOrchestrator.register(
+            'LOG_ROTATION',
+            '0 0 * * *', // Nightly at midnight
+            this.rotate.bind(this),
+            { retryLimit: 2, baseDelay: 5000 }
+        );
     }
 
-    rotate() {
-        logger.info('Starting nightly log rotation sequence...');
+    async rotate() {
+        logger.info('[LogRotator] Sequence started...');
 
-        try {
-            const files = fs.readdirSync(this.logDir);
-            const timestamp = new Date().toISOString().replace(/:/g, '-');
+        const files = fs.readdirSync(this.logDir);
+        const timestamp = new Date().toISOString().replace(/:/g, '-');
 
-            for (const file of files) {
-                if (file.endsWith('.log') && !file.includes('_archive_')) {
-                    const oldPath = path.join(this.logDir, file);
-                    const newPath = path.join(this.logDir, `${file.replace('.log', '')}_archive_${timestamp}.log`);
+        for (const file of files) {
+            if (file.endsWith('.log') && !file.includes('_archive_')) {
+                const oldPath = path.join(this.logDir, file);
+                const newPath = path.join(this.logDir, `${file.replace('.log', '')}_archive_${timestamp}.log`);
 
-                    // In a real system, we might GZIP this, or move it to S3
+                try {
                     fs.renameSync(oldPath, newPath);
+                } catch (err) {
+                    // It's possible the file is locked by the logger itself
+                    logger.warn(`Could not rotate busy log file: ${file}`);
                 }
             }
-
-            // Also clean up archives older than 7 days
-            this.cleanupArchives();
-
-            logger.info('Log rotation completed successfully.');
-        } catch (err) {
-            logger.error('Log rotation failed', { error: err.message });
         }
+
+        this.cleanupArchives();
+        return Promise.resolve();
     }
 
     cleanupArchives() {

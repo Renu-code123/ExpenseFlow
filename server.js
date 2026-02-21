@@ -81,6 +81,9 @@ async function connectDatabase() {
         require('./jobs/searchIndexer').start();
 
 
+        // Start resilient orchestrator
+        require('./services/jobOrchestrator').start();
+
 
 
         console.log('✓ Cron jobs initialized');
@@ -111,7 +114,7 @@ app.use('/api/governance', require('./routes/governance'));
 app.use('/api/taxonomy', require('./routes/taxonomy'));
 app.use('/api/sync', require('./routes/syncManager'));
 app.use('/api/telemetry', require('./routes/telemetry'));
-app.use('/api/search', require('./routes/search'));
+app.use('/api/jobs', require('./routes/jobs'));
 
 
 
