@@ -1,5 +1,6 @@
 const BaseRepository = require('./baseRepository');
 const Expense = require('../models/Expense');
+const ledgerService = require('../services/ledgerService');
 
 /**
  * ExpenseRepository - Data Access Layer for Expense operations
@@ -8,6 +9,48 @@ const Expense = require('../models/Expense');
 class ExpenseRepository extends BaseRepository {
     constructor() {
         super(Expense);
+    }
+
+    /**
+     * Event-Sourced Update
+     */
+    async updateOne(filters, data, options = { new: true, runValidators: true }) {
+        const doc = await this.model.findOne(filters);
+        if (!doc) return null;
+
+        const updatedDoc = await super.updateOne(filters, data, options);
+
+        // Record UPDATE event
+        const event = await ledgerService.recordEvent(
+            doc._id,
+            'UPDATED',
+            data,
+            doc.user // Assumes user exists on doc
+        );
+
+        updatedDoc.ledgerSequence = event.sequence;
+        updatedDoc.lastLedgerEventId = event._id;
+        await updatedDoc.save();
+
+        return updatedDoc;
+    }
+
+    /**
+     * Event-Sourced Delete
+     */
+    async deleteOne(filters) {
+        const doc = await this.model.findOne(filters);
+        if (!doc) return null;
+
+        // Record DELETE event BEFORE actual deletion or use a tombstone
+        await ledgerService.recordEvent(
+            doc._id,
+            'DELETED',
+            { deletedAt: new Date() },
+            doc.user
+        );
+
+        return await super.deleteOne(filters);
     }
 
     /**

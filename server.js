@@ -120,6 +120,7 @@ app.use('/api/governance', require('./routes/governance'));
 app.use('/api/taxonomy', require('./routes/taxonomy'));
 app.use('/api/sync', require('./routes/sync'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/ledger', require('./routes/ledger'));
 
 app.use('/api/telemetry', require('./routes/telemetry'));
 app.use('/api/jobs', require('./routes/jobs'));

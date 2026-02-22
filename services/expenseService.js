@@ -8,6 +8,7 @@ const approvalService = require('./approvalService');
 const intelligenceService = require('./intelligenceService');
 const categorizationEngine = require('./categorizationEngine');
 const merchantLearningService = require('./merchantLearningService');
+const ledgerService = require('./ledgerService');
 
 // Wrapper for backward compatibility
 class ExpenseService {
@@ -109,6 +110,20 @@ class ExpenseService {
 
         // 5. Save Expense
         const expense = await expenseRepository.create(finalData);
+
+        // Issue #738: Immutable Ledger Event
+        const event = await ledgerService.recordEvent(
+            expense._id,
+            'CREATED',
+            finalData,
+            userId
+        );
+
+        // Update sequence in main document
+        await expenseRepository.updateById(expense._id, {
+            ledgerSequence: event.sequence,
+            lastLedgerEventId: event._id
+        });
 
         // 6. Handle Approvals (fallback for non-policy workspace expenses)
         if (finalData.workspace && !finalData.requiresApproval) {

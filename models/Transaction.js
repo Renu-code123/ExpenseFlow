@@ -99,6 +99,20 @@ const transactionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    // Issue #738: Event Sourcing & Ledger Tracking
+    ledgerSequence: {
+        type: Number,
+        default: 0
+    },
+    ledgerStatus: {
+        type: String,
+        enum: ['synced', 'diverged', 'rebuilding'],
+        default: 'synced'
+    },
+    lastLedgerEventId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FinancialEvent'
+    },
     appliedRules: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Rule'
@@ -249,5 +263,11 @@ transactionSchema.index({ workspace: 1, category: 1, date: -1 });
 transactionSchema.index({ location: '2dsphere' });
 transactionSchema.index({ receiptId: 1 });
 transactionSchema.index({ source: 1, user: 1 });
+
+transactionSchema.virtual('history', {
+    ref: 'FinancialEvent',
+    localField: '_id',
+    foreignField: 'entityId'
+});
 
 module.exports = mongoose.model('Transaction', transactionSchema);

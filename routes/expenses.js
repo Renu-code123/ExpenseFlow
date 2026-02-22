@@ -11,6 +11,7 @@ const AppError = require('../utils/AppError');
 const { ExpenseSchemas, validateRequest, validateQuery } = require('../middleware/inputValidator');
 const { expenseLimiter, exportLimiter } = require('../middleware/rateLimiter');
 const { requireAuth, getUserId } = require('../middleware/clerkAuth');
+const integrityGuard = require('../middleware/integrityGuard');
 
 
 
@@ -98,7 +99,7 @@ router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
  * @desc    Update an expense
  * @access  Private
  */
-router.put('/:id', requireAuth, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, integrityGuard, validateRequest(ExpenseSchemas.create), asyncHandler(async (req, res) => {
   const expense = await expenseRepository.updateOne(
     { _id: req.params.id, user: req.user._id },
     req.body
@@ -178,7 +179,7 @@ router.post('/bulk-delete', requireAuth, validateRequest(ExpenseSchemas.bulkDele
  * @desc    Delete an expense
  * @access  Private
  */
-router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
+router.delete('/:id', requireAuth, integrityGuard, asyncHandler(async (req, res) => {
   const expense = await expenseRepository.deleteOne({ _id: req.params.id, user: req.user._id });
 
   if (!expense) throw new NotFoundError('Expense not found');

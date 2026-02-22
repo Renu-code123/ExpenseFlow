@@ -2,67 +2,67 @@ const mongoose = require('mongoose');
 
 /**
  * FinancialEvent Model
- * Issue #680: The immutable source of truth for all state mutations.
- * Each event captures a discrete change in the system.
+ * Issue #738: Stores every state change as an immutable event record.
+ * This is the source of truth for the transaction system.
  */
 const financialEventSchema = new mongoose.Schema({
-    userId: {
+    entityId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
         required: true,
-        index: true
+        index: true // The Transaction ID
+    },
+    entityType: {
+        type: String,
+        enum: ['TRANSACTION', 'BUDGET', 'WORKSPACE'],
+        default: 'TRANSACTION'
     },
     eventType: {
         type: String,
         required: true,
         enum: [
-            'TX_CREATED', 'TX_UPDATED', 'TX_DELETED',
-            'WS_CREATED', 'WS_UPDATED', 'WS_MEMBER_ADDED',
-            'BUDGET_EXCEEDED', 'SYSTEM_AUDIT_LOG'
-        ],
-        index: true
-    },
-    entityType: {
-        type: String,
-        required: true, // e.g., 'Transaction', 'Workspace'
-        index: true
-    },
-    entityId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        index: true
+            'CREATED',
+            'UPDATED',
+            'DELETED',
+            'RECONCILED',
+            'VOIDED',
+            'FROZEN'
+        ]
     },
     payload: {
         type: mongoose.Schema.Types.Mixed,
-        required: true // The state AFTER the change or the delta
+        required: true
     },
-    previousEventId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'FinancialEvent',
-        default: null
-    },
-    metadata: {
-        deviceId: String,
-        ipAddress: String,
-        userAgent: String,
-        correlationId: String, // To group related events
-        timestamp: { type: Date, default: Date.now }
-    },
-    checksum: {
-        type: String,
-        required: true // SHA-256 of payload+previousEventId for immutability validation
-    },
-    version: {
+    sequence: {
         type: Number,
-        required: true // Incremental version per entity
+        required: true
+    },
+    prevHash: {
+        type: String,
+        required: true
+    },
+    currentHash: {
+        type: String,
+        required: true
+    },
+    signature: {
+        type: String,
+        required: true
+    },
+    performedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now,
+        index: true
     }
 }, {
-    timestamps: true
+    timestamps: false // We use our own timestamp
 });
 
-// Comprehensive indexes for forensic analysis
-financialEventSchema.index({ entityId: 1, version: 1 }, { unique: true });
-financialEventSchema.index({ 'metadata.timestamp': 1 });
-financialEventSchema.index({ userId: 1, eventType: 1 });
+// Compound index for unique sequence per entity
+financialEventSchema.index({ entityId: 1, sequence: 1 }, { unique: true });
 
 module.exports = mongoose.model('FinancialEvent', financialEventSchema);

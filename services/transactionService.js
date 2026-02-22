@@ -11,6 +11,8 @@ const EVENTS = require('../config/eventRegistry');
 
 const consensusEngine = require('./consensusEngine');
 
+const ledgerService = require('./ledgerService');
+
 class TransactionService {
     /**
      * Distributed Reconciliation Sync Update
@@ -78,8 +80,21 @@ class TransactionService {
 
         const transaction = new Transaction(finalData);
         await transaction.save();
+
+        // Issue #738: Record Event in Ledger
+        const event = await ledgerService.recordEvent(
+            transaction._id,
+            'CREATED',
+            finalData,
+            userId
+        );
+
+        transaction.ledgerSequence = event.sequence;
+        transaction.lastLedgerEventId = event._id;
+        await transaction.save();
+
         if (typeof transaction.logStep === 'function') {
-            await transaction.logStep('persistence', 'success', 'Transaction record created in pending state');
+            await transaction.logStep('persistence', 'success', 'Transaction record created and recorded in immutable ledger');
         }
 
         return transaction;
