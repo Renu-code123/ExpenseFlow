@@ -217,9 +217,35 @@
             </div>
         </div>
     </footer>
+  <!-- Scroll To Top Button -->
+<button id="scrollTopBtn" aria-label="Scroll to top">
+  <i class="fas fa-arrow-up"></i>
+</button>
 <!-- Blue Cursor Trail -->
 <div class="circle-container" id="cursorTrail"></div>
 <script>
+/* ============================= */
+/* 🔝 Scroll To Top Script */
+/* ============================= */
+
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+// Show button after scrolling 300px
+window.addEventListener("scroll", () => {
+  if (window.scrollY > 300) {
+    scrollTopBtn.classList.add("show");
+  } else {
+    scrollTopBtn.classList.remove("show");
+  }
+});
+
+// Smooth scroll to top
+scrollTopBtn.addEventListener("click", () => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+});
 /* ============================= */
 /* 🔵 Blue Cursor Trail Script  */
 /* ============================= */
