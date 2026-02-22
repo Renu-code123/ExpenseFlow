@@ -220,7 +220,20 @@
             <a href="#health" class="nav-link" id="health-tab">Health</a>
             <a href="#goals" class="nav-link">Goals</a>
             <a href="#debt-tracker" class="nav-link">Debt Tracker</a>
-            <a href="#settings" class="nav-link">Settings</a>
+          <div class="nav-item settings-item">
+  <label for="theme-select" class="nav-link settings-label">
+    Settings
+  </label>
+
+ <select id="theme-select" class="theme-select">
+  <option value="light">☀ Light</option>
+  <option value="dark">🌙 Dark</option>
+  <option value="system">💻 System</option>
+  <option value="ocean">🌊 Ocean</option>
+  <option value="neon">⚡ Neon</option>
+  <option value="pastel">🌸 Pastel</option>
+</select>
+</div>
             <a href="javascript:void(0)" class="nav-link" onclick="openLoginModal()">Login</a>
           </div>
           
@@ -1635,6 +1648,29 @@ window.addEventListener("DOMContentLoaded", () => {
           });
         });
       });
+      //this is theme selector
+      const themeSelect = document.getElementById("theme-select");
+
+/* Apply Saved Theme */
+const savedTheme = localStorage.getItem("theme");
+
+if (savedTheme) {
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  themeSelect.value = savedTheme;
+}
+
+/* Change Theme */
+themeSelect.addEventListener("change", function () {
+  const selectedTheme = this.value;
+
+  if (selectedTheme === "system") {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.removeItem("theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", selectedTheme);
+    localStorage.setItem("theme", selectedTheme);
+  }
+});
     </script>
   </body>
 </html>
