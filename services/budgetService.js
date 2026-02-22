@@ -10,10 +10,33 @@ const intelligenceService = require('./intelligenceService');
 const mongoose = require('mongoose');
 
 const eventDispatcher = require('./eventDispatcher');
+const stressTestEngine = require('./stressTestEngine');
 
 class BudgetService {
   constructor() {
     this._initializeEventListeners();
+  }
+
+  /**
+   * Get Stress-Adjusted Spending Limits
+   * Issue #739: Dynamically reduces available budget if liquidity risk is high.
+   */
+  async getStressAdjustedLimits(workspaceId, budgetId) {
+    const budget = await budgetRepository.findById(budgetId);
+    if (!budget) throw new Error('Budget not found');
+
+    const evaluation = await stressTestEngine.evaluateLiquidity(workspaceId);
+
+    // Scale factor: If ruin probability is 10%, we reduce budget by 20%
+    const riskAdjustmentFactor = Math.max(1 - (evaluation.maxRuinProbability * 2), 0.5);
+    const adjustedLimit = budget.amount * riskAdjustmentFactor;
+
+    return {
+      originalLimit: budget.amount,
+      adjustedLimit,
+      riskFactor: 1 - riskAdjustmentFactor,
+      stressStatus: evaluation.status
+    };
   }
 
   _initializeEventListeners() {

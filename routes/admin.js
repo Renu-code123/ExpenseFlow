@@ -3,6 +3,8 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const TenantConfig = require('../models/TenantConfig');
 const Workspace = require('../models/Workspace');
+const StressScenario = require('../models/StressScenario');
+const stressTestEngine = require('../services/stressTestEngine');
 const ResponseFactory = require('../utils/ResponseFactory');
 
 /**
@@ -70,6 +72,41 @@ router.get('/system-health', auth, requireGlobalAdmin, async (req, res) => {
         };
 
         return ResponseFactory.success(res, health);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * @route   GET /api/admin/scenarios
+ * @desc    Get all active stress scenarios
+ */
+router.get('/scenarios', auth, requireGlobalAdmin, async (req, res) => {
+    const scenarios = await StressScenario.find();
+    res.json({ success: true, scenarios });
+});
+
+/**
+ * @route   POST /api/admin/scenarios
+ * @desc    Create a new stress scenario
+ */
+router.post('/scenarios', auth, requireGlobalAdmin, async (req, res) => {
+    try {
+        const scenario = await StressScenario.create(req.body);
+        res.status(201).json({ success: true, data: scenario });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * @route   GET /api/admin/workspaces/:id/liquidity-audit
+ * @desc    Run real-time stress test on a specific workspace
+ */
+router.get('/workspaces/:id/liquidity-audit', auth, requireGlobalAdmin, async (req, res) => {
+    try {
+        const audit = await stressTestEngine.evaluateLiquidity(req.params.id);
+        res.json({ success: true, audit });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
