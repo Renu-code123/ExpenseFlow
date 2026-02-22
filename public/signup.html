@@ -83,6 +83,7 @@
       .user-profile {
         display: none;
       }
+      
 
       /* Hero */
       .hero-title {
@@ -285,6 +286,159 @@
         font-weight: 500;
         margin-right: 8px;
     }
+
+    /* Enhanced Navbar Styles */
+    .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: -8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .nav-logo:hover {
+        transform: translateX(2px);
+    }
+
+    .logo-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .nav-logo:hover .logo-icon {
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        transform: scale(1.05);
+    }
+
+    .logo-icon i {
+        font-size: 1.5rem;
+        color: #ffffff;
+    }
+
+    .logo-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .brand-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1;
+        background: linear-gradient(135deg, #64ffda, #ffffff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .brand-tagline {
+        font-size: 0.75rem;
+        color: #64ffda;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1;
+    }
+
+    .nav-toggle {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+        gap: 5px;
+        padding: 8px;
+        background: transparent;
+        border: none;
+    }
+
+    .nav-toggle .bar {
+        width: 24px;
+        height: 3px;
+        background: #64ffda;
+        border-radius: 3px;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+        display: block;
+    }
+
+    .nav-toggle.active .bar:nth-child(1) {
+        transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .nav-toggle.active .bar:nth-child(2) {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    .nav-toggle.active .bar:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .logo-text {
+            display: block;
+        }
+
+        .brand-tagline {
+            display: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo-icon i {
+            font-size: 1.2rem;
+        }
+
+        .brand-name {
+            font-size: 1.2rem;
+        }
+
+        .nav-toggle {
+            display: flex;
+        }
+
+        .nav-menu {
+            position: fixed;
+            top: 70px;
+            left: -100%;
+            flex-direction: column;
+            background: rgba(15, 15, 35, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            width: 100%;
+            text-align: center;
+            transition: left 0.3s ease;
+            padding: 2rem 0;
+            gap: 0;
+        }
+
+        .nav-menu.active {
+            left: 0;
+        }
+
+        .nav-link {
+            padding: 1rem 2rem;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid rgba(100, 255, 218, 0.05);
+        }
+
+        .user-profile {
+            display: none;
+        }
+    }
+
       .footer-links {
         display: grid;
         grid-template-columns: repeat(2, minmax(100px, 1fr));
@@ -506,8 +660,13 @@
     <nav class="navbar">
       <div class="nav-container">
         <div class="nav-logo">
-          <i class="fas fa-wallet"></i>
-          <span>ExpenseFlow</span>
+          <div class="logo-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <div class="logo-text">
+            <div class="brand-name">ExpenseFlow</div>
+            <div class="brand-tagline">Smart Finance</div>
+          </div>
         </div>
         <div class="nav-menu" id="nav-menu">
           <a href="dashboard.html" class="nav-link active">Dashboard</a>
@@ -605,6 +764,36 @@
     </footer>
     <div id="toast" class="toast"></div>
     <script src="auth.js"></script>
-    
+    <script>
+      // Hamburger Menu Toggle
+      document.addEventListener('DOMContentLoaded', () => {
+        const navToggle = document.getElementById('nav-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        
+        if (navToggle && navMenu) {
+          navToggle.addEventListener('click', () => {
+            navToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+          });
+
+          // Close menu when a link is clicked
+          const navLinks = navMenu.querySelectorAll('a');
+          navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+              navToggle.classList.remove('active');
+              navMenu.classList.remove('active');
+            });
+          });
+
+          // Close menu when clicking outside
+          document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nav-container')) {
+              navToggle.classList.remove('active');
+              navMenu.classList.remove('active');
+            }
+          });
+        }
+      });
+    </script>
 </body>
 </html>

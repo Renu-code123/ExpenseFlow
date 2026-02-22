@@ -1,5 +1,34 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Hamburger Menu Toggle
+  const navToggle = document.getElementById('nav-toggle');
+  const navMenu = document.getElementById('nav-menu');
+  
+  if (navToggle && navMenu) {
+    navToggle.addEventListener('click', () => {
+      navToggle.classList.toggle('active');
+      navMenu.classList.toggle('active');
+    });
+
+    // Close menu when a link is clicked
+    const navLinks = navMenu.querySelectorAll('a');
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        navToggle.classList.remove('active');
+        navMenu.classList.remove('active');
+      });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-container')) {
+        navToggle.classList.remove('active');
+        navMenu.classList.remove('active');
+      }
+    });
+  }
+
   const form = document.getElementById("loginForm");
+  if (!form) return;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -45,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     (function () {
       // Hide default cursor
-      document.body.style.cursor = 'none';
+      // document.body.style.cursor = 'none';
 
       const container = document.getElementById('cursor-trail');
       const coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -195,4 +224,3 @@ document.addEventListener("DOMContentLoaded", () => {
       // Start animation
       animateTrail();
     })();
-
