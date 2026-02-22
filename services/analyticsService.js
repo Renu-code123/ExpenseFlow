@@ -1,6 +1,8 @@
 const expenseRepository = require('../repositories/expenseRepository');
 const budgetRepository = require('../repositories/budgetRepository');
-const AnalyticsCache = require('../models/AnalyticsCache');
+const multiTierCache = require('../utils/multiTierCache');
+const invalidationManager = require('../services/invalidationManager');
+const Workspace = require('../models/Workspace');
 const mongoose = require('mongoose');
 
 const CACHE_KEYS = {
@@ -25,6 +27,23 @@ class AnalyticsService {
         // Z-Score configuration
         this.Z_SCORE_THRESHOLD = 2.0;
         this.MINIMUM_DATA_POINTS = 5;
+    }
+
+    async _getScopedKey(type, userId, params, workspaceId = null) {
+        let epoch = 0;
+        if (workspaceId) {
+            const ws = await Workspace.findById(workspaceId).select('cacheEpoch');
+            epoch = ws ? ws.cacheEpoch : 0;
+        }
+        const paramStr = JSON.stringify(params);
+        const key = `analytics:${type}:${userId}:${workspaceId || 'global'}:v${epoch}:${paramStr}`;
+
+        // Track dependency for invalidation
+        if (workspaceId) {
+            invalidationManager.track(`workspace:${workspaceId}`, key);
+        }
+
+        return key;
     }
 
     formatCurrency(amount, locale = this.defaultLocale, currency = this.defaultCurrency) {
@@ -66,13 +85,15 @@ class AnalyticsService {
         const {
             months = 6,
             threshold = this.Z_SCORE_THRESHOLD,
-            useCache = true
+            useCache = true,
+            workspaceId = null
         } = options;
 
         const cacheParams = { months, threshold };
+        const cacheKey = await this._getScopedKey('zscore_anomalies', userId, cacheParams, workspaceId);
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('zscore_anomalies', userId, cacheParams);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -185,7 +206,7 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache('zscore_anomalies', userId, cacheParams, result, 30);
+            await multiTierCache.set(cacheKey, result, 30 * 60000); // 30 mins
         }
 
         return result;

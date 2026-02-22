@@ -2,6 +2,9 @@ const FinancialReport = require('../models/FinancialReport');
 const Expense = require('../models/Expense');
 const TaxProfile = require('../models/TaxProfile');
 const Budget = require('../models/Budget');
+const Workspace = require('../models/Workspace');
+const multiTierCache = require('../utils/multiTierCache');
+const invalidationManager = require('../services/invalidationManager');
 const taxService = require('./taxService');
 const mongoose = require('mongoose');
 const PDFDocument = require('pdfkit');
@@ -24,7 +27,7 @@ class ReportService {
       height: this.chartHeight,
       backgroundColour: 'white'
     }) : null;
-    
+
     this.colors = {
       primary: '#4F46E5',
       secondary: '#10B981',
@@ -35,6 +38,22 @@ class ReportService {
         '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
       ]
     };
+  }
+
+  async _getScopedKey(type, userId, params, workspaceId = null) {
+    let epoch = 0;
+    if (workspaceId) {
+      const ws = await Workspace.findById(workspaceId).select('cacheEpoch');
+      epoch = ws ? ws.cacheEpoch : 0;
+    }
+    const paramStr = JSON.stringify(params);
+    const key = `reports:${type}:${userId}:${workspaceId || 'global'}:v${epoch}:${paramStr}`;
+
+    if (workspaceId) {
+      invalidationManager.track(`workspace:${workspaceId}`, key);
+    }
+
+    return key;
   }
 
   /**
@@ -52,7 +71,16 @@ class ReportService {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Check for existing report
+    const cacheKey = await this._getScopedKey(reportType, userId, { start, end, currency }, workspaceId);
+
+    // Check Multi-Tier Cache first
+    const cachedData = await multiTierCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`[ReportService] Multi-Tier Cache Hit for ${reportType}`);
+      return cachedData;
+    }
+
+    // Fallback to database for existing report record
     const existingReport = await FinancialReport.findOne({
       user: userId,
       reportType,
@@ -60,10 +88,6 @@ class ReportService {
       'dateRange.endDate': end,
       status: { $in: ['ready', 'processing'] }
     });
-
-    if (existingReport && existingReport.status === 'ready') {
-      return existingReport;
-    }
 
     // Create new report
     const report = new FinancialReport({
@@ -111,8 +135,12 @@ class ReportService {
       Object.assign(report, reportData);
       report.status = 'ready';
       report.generatedAt = new Date();
-      
+
       await report.save();
+
+      // Store in Multi-Tier Cache for faster subsequent lookups
+      await multiTierCache.set(cacheKey, report, 60 * 60 * 1000); // 1 hour TTL
+
       return report;
     } catch (error) {
       report.status = 'failed';
@@ -265,8 +293,8 @@ class ReportService {
         category: e.category,
         date: e.date
       })),
-      averageMonthlyExpense: monthlyTrends.length > 0 
-        ? totalExpenses / monthlyTrends.length 
+      averageMonthlyExpense: monthlyTrends.length > 0
+        ? totalExpenses / monthlyTrends.length
         : 0
     };
   }
@@ -305,7 +333,7 @@ class ReportService {
     const operatingExpenses = expenses
       .filter(e => ['utilities', 'transport', 'food'].includes(e._id.category))
       .reduce((sum, e) => sum + e.total, 0);
-    
+
     const discretionaryExpenses = expenses
       .filter(e => ['shopping', 'entertainment'].includes(e._id.category))
       .reduce((sum, e) => sum + e.total, 0);
@@ -345,13 +373,13 @@ class ReportService {
    */
   async generateTaxReport(userId, startDate, endDate) {
     const taxYear = startDate.getFullYear();
-    
+
     // Get tax calculation
     const taxCalc = await taxService.calculateTax(userId, taxYear);
-    
+
     // Get deductible expenses
     const deductibleExpenses = await taxService.getDeductibleExpenses(userId, startDate, endDate);
-    
+
     return {
       totalIncome: taxCalc.grossIncome,
       totalExpenses: 0, // Will be filled from expense data
@@ -455,7 +483,7 @@ class ReportService {
 
     // Transform into monthly trends
     const monthlyMap = new Map();
-    
+
     for (const data of monthlyData) {
       const key = `${data._id.year}-${String(data._id.month).padStart(2, '0')}`;
       if (!monthlyMap.has(key)) {
@@ -467,7 +495,7 @@ class ReportService {
           transactionCount: 0
         });
       }
-      
+
       const entry = monthlyMap.get(key);
       if (data._id.type === 'income') {
         entry.income = data.total;
@@ -479,7 +507,7 @@ class ReportService {
     }
 
     const monthlyTrends = Array.from(monthlyMap.values());
-    
+
     const totalIncome = monthlyTrends.reduce((sum, m) => sum + m.income, 0);
     const totalExpenses = monthlyTrends.reduce((sum, m) => sum + m.expenses, 0);
 
@@ -487,12 +515,12 @@ class ReportService {
     for (let i = 1; i < monthlyTrends.length; i++) {
       const prev = monthlyTrends[i - 1];
       const curr = monthlyTrends[i];
-      
-      curr.incomeGrowth = prev.income > 0 
-        ? ((curr.income - prev.income) / prev.income * 100).toFixed(2) 
+
+      curr.incomeGrowth = prev.income > 0
+        ? ((curr.income - prev.income) / prev.income * 100).toFixed(2)
         : 0;
-      curr.expenseGrowth = prev.expenses > 0 
-        ? ((curr.expenses - prev.expenses) / prev.expenses * 100).toFixed(2) 
+      curr.expenseGrowth = prev.expenses > 0
+        ? ((curr.expenses - prev.expenses) / prev.expenses * 100).toFixed(2)
         : 0;
     }
 
@@ -622,9 +650,9 @@ class ReportService {
       annual_summary: 'Annual Summary'
     };
 
-    const formatDate = (date) => date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      year: 'numeric' 
+    const formatDate = (date) => date.toLocaleDateString('en-US', {
+      month: 'short',
+      year: 'numeric'
     });
 
     return `${typeNames[reportType] || reportType} - ${formatDate(startDate)} to ${formatDate(endDate)}`;
@@ -646,7 +674,7 @@ class ReportService {
     // Get report data
     const annualData = await this.generateAnnualSummary(userId, new Date(startDate), new Date(endDate));
     const categoryData = await this.generateCategoryBreakdown(userId, new Date(startDate), new Date(endDate));
-    
+
     // Generate charts if available
     let charts = {};
     if (includeCharts && this.chartRenderer) {
@@ -656,11 +684,11 @@ class ReportService {
         console.error('Chart generation error:', e);
       }
     }
-    
+
     return new Promise((resolve, reject) => {
       const chunks = [];
-      const doc = new PDFDocument({ 
-        size: 'A4', 
+      const doc = new PDFDocument({
+        size: 'A4',
         margin: 50,
         info: {
           Title: 'Professional Financial Report',
@@ -668,30 +696,30 @@ class ReportService {
           Subject: 'Financial Analysis Report'
         }
       });
-      
+
       doc.on('data', chunk => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
-      
+
       // Cover Page
       this.renderPDFCoverPage(doc, annualData, new Date(startDate), new Date(endDate));
-      
+
       // Executive Summary
       doc.addPage();
       this.renderPDFExecutiveSummary(doc, annualData);
-      
+
       // Category Breakdown
       doc.addPage();
       this.renderPDFCategoryBreakdown(doc, categoryData, charts.category);
-      
+
       // Monthly Trends
       doc.addPage();
       this.renderPDFMonthlyTrends(doc, annualData, charts.trend);
-      
+
       // Transaction Details
       doc.addPage();
       this.renderPDFTransactions(doc, userId, new Date(startDate), new Date(endDate));
-      
+
       doc.end();
     });
   }
@@ -701,7 +729,7 @@ class ReportService {
    */
   async generateCharts(categoryData, annualData) {
     const charts = {};
-    
+
     // Category Pie Chart
     if (categoryData.expenseBreakdown && categoryData.expenseBreakdown.length > 0) {
       const categoryConfig = {
@@ -727,10 +755,10 @@ class ReportService {
           }
         }
       };
-      
+
       charts.category = await this.chartRenderer.renderToBuffer(categoryConfig);
     }
-    
+
     // Monthly Trend Chart
     if (annualData.monthlyTrends && annualData.monthlyTrends.length > 0) {
       const trendConfig = {
@@ -769,10 +797,10 @@ class ReportService {
           }
         }
       };
-      
+
       charts.trend = await this.chartRenderer.renderToBuffer(trendConfig);
     }
-    
+
     return charts;
   }
 
@@ -782,39 +810,39 @@ class ReportService {
   renderPDFCoverPage(doc, data, startDate, endDate) {
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
-    
+
     // Background
     doc.rect(0, 0, pageWidth, pageHeight).fill('#4F46E5');
-    
+
     // Title
     doc.fillColor('#ffffff')
-       .fontSize(42)
-       .font('Helvetica-Bold')
-       .text('Financial Report', 50, 200, { align: 'center' });
-    
+      .fontSize(42)
+      .font('Helvetica-Bold')
+      .text('Financial Report', 50, 200, { align: 'center' });
+
     // Subtitle
     doc.fontSize(18)
-       .font('Helvetica')
-       .text('Professional Expense Analysis', 50, 260, { align: 'center' });
-    
+      .font('Helvetica')
+      .text('Professional Expense Analysis', 50, 260, { align: 'center' });
+
     // Date Range
     doc.fontSize(14)
-       .text(`${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`, 50, 320, { align: 'center' });
-    
+      .text(`${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`, 50, 320, { align: 'center' });
+
     // Summary Box
     doc.roundedRect(100, 400, pageWidth - 200, 150, 10)
-       .fillOpacity(0.2)
-       .fill('#ffffff');
-    
+      .fillOpacity(0.2)
+      .fill('#ffffff');
+
     doc.fillOpacity(1).fillColor('#ffffff');
-    
+
     // Stats
     const stats = [
       { label: 'Total Income', value: `$${(data.totalIncome || 0).toLocaleString()}` },
       { label: 'Total Expenses', value: `$${(data.totalExpenses || 0).toLocaleString()}` },
       { label: 'Savings Rate', value: `${data.savingsRate || 0}%` }
     ];
-    
+
     let xPos = 130;
     stats.forEach(stat => {
       doc.fontSize(12).text(stat.label, xPos, 430, { width: 140, align: 'center' });
@@ -822,11 +850,11 @@ class ReportService {
       doc.font('Helvetica');
       xPos += 150;
     });
-    
+
     // Footer
     doc.fontSize(10)
-       .text('Generated by ExpenseFlow', 50, pageHeight - 80, { align: 'center' })
-       .text(new Date().toLocaleDateString(), 50, pageHeight - 65, { align: 'center' });
+      .text('Generated by ExpenseFlow', 50, pageHeight - 80, { align: 'center' })
+      .text(new Date().toLocaleDateString(), 50, pageHeight - 65, { align: 'center' });
   }
 
   /**
@@ -834,12 +862,12 @@ class ReportService {
    */
   renderPDFExecutiveSummary(doc, data) {
     doc.fillColor('#1F2937').fontSize(24).font('Helvetica-Bold')
-       .text('Executive Summary', 50, 50);
-    
+      .text('Executive Summary', 50, 50);
+
     doc.moveTo(50, 85).lineTo(545, 85).stroke('#E5E7EB');
-    
+
     let y = 110;
-    
+
     // Key Metrics
     const metrics = [
       { label: 'Total Income', value: `$${(data.totalIncome || 0).toLocaleString()}`, color: this.colors.secondary },
@@ -849,43 +877,43 @@ class ReportService {
       { label: 'Avg Monthly Income', value: `$${Math.round(data.summary?.averageMonthlyIncome || 0).toLocaleString()}`, color: this.colors.primary },
       { label: 'Avg Monthly Expense', value: `$${Math.round(data.summary?.averageMonthlyExpense || 0).toLocaleString()}`, color: this.colors.warning }
     ];
-    
+
     const colWidth = 160;
     const rowHeight = 70;
-    
+
     metrics.forEach((metric, idx) => {
       const col = idx % 3;
       const row = Math.floor(idx / 3);
       const x = 50 + col * colWidth;
       const boxY = y + row * rowHeight;
-      
+
       doc.roundedRect(x, boxY, colWidth - 10, rowHeight - 10, 5)
-         .fillOpacity(0.1).fill(metric.color);
-      
+        .fillOpacity(0.1).fill(metric.color);
+
       doc.fillOpacity(1).fillColor('#6B7280').fontSize(10).font('Helvetica')
-         .text(metric.label, x + 10, boxY + 15);
-      
+        .text(metric.label, x + 10, boxY + 15);
+
       doc.fillColor(metric.color).fontSize(18).font('Helvetica-Bold')
-         .text(metric.value, x + 10, boxY + 35);
+        .text(metric.value, x + 10, boxY + 35);
     });
-    
+
     y += rowHeight * 2 + 40;
-    
+
     // Insights
     doc.fillColor('#1F2937').fontSize(16).font('Helvetica-Bold')
-       .text('Key Insights', 50, y);
-    
+      .text('Key Insights', 50, y);
+
     y += 30;
-    
+
     const insights = [
       data.savingsRate > 20 ? `Strong savings rate of ${data.savingsRate}% - above recommended 20%` : `Savings rate is ${data.savingsRate}% - aim for 20% or higher`,
       data.summary?.highestExpenseMonth ? `Highest spending in ${data.summary.highestExpenseMonth}: $${data.summary.highestExpenseAmount?.toLocaleString()}` : null,
       data.expenseBreakdown?.[0] ? `Top expense category: ${data.expenseBreakdown[0].category} (${data.expenseBreakdown[0].percentage}%)` : null
     ].filter(Boolean);
-    
+
     insights.forEach(insight => {
       doc.fillColor('#4B5563').fontSize(11).font('Helvetica')
-         .text(`• ${insight}`, 60, y, { width: 480 });
+        .text(`• ${insight}`, 60, y, { width: 480 });
       y += 25;
     });
   }
@@ -895,45 +923,45 @@ class ReportService {
    */
   renderPDFCategoryBreakdown(doc, data, chartImage) {
     doc.fillColor('#1F2937').fontSize(24).font('Helvetica-Bold')
-       .text('Category Breakdown', 50, 50);
-    
+      .text('Category Breakdown', 50, 50);
+
     doc.moveTo(50, 85).lineTo(545, 85).stroke('#E5E7EB');
-    
+
     let y = 100;
-    
+
     // Chart
     if (chartImage) {
       doc.image(chartImage, 75, y, { width: 450 });
       y = 500;
     }
-    
+
     // Category Table
     doc.fillColor('#1F2937').fontSize(14).font('Helvetica-Bold')
-       .text('Category Details', 50, y);
-    
+      .text('Category Details', 50, y);
+
     y += 25;
-    
+
     // Table Header
     doc.fillColor('#6B7280').fontSize(9).font('Helvetica-Bold');
     doc.text('Category', 50, y);
     doc.text('Amount', 200, y, { width: 80, align: 'right' });
     doc.text('Count', 290, y, { width: 50, align: 'right' });
     doc.text('% of Total', 350, y, { width: 70, align: 'right' });
-    
+
     y += 20;
     doc.moveTo(50, y).lineTo(420, y).stroke('#E5E7EB');
     y += 10;
-    
+
     // Table Rows
     (data.expenseBreakdown || []).slice(0, 10).forEach((cat, idx) => {
       if (y > 750) return;
-      
+
       doc.fillColor('#4B5563').fontSize(10).font('Helvetica');
       doc.text(cat.category || 'Other', 50, y, { width: 140 });
       doc.text(`$${(cat.amount || 0).toLocaleString()}`, 200, y, { width: 80, align: 'right' });
       doc.text((cat.count || 0).toString(), 290, y, { width: 50, align: 'right' });
       doc.text(`${cat.percentage || 0}%`, 350, y, { width: 70, align: 'right' });
-      
+
       y += 22;
     });
   }
@@ -943,47 +971,47 @@ class ReportService {
    */
   renderPDFMonthlyTrends(doc, data, chartImage) {
     doc.fillColor('#1F2937').fontSize(24).font('Helvetica-Bold')
-       .text('Monthly Trends', 50, 50);
-    
+      .text('Monthly Trends', 50, 50);
+
     doc.moveTo(50, 85).lineTo(545, 85).stroke('#E5E7EB');
-    
+
     let y = 100;
-    
+
     // Chart
     if (chartImage) {
       doc.image(chartImage, 50, y, { width: 500 });
       y = 520;
     }
-    
+
     // Monthly Table
     doc.fillColor('#1F2937').fontSize(14).font('Helvetica-Bold')
-       .text('Monthly Summary', 50, y);
-    
+      .text('Monthly Summary', 50, y);
+
     y += 25;
-    
+
     // Table Header
     doc.fillColor('#6B7280').fontSize(9).font('Helvetica-Bold');
     doc.text('Month', 50, y);
     doc.text('Income', 150, y, { width: 80, align: 'right' });
     doc.text('Expenses', 240, y, { width: 80, align: 'right' });
     doc.text('Net', 330, y, { width: 80, align: 'right' });
-    
+
     y += 20;
     doc.moveTo(50, y).lineTo(420, y).stroke('#E5E7EB');
     y += 10;
-    
+
     (data.monthlyTrends || []).slice(-8).forEach(month => {
       if (y > 750) return;
-      
+
       doc.fillColor('#4B5563').fontSize(10).font('Helvetica');
       doc.text(month.month, 50, y);
       doc.text(`$${(month.income || 0).toLocaleString()}`, 150, y, { width: 80, align: 'right' });
       doc.text(`$${(month.expenses || 0).toLocaleString()}`, 240, y, { width: 80, align: 'right' });
-      
+
       const net = month.netSavings || (month.income - month.expenses);
       doc.fillColor(net >= 0 ? this.colors.secondary : this.colors.danger);
       doc.text(`$${net.toLocaleString()}`, 330, y, { width: 80, align: 'right' });
-      
+
       y += 22;
     });
   }
@@ -993,46 +1021,46 @@ class ReportService {
    */
   async renderPDFTransactions(doc, userId, startDate, endDate) {
     doc.fillColor('#1F2937').fontSize(24).font('Helvetica-Bold')
-       .text('Recent Transactions', 50, 50);
-    
+      .text('Recent Transactions', 50, 50);
+
     doc.moveTo(50, 85).lineTo(545, 85).stroke('#E5E7EB');
-    
+
     // Fetch transactions
     const transactions = await Expense.find({
       user: userId,
       date: { $gte: startDate, $lte: endDate }
     }).sort({ date: -1 }).limit(30).lean();
-    
+
     let y = 110;
-    
+
     // Table Header
     doc.fillColor('#6B7280').fontSize(9).font('Helvetica-Bold');
     doc.text('Date', 50, y);
     doc.text('Description', 120, y, { width: 200 });
     doc.text('Category', 330, y, { width: 80 });
     doc.text('Amount', 420, y, { width: 80, align: 'right' });
-    
+
     y += 20;
     doc.moveTo(50, y).lineTo(500, y).stroke('#E5E7EB');
     y += 10;
-    
+
     transactions.forEach(tx => {
       if (y > 750) return;
-      
+
       doc.fillColor('#4B5563').fontSize(9).font('Helvetica');
       doc.text(new Date(tx.date).toLocaleDateString(), 50, y, { width: 60 });
       doc.text((tx.description || 'N/A').substring(0, 35), 120, y, { width: 200 });
       doc.text(tx.category || 'Uncategorized', 330, y, { width: 80 });
-      
+
       doc.fillColor(tx.type === 'expense' ? this.colors.danger : this.colors.secondary);
       doc.text(`${tx.type === 'expense' ? '-' : '+'}$${(tx.amount || 0).toLocaleString()}`, 420, y, { width: 80, align: 'right' });
-      
+
       y += 18;
     });
-    
+
     if (transactions.length >= 30) {
       doc.fillColor('#9CA3AF').fontSize(10).font('Helvetica-Oblique')
-         .text('... showing last 30 transactions', 50, y + 10, { align: 'center' });
+        .text('... showing last 30 transactions', 50, y + 10, { align: 'center' });
     }
   }
 
@@ -1227,7 +1255,7 @@ class ReportService {
     (data.monthlyTrends || []).forEach(month => {
       const net = month.netSavings || (month.income - month.expenses);
       const row = sheet.addRow([month.month, month.income || 0, month.expenses || 0, net]);
-      
+
       if (net < 0) {
         row.getCell(4).font = { color: { argb: 'EF4444' } };
       } else {

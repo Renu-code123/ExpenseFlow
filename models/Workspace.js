@@ -140,6 +140,9 @@ const workspaceSchema = new mongoose.Schema({
   description: String,
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
+  // Issue #741: Atomic Invalidation Tracking
+  cacheEpoch: { type: Number, default: 0 },
+
   // Hierarchy fields (#629)
   parentWorkspace: {
     type: mongoose.Schema.Types.ObjectId,
