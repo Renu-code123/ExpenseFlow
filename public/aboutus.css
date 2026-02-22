@@ -589,3 +589,64 @@ html{
     0 0 8px rgba(0, 123, 255, 0.7),
     0 0 16px rgba(0, 123, 255, 0.4);
 }
+/* ============================= */
+/* 🔝 Scroll To Top Button */
+/* ============================= */
+
+#scrollTopBtn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 9999;
+
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+
+  border: none;
+  outline: none;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  font-size: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+
+  transition: all 0.3s ease;
+}
+
+/* Show Button */
+#scrollTopBtn.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Hover Effect */
+#scrollTopBtn:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(124, 58, 237, 0.5);
+}
+
+/* Click Effect */
+#scrollTopBtn:active {
+  transform: scale(0.95);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #scrollTopBtn {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+  }
+}
