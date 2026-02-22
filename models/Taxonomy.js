@@ -66,8 +66,13 @@ const taxonomySchema = new mongoose.Schema({
     timestamps: true
 });
 
+const auditPlugin = require('../plugins/mongooseAuditV2');
+
 // Composite unique index for slug per user context
 taxonomySchema.index({ slug: 1, user: 1 }, { unique: true });
+
+// Register Audit Plugin
+taxonomySchema.plugin(auditPlugin, { modelName: 'Taxonomy' });
 
 // Pre-save hook to calculate level and path
 taxonomySchema.pre('save', async function (next) {

@@ -1,71 +1,66 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const syncManager = require('../services/syncManager');
+const syncInterceptor = require('../middleware/syncInterceptor');
+const transactionService = require('../services/transactionService');
+const consensusEngine = require('../services/consensusEngine');
+const SyncConflict = require('../models/SyncConflict');
+const ResponseFactory = require('../utils/ResponseFactory');
 
 /**
- * @route   GET /api/sync/delta
- * @desc    Fetch differential updates since a specific version
+ * Distributed Sync API (Vector Clock Enhanced)
+ * Issue #730: Handles high-integrity multi-device data synchronization.
  */
-router.get('/delta', auth, async (req, res) => {
-  try {
-    const lastVersion = parseInt(req.query.v) || 0;
-    const changes = await syncManager.getDifferentialUpdates(req.user._id, lastVersion);
-
-    const latestVersion = changes.length > 0 ? changes[changes.length - 1].version : lastVersion;
-
-    res.json({
-      success: true,
-      v: latestVersion,
-      count: changes.length,
-      changes
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
 /**
- * @route   POST /api/sync/push
- * @desc    Push local changes from a client with conflict resolution
+ * @route   POST /api/sync/transactions/:id
+ * @desc    Sync a specific transaction with consensus reconciliation
  */
-router.post('/push', auth, async (req, res) => {
+router.post('/transactions/:id', auth, syncInterceptor, async (req, res) => {
   try {
-    const deviceId = req.headers['x-device-id'] || 'web-default';
-    const { entityType, data } = req.body;
+    const { id } = req.params;
+    const result = await transactionService.syncUpdate(id, req.body, req.syncContext);
 
-    if (!entityType || !data) {
-      return res.status(400).json({ success: false, error: 'Missing sync payload' });
+    if (result.status === 'synced') {
+      return ResponseFactory.success(res, result.transaction, 200, 'State synchronized');
     }
 
-    const result = await syncManager.applyIncomingUpdate(req.user._id, deviceId, entityType, data);
+    if (result.status === 'conflict') {
+      return ResponseFactory.success(res, null, 409, 'Conflict detected. Captured in graveyard.');
+    }
 
-    res.json({
-      success: true,
-      action: result.action,
-      entity: result.entity,
-      logs: result.logs
-    });
-  } catch (error) {
-    console.error('[SyncRoute] Push failed:', error);
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
 /**
- * @route   POST /api/sync/delete
- * @desc    Propagate a hard/soft delete across devices
+ * @route   GET /api/sync/conflicts
+ * @desc    List all captured conflicts for the user
  */
-router.post('/delete', auth, async (req, res) => {
+router.get('/conflicts', auth, async (req, res) => {
+  const conflicts = await SyncConflict.find({
+    userId: req.user._id,
+    status: 'open'
+  }).sort({ createdAt: -1 });
+
+  res.json({ success: true, count: conflicts.length, conflicts });
+});
+
+/**
+ * @route   POST /api/sync/conflicts/:id/resolve
+ * @desc    Resolve a conflict using a specific strategy
+ */
+router.post('/conflicts/:id/resolve', auth, async (req, res) => {
   try {
-    const deviceId = req.headers['x-device-id'] || 'web-default';
-    const { entityType, entityId } = req.body;
+    const { id } = req.params;
+    const { strategy, resolvedData } = req.body;
 
-    await syncManager.softDelete(req.user._id, deviceId, entityType, entityId);
-
-    res.json({ success: true, message: 'Delete captured and synced' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    const result = await consensusEngine.resolveConflict(id, strategy, resolvedData);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

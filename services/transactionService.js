@@ -9,8 +9,41 @@ const eventDispatcher = require('./eventDispatcher');
 const AppEventBus = require('../utils/AppEventBus');
 const EVENTS = require('../config/eventRegistry');
 
+const consensusEngine = require('./consensusEngine');
 
 class TransactionService {
+    /**
+     * Distributed Reconciliation Sync Update
+     * Issue #730: Reconciles incoming transaction state using vector clocks.
+     */
+    async syncUpdate(transactionId, updateData, syncContext) {
+        const transaction = await Transaction.findById(transactionId);
+        if (!transaction) throw new Error('Transaction not found');
+
+        const { clientClock, deviceId } = syncContext;
+
+        const result = await consensusEngine.reconcile(
+            transaction,
+            updateData,
+            clientClock,
+            deviceId
+        );
+
+        if (result.action === 'update') {
+            transaction.set(result.data);
+            await transaction.save();
+            return { status: 'synced', transaction };
+        }
+
+        if (result.action === 'conflict') {
+            transaction.set(result.data);
+            await transaction.save();
+            return { status: 'conflict', message: 'Manual resolution required' };
+        }
+
+        return { status: 'ignored', reason: result.reason };
+    }
+
     /**
      * Entry point for transaction creation
      */

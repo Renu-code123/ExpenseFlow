@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const auditPlugin = require('../plugins/mongooseAuditV2');
 
 const transactionSchema = new mongoose.Schema({
     user: {
@@ -176,13 +177,12 @@ const transactionSchema = new mongoose.Schema({
     },
     syncMetadata: {
         lastDeviceId: String,
+        lastModifiedByDevice: String,
+        checksum: String,
         isDeleted: { type: Boolean, default: false },
         deletedAt: Date,
-        conflicts: [{
-            deviceId: String,
-            timestamp: Date,
-            data: mongoose.Schema.Types.Mixed
-        }]
+        syncStatus: { type: String, enum: ['synced', 'pending', 'conflict'], default: 'synced' },
+        conflictsCount: { type: Number, default: 0 }
     },
     // NEW: Features for Event Sourcing
     lastEventId: {
@@ -215,6 +215,9 @@ const transactionSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+// Register Audit Plugin
+transactionSchema.plugin(auditPlugin, { modelName: 'Transaction' });
 
 // Middleware to increment version on save
 transactionSchema.pre('save', function (next) {

@@ -2,18 +2,14 @@ const mongoose = require('mongoose');
 
 /**
  * SyncConflict Model
- * Issue #705: Stores conflicting edits detected via vector clocks.
- * Allows for manual or automatic field-level resolution.
+ * Issue #730: Stores conflicting state snapshots for distributed transaction reconciliation.
+ * Acts as a "Conflict Graveyard" for manual or automatic resolution.
  */
 const syncConflictSchema = new mongoose.Schema({
-    entityId: {
+    transactionId: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: 'Transaction',
         required: true,
-        index: true
-    },
-    entityType: {
-        type: String,
-        required: true, // e.g., 'Transaction'
         index: true
     },
     userId: {
@@ -22,29 +18,36 @@ const syncConflictSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    workspaceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Workspace',
+        index: true
+    },
     baseState: mongoose.Schema.Types.Mixed,
-    conflictingStates: [{
-        deviceId: String,
-        state: mongoose.Schema.Types.Mixed,
-        vectorClock: {
-            type: Map,
-            of: Number
-        },
-        timestamp: { type: Date, default: Date.now }
-    }],
-    resolvedState: mongoose.Schema.Types.Mixed,
-    resolvedAt: Date,
-    resolutionStrategy: {
+    serverState: mongoose.Schema.Types.Mixed,
+    clientState: mongoose.Schema.Types.Mixed,
+    vectorClocks: {
+        server: { type: Map, of: Number },
+        client: { type: Map, of: Number }
+    },
+    conflictType: {
         type: String,
-        enum: ['manual', 'auto_merge', 'last_write_wins', 'source_wins'],
-        default: 'manual'
+        enum: ['concurrent_update', 'delete_update_collision', 'logic_violation'],
+        default: 'concurrent_update'
     },
     status: {
         type: String,
         enum: ['open', 'resolved', 'ignored'],
         default: 'open',
         index: true
-    }
+    },
+    resolutionStrategy: String, // 'client_wins', 'server_wins', 'merge', 'manual'
+    resolvedAt: Date,
+    resolvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    checksum: String
 }, {
     timestamps: true
 });
