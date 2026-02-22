@@ -51,6 +51,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(require('./middleware/encryptionInterceptor'));
 app.use(require('./middleware/validationInterceptor'));
+app.use(require('./middleware/auditInterceptor'));
+
 
 
 /* ================================
@@ -113,6 +115,8 @@ app.use('/api/forecasting', require('./routes/forecasting'));
 app.use('/api/governance', require('./routes/governance'));
 app.use('/api/taxonomy', require('./routes/taxonomy'));
 app.use('/api/sync', require('./routes/syncManager'));
+app.use('/api/audit', require('./routes/audit'));
+
 app.use('/api/telemetry', require('./routes/telemetry'));
 app.use('/api/jobs', require('./routes/jobs'));
 

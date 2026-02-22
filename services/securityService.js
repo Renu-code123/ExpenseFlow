@@ -45,16 +45,16 @@ class SecurityService {
   static generateHOTP(secret, counter) {
     // Decode base32 secret
     const key = base32Decode(secret);
-    
+
     // Convert counter to 8-byte buffer (big-endian)
     const counterBuffer = Buffer.alloc(8);
     counterBuffer.writeBigInt64BE(BigInt(counter));
-    
+
     // Generate HMAC-SHA1
     const hmac = crypto.createHmac('sha1', key);
     hmac.update(counterBuffer);
     const digest = hmac.digest();
-    
+
     // Dynamic truncation
     const offset = digest[digest.length - 1] & 0x0f;
     const code = (
@@ -63,7 +63,7 @@ class SecurityService {
       ((digest[offset + 2] & 0xff) << 8) |
       (digest[offset + 3] & 0xff)
     ) % Math.pow(10, TOTP_CONFIG.digits);
-    
+
     // Pad with leading zeros
     return code.toString().padStart(TOTP_CONFIG.digits, '0');
   }
@@ -76,7 +76,7 @@ class SecurityService {
     for (let i = -TOTP_CONFIG.window; i <= TOTP_CONFIG.window; i++) {
       const adjustedTime = timestamp + (i * TOTP_CONFIG.period * 1000);
       const expectedToken = this.generateTOTP(secret, adjustedTime);
-      
+
       if (crypto.timingSafeEqual(
         Buffer.from(token.padStart(6, '0')),
         Buffer.from(expectedToken)
@@ -93,7 +93,7 @@ class SecurityService {
   static generateOTPAuthURL(email, secret) {
     const encodedIssuer = encodeURIComponent(TOTP_CONFIG.issuer);
     const encodedEmail = encodeURIComponent(email);
-    
+
     return `otpauth://totp/${encodedIssuer}:${encodedEmail}?` +
       `secret=${secret}&` +
       `issuer=${encodedIssuer}&` +
@@ -126,7 +126,7 @@ class SecurityService {
    */
   static async setup2FA(userId) {
     const user = await User.findById(userId).select('+twoFactorAuth.secret +twoFactorAuth.tempSecret');
-    
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -137,7 +137,7 @@ class SecurityService {
 
     // Generate new secret
     const secret = this.generateSecret();
-    
+
     // Store as temporary secret until verified
     user.twoFactorAuth = user.twoFactorAuth || {};
     user.twoFactorAuth.tempSecret = secret;
@@ -167,7 +167,7 @@ class SecurityService {
    */
   static async verify2FASetup(userId, token, req) {
     const user = await User.findById(userId).select('+twoFactorAuth.secret +twoFactorAuth.tempSecret');
-    
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -178,7 +178,7 @@ class SecurityService {
 
     // Verify the token against temp secret
     const isValid = this.verifyTOTP(user.twoFactorAuth.tempSecret, token);
-    
+
     if (!isValid) {
       // Log failed attempt
       await AuditLog.logAuthEvent(userId, 'totp_failed', req, {
@@ -219,7 +219,7 @@ class SecurityService {
    */
   static async verifyToken(userId, token, req) {
     const user = await User.findById(userId).select('+twoFactorAuth.secret +twoFactorAuth.backupCodes');
-    
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -248,14 +248,14 @@ class SecurityService {
       await AuditLog.logAuthEvent(userId, 'totp_backup_used', req, {
         severity: 'high',
         status: 'success',
-        securityContext: { 
+        securityContext: {
           totpUsed: true,
           riskFactors: ['backup_code_used']
         }
       });
 
-      return { 
-        valid: true, 
+      return {
+        valid: true,
         method: 'backup',
         remainingBackupCodes: user.getRemainingBackupCodes()
       };
@@ -276,7 +276,7 @@ class SecurityService {
    */
   static async disable2FA(userId, password, req) {
     const user = await User.findById(userId).select('+twoFactorAuth.secret');
-    
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -313,7 +313,7 @@ class SecurityService {
    */
   static async regenerateBackupCodes(userId, token, req) {
     const user = await User.findById(userId).select('+twoFactorAuth.secret +twoFactorAuth.backupCodes');
-    
+
     if (!user || !user.twoFactorAuth?.enabled) {
       throw new Error('2FA is not enabled');
     }
@@ -342,7 +342,7 @@ class SecurityService {
    */
   static async get2FAStatus(userId) {
     const user = await User.findById(userId).select('twoFactorAuth.enabled twoFactorAuth.enabledAt twoFactorAuth.lastVerifiedAt twoFactorAuth.backupCodes');
-    
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -378,7 +378,7 @@ class SecurityService {
    */
   static async revokeSession(sessionId, userId, req) {
     const session = await Session.findOne({ _id: sessionId, userId });
-    
+
     if (!session) {
       throw new Error('Session not found');
     }
@@ -409,10 +409,10 @@ class SecurityService {
       }
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       revokedCount,
-      message: `${revokedCount} session(s) revoked successfully` 
+      message: `${revokedCount} session(s) revoked successfully`
     };
   }
 
@@ -456,19 +456,60 @@ class SecurityService {
     }));
   }
 
-  /**
-   * Get login history from audit logs
-   */
   static async getLoginHistoryFromAudit(userId, limit = 50) {
     const logs = await AuditLog.find({
-      userId,
+      performedBy: userId,
       action: { $in: ['user_login', 'login_failed', 'totp_verified', 'totp_failed'] }
     })
-      .sort({ createdAt: -1 })
+      .sort({ timestamp: -1 })
       .limit(limit)
       .lean();
 
     return logs;
+  }
+
+  /**
+   * Forensic Pattern Detection
+   * Issue #731: Identifies high-risk mutation patterns (e.g. mass deletion).
+   */
+  static async detectSuspiciousPatterns(userId) {
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
+    const massActions = await AuditLog.aggregate([
+      {
+        $match: {
+          performedBy: userId,
+          action: { $in: ['delete', 'update'] },
+          timestamp: { $gt: tenMinutesAgo }
+        }
+      },
+      {
+        $group: {
+          _id: "$action",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const alerts = [];
+    for (const action of massActions) {
+      if (action._id === 'delete' && action.count > 50) {
+        alerts.push({
+          type: 'MASS_DELETION',
+          severity: 'critical',
+          message: `Detected ${action.count} deletions in 10 minutes.`
+        });
+      }
+      if (action._id === 'update' && action.count > 100) {
+        alerts.push({
+          type: 'RAPID_MUTATION',
+          severity: 'high',
+          message: `Detected ${action.count} updates in 10 minutes.`
+        });
+      }
+    }
+
+    return alerts;
   }
 }
 
@@ -508,7 +549,7 @@ function base32Encode(buffer) {
 function base32Decode(encoded) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   const cleanedInput = encoded.replace(/=+$/, '').toUpperCase();
-  
+
   let bits = 0;
   let value = 0;
   const output = [];

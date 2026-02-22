@@ -620,4 +620,9 @@ workspaceSchema.methods.addMessage = function (discussionId, userId, text, menti
 workspaceSchema.statics.ROLE_PERMISSIONS = ROLE_PERMISSIONS;
 workspaceSchema.statics.ROLE_HIERARCHY = ROLE_HIERARCHY;
 
+const auditPlugin = require('../plugins/mongooseAuditV2');
+
+// Register Audit Plugin
+workspaceSchema.plugin(auditPlugin, { modelName: 'Workspace' });
+
 module.exports = mongoose.model('Workspace', workspaceSchema);

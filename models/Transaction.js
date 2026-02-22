@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const auditPlugin = require('../plugins/mongooseAuditV2');
 
 const transactionSchema = new mongoose.Schema({
     user: {
@@ -215,6 +216,9 @@ const transactionSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+// Register Audit Plugin
+transactionSchema.plugin(auditPlugin, { modelName: 'Transaction' });
 
 // Middleware to increment version on save
 transactionSchema.pre('save', function (next) {
