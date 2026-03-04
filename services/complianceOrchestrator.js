@@ -12,12 +12,15 @@ class ComplianceOrchestrator {
     /**
      * Test an action against active workspace constraints.
      * Returns { allowed: boolean, reason?: string, action?: 'FLAG'|'FREEZE'|'DENY' }
+     * Issue #961: Now accepts jurisdictionCode in contextData for dynamic policy mounting.
      */
     async evaluate(workspaceId, resourceType, payload, contextData = {}) {
         if (!workspaceId) return { allowed: true };
 
         const paths = await diffGraph.getInvalidationPaths(workspaceId);
-        const policies = await policyRepository.getInheritedPolicies(paths);
+        // Issue #961: Use jurisdiction-aware policy retrieval
+        const jurisdictionCode = contextData.jurisdictionCode || null;
+        const policies = await policyRepository.getInheritedWithJurisdiction(paths, jurisdictionCode);
 
         // Filter pertinent policies
         const targets = policies.filter(p => p.targetResource === resourceType);
@@ -41,17 +44,16 @@ class ComplianceOrchestrator {
                         allowed: policy.action === 'NOTIFY' || policy.action === 'FLAG',
                         action: policy.action,
                         reason: `Policy Violation: ${policy.description || policy.name}`,
-                        policyId: policy._id
+                        policyId: policy._id,
+                        jurisdictionCode
                     };
                 }
             } catch (err) {
                 logger.error(`[Compliance Circuit] Evaluation Error on Policy ${policy._id}: ${err.message}`);
-                // Fail-safe defaults to allowed, unless strictly required to fail-closed
-                // For enterprise apps, you might prefer fail-closed for specific high-risk operations.
             }
         }
 
-        return { allowed: true };
+        return { allowed: true, jurisdictionCode };
     }
 }
 

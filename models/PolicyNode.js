@@ -64,6 +64,13 @@ const policyNodeSchema = new mongoose.Schema({
         lastRedTeamFailure: Date,
         commonBypassVectors: [String],
         isHardened: { type: Boolean, default: false }
+    },
+    // Issue #961: Autonomous Tax-Jurisdiction Switchgear
+    jurisdictionCode: { type: String, uppercase: true, index: true, sparse: true },
+    nexusTrigger: {
+        type: { type: String, enum: ['MERCHANT_LOCATION', 'IP_ORIGIN', 'CURRENCY', 'AMOUNT_THRESHOLD'] },
+        threshold: Number,
+        currencyCode: String
     }
 }, {
     timestamps: true

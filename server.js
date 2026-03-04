@@ -180,6 +180,7 @@ app.use(require('./middleware/leakageMonitor'));
 app.use(require('./middleware/integrityMonitor')); // Issue #910: Financial Integrity Watchtower
 app.use(require('./middleware/liquidityAlertGuard')); // Issue #909: Predictive Liquidity Prophet
 app.use(require('./middleware/threatIntelGuard')); // Issue #907: Adversarial Fraud Prevention
+app.use(require('./middleware/jurisdictionGuard')); // Issue #961: Autonomous Tax-Jurisdiction Nexus Engine
 
 
 
@@ -223,6 +224,7 @@ async function connectDatabase() {
         require('./jobs/nightlyReconciler').start(); // Issue #910: Self-Healing Reconciliation
         require('./jobs/weeklyProphet').start(); // Issue #909: Predictive Liquidity Prophet
         require('./jobs/redTeamSweep').start(); // Issue #907: Adversarial Fraud Simulation
+        require('./jobs/nexusUpdateJob').start(); // Issue #961: Tax Nexus Global Sync
 
         require('./services/jobOrchestrator').start();
 
