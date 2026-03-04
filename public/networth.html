@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Net Worth Dashboard | ExpenseFlow</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+/* ================= ROOT ================= */
+
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-primary: #ffffff;
+  --text-secondary: #b4b4b4;
+  --accent: #667eea;
+  --danger: #ef4444;
+  --success: #10b981;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: 0.3s ease;
+}
+
+body.light-mode {
+  --bg-primary: #f5f7fb;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #555;
+}
+
+/* ================= NAV ================= */
+
+.navbar {
+  background: var(--bg-secondary);
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* ================= LAYOUT ================= */
+
+.container {
+  padding: 30px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px,1fr));
+  gap: 25px;
+}
+
+/* ================= CARD ================= */
+
+.card {
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 14px;
+}
+
+.card h3 {
+  margin-bottom: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+button.calculate {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* ================= SUMMARY ================= */
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.summary-box {
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 14px;
+}
+
+.summary-box h2 {
+  margin: 5px 0 0;
+}
+
+.net-positive { color: var(--success); }
+.net-negative { color: var(--danger); }
+
+canvas {
+  margin-top: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <h2><i class="fas fa-chart-line"></i> Net Worth Dashboard</h2>
+  <button id="themeToggle" class="theme-toggle">
+    <i class="fas fa-moon"></i>
+  </button>
+</div>
+
+<div class="container">
+
+  <div class="grid">
+
+    <!-- ASSETS -->
+    <div class="card">
+      <h3>Assets</h3>
+      <input type="number" id="cash" placeholder="Cash">
+      <input type="number" id="bank" placeholder="Bank Balance">
+      <input type="number" id="investments" placeholder="Investments">
+      <input type="number" id="property" placeholder="Property Value">
+      <input type="number" id="otherAssets" placeholder="Other Assets">
+    </div>
+
+    <!-- LIABILITIES -->
+    <div class="card">
+      <h3>Liabilities</h3>
+      <input type="number" id="homeLoan" placeholder="Home Loan">
+      <input type="number" id="carLoan" placeholder="Car Loan">
+      <input type="number" id="creditCard" placeholder="Credit Card">
+      <input type="number" id="otherLiabilities" placeholder="Other Liabilities">
+    </div>
+
+  </div>
+
+  <button class="calculate" onclick="calculateNetWorth()">Calculate Net Worth</button>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <div class="summary-box">
+      <h4>Total Assets</h4>
+      <h2 id="totalAssets">₹0</h2>
+    </div>
+
+    <div class="summary-box">
+      <h4>Total Liabilities</h4>
+      <h2 id="totalLiabilities">₹0</h2>
+    </div>
+
+    <div class="summary-box">
+      <h4>Net Worth</h4>
+      <h2 id="netWorth">₹0</h2>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="grid" style="margin-top:30px;">
+    <div class="card">
+      <h3>Asset Breakdown</h3>
+      <canvas id="assetChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Debt Breakdown</h3>
+      <canvas id="debtChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+let assetChart, debtChart;
+
+function calculateNetWorth(){
+
+  const assets = {
+    cash: +document.getElementById("cash").value || 0,
+    bank: +document.getElementById("bank").value || 0,
+    investments: +document.getElementById("investments").value || 0,
+    property: +document.getElementById("property").value || 0,
+    other: +document.getElementById("otherAssets").value || 0
+  };
+
+  const liabilities = {
+    homeLoan: +document.getElementById("homeLoan").value || 0,
+    carLoan: +document.getElementById("carLoan").value || 0,
+    creditCard: +document.getElementById("creditCard").value || 0,
+    other: +document.getElementById("otherLiabilities").value || 0
+  };
+
+  const totalAssets = Object.values(assets).reduce((a,b)=>a+b,0);
+  const totalLiabilities = Object.values(liabilities).reduce((a,b)=>a+b,0);
+  const netWorth = totalAssets - totalLiabilities;
+
+  document.getElementById("totalAssets").innerText = "₹" + totalAssets.toLocaleString();
+  document.getElementById("totalLiabilities").innerText = "₹" + totalLiabilities.toLocaleString();
+
+  const netEl = document.getElementById("netWorth");
+  netEl.innerText = "₹" + netWorth.toLocaleString();
+  netEl.className = netWorth >= 0 ? "net-positive" : "net-negative";
+
+  localStorage.setItem("netWorthData", JSON.stringify({assets, liabilities}));
+
+  renderCharts(assets, liabilities);
+}
+
+function renderCharts(assets, liabilities){
+
+  if(assetChart) assetChart.destroy();
+  if(debtChart) debtChart.destroy();
+
+  assetChart = new Chart(document.getElementById("assetChart"), {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(assets),
+      datasets: [{
+        data: Object.values(assets),
+        backgroundColor: ["#667eea","#10b981","#f59e0b","#3b82f6","#a855f7"]
+      }]
+    }
+  });
+
+  debtChart = new Chart(document.getElementById("debtChart"), {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(liabilities),
+      datasets: [{
+        data: Object.values(liabilities),
+        backgroundColor: ["#ef4444","#f97316","#e11d48","#dc2626"]
+      }]
+    }
+  });
+}
+
+/* ================= LOAD SAVED ================= */
+
+const saved = JSON.parse(localStorage.getItem("netWorthData"));
+if(saved){
+  Object.keys(saved.assets).forEach(key=>{
+    if(document.getElementById(key))
+      document.getElementById(key).value = saved.assets[key];
+  });
+  Object.keys(saved.liabilities).forEach(key=>{
+    if(document.getElementById(key))
+      document.getElementById(key).value = saved.liabilities[key];
+  });
+  calculateNetWorth();
+}
+
+/* ================= THEME ================= */
+
+const toggle = document.getElementById("themeToggle");
+
+if(localStorage.getItem("theme")==="light"){
+  document.body.classList.add("light-mode");
+  toggle.innerHTML='<i class="fas fa-sun"></i>';
+}
+
+toggle.addEventListener("click", ()=>{
+  document.body.classList.toggle("light-mode");
+
+  if(document.body.classList.contains("light-mode")){
+    localStorage.setItem("theme","light");
+    toggle.innerHTML='<i class="fas fa-sun"></i>';
+  }else{
+    localStorage.setItem("theme","dark");
+    toggle.innerHTML='<i class="fas fa-moon"></i>';
+  }
+});
+
+</script>
+
+</body>
+</html>
