@@ -500,6 +500,46 @@
     transform: translate(-50%, -50%) scale(1.3);
     background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
   }
+  /* =========================
+   SCROLL TO TOP BUTTON
+========================= */
+
+#scrollTopBtn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6366f1, #64ffda);
+  color: white;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+  z-index: 9999;
+}
+
+/* Show button */
+#scrollTopBtn.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Hover effect */
+#scrollTopBtn:hover {
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
 </style>
 
 <div class="cursor-trail-container" id="cursor-trail"></div>
@@ -819,6 +859,32 @@
     </div>
   </div>
 </footer>
+<!-- SCROLL TO TOP BUTTON -->
+<button id="scrollTopBtn">
+  <i class="fas fa-arrow-up"></i>
+</button>
 
+<script>
+  const scrollBtn = document.getElementById("scrollTopBtn");
+
+  // Show button after scrolling
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 300) {
+      scrollBtn.classList.add("show");
+    } else {
+      scrollBtn.classList.remove("show");
+    }
+  });
+
+  // Smooth scroll to top
+  scrollBtn.addEventListener("click", () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  });
+</script>
+
+<script src="protect.js"></script>
 </body>
 </html>

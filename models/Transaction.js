@@ -1,250 +1,306 @@
 const mongoose = require('mongoose');
+const auditPlugin = require('../plugins/mongooseAuditV2');
 
 const transactionSchema = new mongoose.Schema({
-    portfolio: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Portfolio',
-        required: true,
-        index: true
-    },
-    asset: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Asset',
-        required: true,
-        index: true
-    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: true
+    },
+    kind: {
+        type: String,
+        required: true,
+        enum: ['expense', 'income', 'transfer'],
+        default: 'expense'
+    },
+    description: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 100
+    },
+    amount: {
+        type: Number,
+        required: true,
+        min: 0.01
+    },
+    originalAmount: {
+        type: Number,
+        required: true,
+        min: 0.01
+    },
+    originalCurrency: {
+        type: String,
+        required: true,
+        default: 'INR',
+        uppercase: true
+    },
+    convertedAmount: {
+        type: Number,
+        min: 0.01
+    },
+    convertedCurrency: {
+        type: String,
+        uppercase: true
+    },
+    exchangeRate: {
+        type: Number,
+        min: 0
+    },
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Taxonomy',
         required: true,
         index: true
     },
-    transaction_type: {
-        type: String,
-        enum: ['buy', 'sell', 'dividend', 'split', 'transfer', 'fee', 'interest'],
-        required: true
-    },
-    symbol: {
+    type: {
         type: String,
         required: true,
-        uppercase: true
+        enum: ['income', 'expense', 'transfer']
     },
-    asset_type: {
+    merchant: {
         type: String,
-        enum: ['stock', 'crypto', 'etf', 'mutual_fund', 'bond', 'cash']
+        trim: true,
+        maxlength: 50,
+        default: '',
+        sensitive: true // Issue #770
     },
-    transaction_date: {
+    notes: {
+        type: String,
+        trim: true,
+        maxlength: 500,
+        default: '',
+        sensitive: true // Issue #770
+    },
+    date: {
         type: Date,
-        required: true,
         default: Date.now
     },
-    quantity: {
-        type: Number,
-        default: 0
+    workspace: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Workspace',
+        default: null
     },
-    price: {
-        type: Number,
-        default: 0
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
-    total_amount: {
-        type: Number,
-        required: true
+    isPrivate: {
+        type: Boolean,
+        default: false
     },
-    fees: {
-        type: Number,
-        default: 0
+    syncedToAccounting: {
+        type: Boolean,
+        default: false
     },
-    currency: {
-        type: String,
-        default: 'USD',
-        uppercase: true
-    },
-    exchange_rate: {
+    version: {
         type: Number,
         default: 1
     },
-    amount_in_base_currency: Number,
-    notes: String,
-    tax_info: {
-        is_taxable: {
-            type: Boolean,
-            default: true
-        },
-        tax_year: Number,
-        cost_basis: Number,
-        gain_loss: Number,
-        holding_period: {
-            type: String,
-            enum: ['short_term', 'long_term', 'n/a'],
-            default: 'n/a'
-        }
+    lastSyncedAt: {
+        type: Date,
+        default: Date.now
     },
-    split_info: {
-        split_ratio: String,
-        pre_split_quantity: Number,
-        post_split_quantity: Number
+    // Issue #738: Event Sourcing & Ledger Tracking
+    ledgerSequence: {
+        type: Number,
+        default: 0
     },
-    transfer_info: {
-        from_portfolio: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Portfolio'
-        },
-        to_portfolio: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Portfolio'
-        }
+    ledgerStatus: {
+        type: String,
+        enum: ['synced', 'diverged', 'rebuilding'],
+        default: 'synced'
     },
-    broker: String,
-    order_id: String,
-    confirmation_number: String,
+    lastLedgerEventId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FinancialEvent'
+    },
+    appliedRules: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Rule'
+    }],
+    projectId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        default: null
+    },
+    billing: {
+        isBillable: { type: Boolean, default: false },
+        isBilled: { type: Boolean, default: false },
+        billedAt: Date,
+        invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectInvoice' },
+        markupOverride: Number
+    },
+    // New fields for Historical Currency Revaluation Engine Overhaul
+    forexMetadata: {
+        rateAtTransaction: { type: Number },
+        rateSource: { type: String, default: 'manual' },
+        lastRevaluedAt: { type: Date },
+        isHistoricallyAccurate: { type: Boolean, default: false },
+        historicalProvider: { type: String }
+    },
+    revaluationHistory: [{
+        revaluedAt: { type: Date, default: Date.now },
+        oldRate: Number,
+        newRate: Number,
+        oldConvertedAmount: Number,
+        newConvertedAmount: Number,
+        baseCurrency: String,
+        reason: String
+    }],
     status: {
         type: String,
-        enum: ['pending', 'completed', 'cancelled', 'failed'],
-        default: 'completed'
+        enum: ['pending', 'processing', 'validated', 'archived', 'failed'],
+        default: 'pending'
     },
-    attached_documents: [{
-        filename: String,
-        url: String,
-        file_type: String
-    }]
+    processingLogs: [{
+        step: String,
+        status: String,
+        timestamp: { type: Date, default: Date.now },
+        message: String,
+        details: mongoose.Schema.Types.Mixed
+    }],
+    // New fields for Smart Location Intelligence
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            default: [0, 0]
+        }
+    },
+    formattedAddress: {
+        type: String,
+        trim: true
+    },
+    locationSource: {
+        type: String,
+        enum: ['manual', 'geocoded', 'inferred', 'none'],
+        default: 'none'
+    },
+    place: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Place'
+    },
+    // New fields for Differential Data Synchronization
+    vectorClock: {
+        type: Map,
+        of: Number,
+        default: {}
+    },
+    syncMetadata: {
+        lastDeviceId: String,
+        lastModifiedByDevice: String,
+        checksum: String,
+        isDeleted: { type: Boolean, default: false },
+        deletedAt: Date,
+        syncStatus: { type: String, enum: ['synced', 'pending', 'conflict'], default: 'synced' },
+        conflictsCount: { type: Number, default: 0 }
+    },
+    // NEW: Features for Event Sourcing
+    lastEventId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FinancialEvent'
+    },
+    isEventSourced: {
+        type: Boolean,
+        default: true
+    },
+    // NEW: Features for Zero-Knowledge Vault
+    encryptedFields: {
+        type: [String],
+        default: [] // List of keys that are currently encrypted: ['description', 'notes']
+    },
+    // NEW: Features for Multi-Stage Validation
+    validationMetadata: {
+        purityScore: { type: Number, default: 100 },
+        validationId: String, // requestId from the pipeline
+        remediatedAt: Date
+    },
+    // NEW: Features for Semantic Indexing & Multi-Faceted Search
+    searchMetadata: {
+        tags: [{ type: String }],
+        merchantSentiment: { type: String, enum: ['positive', 'neutral', 'negative'], default: 'neutral' },
+        businessType: String,
+        isRecurringInferred: { type: Boolean, default: false },
+        indexedAt: Date
+    },
+    // NEW: Features for Differential Privacy Benchmarking
+    privacyMetadata: {
+        isBenchmarked: { type: Boolean, default: false },
+        lastBenchmarkedAt: Date,
+        privacyEpsilonConsumed: { type: Number, default: 0 }
+    },
+    // NEW: Features for Zero-Knowledge Compliance
+    zkAuditMetadata: {
+        zkProofId: { type: mongoose.Schema.Types.ObjectId, ref: 'ZKAttestation' },
+        complianceRoot: String,
+        isProven: { type: Boolean, default: false }
+    }
 }, {
     timestamps: true
 });
 
-// Indexes
-transactionSchema.index({ portfolio: 1, transaction_date: -1 });
-transactionSchema.index({ user: 1, transaction_date: -1 });
-transactionSchema.index({ asset: 1, transaction_date: -1 });
-transactionSchema.index({ transaction_type: 1, transaction_date: -1 });
+// Register Audit Plugin
+transactionSchema.plugin(auditPlugin, { modelName: 'Transaction' });
 
-// Virtuals
-transactionSchema.virtual('net_amount').get(function() {
-    return this.total_amount - this.fees;
-});
-
-transactionSchema.virtual('is_recent').get(function() {
-    const daysDiff = (new Date() - this.transaction_date) / (1000 * 60 * 60 * 24);
-    return daysDiff <= 7;
-});
-
-// Methods
-transactionSchema.methods.calculateGainLoss = function(costBasis) {
-    if (this.transaction_type === 'sell') {
-        this.tax_info.cost_basis = costBasis;
-        this.tax_info.gain_loss = this.total_amount - costBasis - this.fees;
-        
-        // Determine holding period (simplified - should use actual purchase date)
-        const monthsHeld = 12; // This should be calculated from tax lot
-        this.tax_info.holding_period = monthsHeld > 12 ? 'long_term' : 'short_term';
+// Middleware to increment version on save
+transactionSchema.pre('save', function (next) {
+    if (this.isModified()) {
+        this.version += 1;
+        this.lastSyncedAt = Date.now();
     }
-    
+    // Auto-set kind based on type if not set
+    if (this.type && !this.kind) {
+        this.kind = this.type;
+    }
+    next();
+});
+
+// Method to log processing steps
+transactionSchema.methods.logStep = async function (step, status, message, details = {}) {
+    this.processingLogs.push({ step, status, message, details });
+    if (status === 'failed') this.status = 'failed';
     return this.save();
 };
 
-transactionSchema.methods.cancel = function(reason) {
-    this.status = 'cancelled';
-    this.notes = (this.notes || '') + ` | Cancelled: ${reason}`;
-    return this.save();
-};
+// Indexes for performance optimization
+transactionSchema.index({ description: 'text', merchant: 'text' }); // Text search
+transactionSchema.index({ user: 1, date: -1 });
+transactionSchema.index({ workspace: 1, date: -1 });
+transactionSchema.index({ user: 1, amount: 1 }); // Range queries optimization
+transactionSchema.index({ user: 1, category: 1, date: -1 });
+transactionSchema.index({ workspace: 1, category: 1, date: -1 });
+transactionSchema.index({ location: '2dsphere' });
+transactionSchema.index({ receiptId: 1 });
+transactionSchema.index({ source: 1, user: 1 });
 
-// Static methods
-transactionSchema.statics.getPortfolioTransactions = function(portfolioId, options = {}) {
-    const query = { portfolio: portfolioId };
-    
-    if (options.transaction_type) {
-        query.transaction_type = options.transaction_type;
-    }
-    
-    if (options.asset) {
-        query.asset = options.asset;
-    }
-    
-    if (options.start_date || options.end_date) {
-        query.transaction_date = {};
-        if (options.start_date) query.transaction_date.$gte = options.start_date;
-        if (options.end_date) query.transaction_date.$lte = options.end_date;
-    }
-    
-    return this.find(query)
-        .populate('asset')
-        .sort({ transaction_date: -1 });
-};
+transactionSchema.virtual('history', {
+    ref: 'FinancialEvent',
+    localField: '_id',
+    foreignField: 'entityId'
+});
 
-transactionSchema.statics.getUserTransactions = function(userId, limit = 50) {
-    return this.find({ user: userId })
-        .populate('asset')
-        .populate('portfolio')
-        .sort({ transaction_date: -1 })
-        .limit(limit);
-};
-
-transactionSchema.statics.getDividendHistory = function(portfolioId, year = null) {
-    const query = {
-        portfolio: portfolioId,
-        transaction_type: 'dividend'
-    };
-    
-    if (year) {
-        const startDate = new Date(year, 0, 1);
-        const endDate = new Date(year, 11, 31, 23, 59, 59);
-        query.transaction_date = { $gte: startDate, $lte: endDate };
+// Issue #756: Automatic Search Indexing Hooks
+transactionSchema.post('save', async function (doc) {
+    try {
+        const indexingEngine = require('../services/indexingEngine');
+        await indexingEngine.indexEntity('TRANSACTION', doc, doc.user, doc.workspace);
+    } catch (err) {
+        console.error('Indexing failed on save:', err);
     }
-    
-    return this.find(query).sort({ transaction_date: -1 });
-};
+});
 
-transactionSchema.statics.getTaxReport = function(userId, taxYear) {
-    const startDate = new Date(taxYear, 0, 1);
-    const endDate = new Date(taxYear, 11, 31, 23, 59, 59);
-    
-    return this.find({
-        user: userId,
-        transaction_type: { $in: ['sell', 'dividend'] },
-        transaction_date: { $gte: startDate, $lte: endDate },
-        'tax_info.is_taxable': true
-    }).sort({ transaction_date: 1 });
-};
-
-transactionSchema.statics.getTransactionSummary = async function(portfolioId, period = 'all') {
-    let matchQuery = { portfolio: portfolioId };
-    
-    if (period !== 'all') {
-        const now = new Date();
-        let startDate;
-        
-        switch (period) {
-            case 'today':
-                startDate = new Date(now.setHours(0, 0, 0, 0));
-                break;
-            case 'week':
-                startDate = new Date(now.setDate(now.getDate() - 7));
-                break;
-            case 'month':
-                startDate = new Date(now.setMonth(now.getMonth() - 1));
-                break;
-            case 'year':
-                startDate = new Date(now.setFullYear(now.getFullYear() - 1));
-                break;
-        }
-        
-        if (startDate) {
-            matchQuery.transaction_date = { $gte: startDate };
-        }
+transactionSchema.post('remove', async function (doc) {
+    try {
+        const indexingEngine = require('../services/indexingEngine');
+        await indexingEngine.deindexEntity(doc._id);
+    } catch (err) {
+        console.error('Deindexing failed on remove:', err);
     }
-    
-    const summary = await this.aggregate([
-        { $match: matchQuery },
-        {
-            $group: {
-                _id: '$transaction_type',
-                count: { $sum: 1 },
-                total_amount: { $sum: '$total_amount' },
-                total_fees: { $sum: '$fees' }
-            }
-        }
-    ]);
-    
-    return summary;
-};
+});
 
 module.exports = mongoose.model('Transaction', transactionSchema);

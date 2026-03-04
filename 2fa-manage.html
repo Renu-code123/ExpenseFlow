@@ -75,6 +75,56 @@
                 </div>
             </div>
 
+            <!-- Adaptive MFA Section -->
+            <div class="card" id="adaptive-mfa-card" style="display: none;">
+                <div class="card-header">
+                    <h2>🤖 Adaptive MFA Orchestrator</h2>
+                    <span class="beta-badge">BETA</span>
+                </div>
+                <div class="card-body">
+                    <p>Enable adaptive multi-factor authentication that selects challenges based on risk assessment and user behavior patterns.</p>
+                    <div id="adaptive-status" class="adaptive-status">
+                        <div class="loading">Loading adaptive settings...</div>
+                    </div>
+                    <div class="adaptive-controls" id="adaptive-controls" style="display: none;">
+                        <div class="adaptive-toggle">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="adaptive-enabled" onchange="toggleAdaptiveMFA()">
+                                <span class="toggle-slider"></span>
+                                Enable Adaptive MFA
+                            </label>
+                        </div>
+                        <div class="adaptive-settings" id="adaptive-settings" style="display: none;">
+                            <h3>Risk Thresholds</h3>
+                            <div class="threshold-controls">
+                                <div class="threshold-item">
+                                    <label for="high-threshold">High Risk Threshold:</label>
+                                    <input type="range" id="high-threshold" min="0.5" max="1.0" step="0.1" value="0.8" onchange="updateThresholdDisplay('high')">
+                                    <span id="high-threshold-value">0.8</span>
+                                </div>
+                                <div class="threshold-item">
+                                    <label for="medium-threshold">Medium Risk Threshold:</label>
+                                    <input type="range" id="medium-threshold" min="0.2" max="0.8" step="0.1" value="0.5" onchange="updateThresholdDisplay('medium')">
+                                    <span id="medium-threshold-value">0.5</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveAdaptiveSettings()">Save Settings</button>
+                        </div>
+                        <div class="adaptive-methods" id="adaptive-methods">
+                            <h3>Available Challenge Methods</h3>
+                            <div class="method-grid" id="method-grid">
+                                <div class="loading">Loading methods...</div>
+                            </div>
+                        </div>
+                        <div class="adaptive-test">
+                            <h3>Test Confidence Scoring</h3>
+                            <button class="btn btn-secondary" onclick="testConfidenceScoring()">🧪 Test Current Session</button>
+                            <div id="confidence-result" class="confidence-result" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Trusted Devices Section -->
             <div class="card">
                 <div class="card-header">

@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+/**
+ * Subscription Model
+ * Issue #647: Enhanced with State Machine and Predictive Lifecycle Tracking
+ */
 const subscriptionSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -15,11 +19,12 @@ const subscriptionSchema = new mongoose.Schema({
     merchant: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        index: true
     },
     category: {
         type: String,
-        enum: ['food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'other'],
+        enum: ['food', 'transport', 'entertainment', 'utilities', 'healthcare', 'shopping', 'software', 'music', 'fitness', 'other'],
         default: 'other'
     },
     amount: {
@@ -32,180 +37,204 @@ const subscriptionSchema = new mongoose.Schema({
         default: 'INR',
         uppercase: true
     },
-    billing_cycle: {
+    billingCycle: {
         type: String,
-        enum: ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'],
+        enum: ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly', 'semi_annual', 'yearly'],
         required: true,
         default: 'monthly'
     },
-    billing_day: {
-        type: Number,
-        min: 1,
-        max: 31
-    },
-    next_billing_date: {
+    nextPaymentDate: {
         type: Date,
-        required: true
+        required: true,
+        index: true
     },
-    last_billing_date: {
-        type: Date
+    startDate: {
+        type: Date,
+        default: Date.now
     },
-    detection_method: {
-        type: String,
-        enum: ['auto', 'manual'],
-        default: 'auto'
-    },
-    confidence_score: {
-        type: Number,
-        min: 0,
-        max: 1,
-        default: 0.8
-    },
+    endDate: Date,
+
+    // State Machine logic
     status: {
         type: String,
-        enum: ['active', 'cancelled', 'paused', 'trial'],
-        default: 'active'
+        enum: ['active', 'trial', 'paused', 'cancelled', 'expired', 'grace_period'],
+        default: 'active',
+        index: true
     },
-    trial_end_date: {
-        type: Date
-    },
-    cancellation_date: {
-        type: Date
-    },
-    transaction_history: [{
-        transaction_id: mongoose.Schema.Types.ObjectId,
-        amount: Number,
-        date: Date
-    }],
-    reminder_sent: {
+
+    // Trial Management
+    isInTrial: {
         type: Boolean,
         default: false
     },
-    reminder_date: {
-        type: Date
+    trialEndDate: Date,
+    trialReminderSent: {
+        type: Boolean,
+        default: false
     },
-    notes: {
+
+    // Automated Processing
+    lastPaymentDate: Date,
+    totalSpent: {
+        type: Number,
+        default: 0
+    },
+    paymentCount: {
+        type: Number,
+        default: 0
+    },
+
+    // Usage Tracking
+    lastUsedDate: Date,
+    usageFrequency: {
         type: String,
-        trim: true,
-        maxlength: 500
+        enum: ['high', 'medium', 'low', 'none'],
+        default: 'medium'
     },
-    metadata: {
-        website: String,
-        support_email: String,
-        cancellation_difficulty: {
-            type: String,
-            enum: ['easy', 'medium', 'hard']
-        },
-        value_rating: Number,
-        usage_frequency: String,
-        alternative_suggestions: [String]
-    }
+
+    // Configuration
+    reminderEnabled: {
+        type: Boolean,
+        default: true
+    },
+    reminderDaysBefore: {
+        type: Number,
+        default: 3
+    },
+    reminderSent: {
+        type: Boolean,
+        default: false
+    },
+
+    // Metadata & Intelligence
+    isAutoDetected: {
+        type: Boolean,
+        default: false
+    },
+    detectionConfidence: Number,
+    valueRating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 3
+    },
+    logo: String,
+    website: String,
+    notes: String,
+    tags: [String],
+
+    // Lifecycle History
+    history: [{
+        action: String,
+        fromStatus: String,
+        toStatus: String,
+        timestamp: { type: Date, default: Date.now },
+        note: String
+    }]
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 // Indexes
-subscriptionSchema.index({ user: 1, status: 1 });
-subscriptionSchema.index({ user: 1, next_billing_date: 1 });
-subscriptionSchema.index({ next_billing_date: 1, status: 1 });
+subscriptionSchema.index({ user: 1, status: 1, nextPaymentDate: 1 });
+subscriptionSchema.index({ status: 1, trialEndDate: 1 });
 
-// Virtual: Annual cost
-subscriptionSchema.virtual('annual_cost').get(function() {
-    const multipliers = {
-        daily: 365,
-        weekly: 52,
-        monthly: 12,
-        quarterly: 4,
-        yearly: 1
+// Virtuals
+subscriptionSchema.virtual('monthlyAmount').get(function () {
+    const weights = {
+        daily: 30,
+        weekly: 4.33,
+        biweekly: 2.16,
+        monthly: 1,
+        quarterly: 1 / 3,
+        semi_annual: 1 / 6,
+        yearly: 1 / 12
     };
-    return this.amount * (multipliers[this.billing_cycle] || 12);
+    return (this.amount * (weights[this.billingCycle] || 1));
 });
 
-// Virtual: Days until next billing
-subscriptionSchema.virtual('days_until_billing').get(function() {
-    if (!this.next_billing_date) return null;
-    const diff = this.next_billing_date - new Date();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+subscriptionSchema.virtual('yearlyAmount').get(function () {
+    return this.monthlyAmount * 12;
 });
 
-// Calculate next billing date
-subscriptionSchema.methods.calculateNextBillingDate = function() {
-    const currentDate = this.next_billing_date || new Date();
-    const nextDate = new Date(currentDate);
-    
-    switch (this.billing_cycle) {
-        case 'daily':
-            nextDate.setDate(nextDate.getDate() + 1);
-            break;
-        case 'weekly':
-            nextDate.setDate(nextDate.getDate() + 7);
-            break;
-        case 'monthly':
-            nextDate.setMonth(nextDate.getMonth() + 1);
-            break;
-        case 'quarterly':
-            nextDate.setMonth(nextDate.getMonth() + 3);
-            break;
-        case 'yearly':
-            nextDate.setFullYear(nextDate.getFullYear() + 1);
-            break;
-    }
-    
-    this.next_billing_date = nextDate;
-    return nextDate;
-};
+subscriptionSchema.virtual('daysUntilPayment').get(function () {
+    if (!this.nextPaymentDate) return null;
+    return Math.ceil((this.nextPaymentDate - new Date()) / (1000 * 60 * 60 * 24));
+});
 
-// Mark as billed
-subscriptionSchema.methods.markAsBilled = function(transactionId, amount) {
-    this.last_billing_date = new Date();
-    this.transaction_history.push({
-        transaction_id: transactionId,
-        amount: amount,
-        date: new Date()
+subscriptionSchema.virtual('daysUntilTrialEnds').get(function () {
+    if (!this.trialEndDate) return null;
+    return Math.ceil((this.trialEndDate - new Date()) / (1000 * 60 * 60 * 24));
+});
+
+// State Transition Helper
+subscriptionSchema.methods.transitionTo = function (newStatus, note = '') {
+    const oldStatus = this.status;
+    if (oldStatus === newStatus) return;
+
+    this.status = newStatus;
+    this.history.push({
+        action: 'status_change',
+        fromStatus: oldStatus,
+        toStatus: newStatus,
+        note
     });
-    this.calculateNextBillingDate();
-    this.reminder_sent = false;
-    return this.save();
 };
 
-// Cancel subscription
-subscriptionSchema.methods.cancel = function(reason) {
-    this.status = 'cancelled';
-    this.cancellation_date = new Date();
-    if (reason) this.notes = reason;
-    return this.save();
+// Calculate next payment date
+subscriptionSchema.methods.calculateNextPaymentDate = function () {
+    const base = this.nextPaymentDate || new Date();
+    const next = new Date(base);
+
+    switch (this.billingCycle) {
+        case 'daily': next.setDate(next.getDate() + 1); break;
+        case 'weekly': next.setDate(next.getDate() + 7); break;
+        case 'biweekly': next.setDate(next.getDate() + 14); break;
+        case 'monthly': next.setMonth(next.getMonth() + 1); break;
+        case 'quarterly': next.setMonth(next.getMonth() + 3); break;
+        case 'semi_annual': next.setMonth(next.getMonth() + 6); break;
+        case 'yearly': next.setFullYear(next.getFullYear() + 1); break;
+    }
+    return next;
 };
 
-// Get upcoming subscriptions (next 7 days)
-subscriptionSchema.statics.getUpcoming = function(userId, days = 7) {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + days);
-    
+// Logic for whether reminder should be sent
+subscriptionSchema.methods.shouldSendReminder = function () {
+    if (!this.reminderEnabled || this.reminderSent || this.status !== 'active') return false;
+    const days = this.daysUntilPayment;
+    return days !== null && days <= this.reminderDaysBefore && days >= 0;
+};
+
+subscriptionSchema.methods.shouldSendTrialReminder = function () {
+    if (this.status !== 'trial' || this.trialReminderSent || !this.trialEndDate) return false;
+    const days = this.daysUntilTrialEnds;
+    return days !== null && days <= 3 && days >= 0;
+};
+
+// Static: Find unused subscriptions
+subscriptionSchema.statics.findUnused = function (userId) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     return this.find({
         user: userId,
         status: 'active',
-        next_billing_date: {
-            $gte: new Date(),
-            $lte: futureDate
-        }
-    }).sort({ next_billing_date: 1 });
+        $or: [
+            { lastUsedDate: { $lt: thirtyDaysAgo } },
+            { lastUsedDate: { $exists: false } }
+        ]
+    });
 };
 
-// Get total monthly cost
-subscriptionSchema.statics.getTotalMonthlyCost = async function(userId) {
-    const subscriptions = await this.find({ user: userId, status: 'active' });
-    
-    const monthlyEquivalents = {
-        daily: 30,
-        weekly: 4.33,
-        monthly: 1,
-        quarterly: 0.33,
-        yearly: 0.083
-    };
-    
-    return subscriptions.reduce((total, sub) => {
-        return total + (sub.amount * (monthlyEquivalents[sub.billing_cycle] || 1));
-    }, 0);
+// Static: Get upcoming for auto-billing background task
+subscriptionSchema.statics.getUpcomingForProcess = function () {
+    const now = new Date();
+    return this.find({
+        status: { $in: ['active', 'trial', 'grace_period'] },
+        nextPaymentDate: { $lte: now }
+    });
 };
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);

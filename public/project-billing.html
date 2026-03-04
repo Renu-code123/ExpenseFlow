@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Costing & Billing - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Professional Project Billing</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="project-header">
+            <div class="header-main">
+                <h1>Profitability Center</h1>
+                <p>Track project burn-rates and automate client invoicing</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openProjectModal()"><i class="fas fa-plus"></i> New
+                    Project</button>
+            </div>
+        </div>
+
+        <!-- Project Grid -->
+        <div id="projects-grid" class="projects-grid">
+            <div class="loading-placeholder">Analysing project margins...</div>
+        </div>
+
+        <!-- Billing Section -->
+        <section class="billing-section mt-40">
+            <div class="section-header">
+                <h2>Generated Invoices</h2>
+            </div>
+            <div class="invoices-table-container glass-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Project</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoices-list">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="project-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Create Commercial Project</h3>
+                <span class="close-modal" onclick="closeProjectModal()">&times;</span>
+            </div>
+            <form id="project-form">
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" id="proj-name" required placeholder="e.g. Website Overhaul 2024">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Budget Limit</label>
+                        <input type="number" id="proj-budget" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Markup (%)</label>
+                        <input type="number" id="proj-markup" value="15">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Client Name</label>
+                    <input type="text" id="proj-client" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Launch Project Tracker</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/project-billing-controller.js"></script>
+</body>
+
+</html>

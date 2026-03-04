@@ -148,3 +148,116 @@ body {
         grid-template-columns: 1fr;
     }
 }
+/* =========================================
+   FORCE DASHBOARD SECTION CARDS & GRID
+   ========================================= */
+
+/* Main dashboard content wrapper */
+.dashboard-main {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: start;
+}
+
+/* Force Budget & Goals into card containers */
+.budget-overview,
+.goals-progress {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-sizing: border-box;
+  width: 100%;
+  display: block;
+}
+
+/* Fix Budget & Goals content spacing */
+.budget-overview > *,
+.goals-progress > * {
+  margin-bottom: 0.5rem;
+}
+
+/* =========================================
+   FIX QUICK ACTIONS CONTAINER
+   ========================================= */
+
+.quick-actions {
+  grid-column: 1 / -1; /* full width */
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.quick-actions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+/* =========================================
+   FIX ADD TRANSACTION MODAL (CRITICAL)
+   ========================================= */
+
+.modal-overlay {
+  position: fixed !important;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal {
+  position: relative !important;
+  background: rgba(20,20,20,0.95);
+  border-radius: 14px;
+  max-width: 520px;
+  width: 100%;
+  padding: 1.25rem;
+  margin: 1rem;
+}
+
+/* Prevent modal from flowing inline */
+.modal:not(.active) {
+  display: none;
+}
+
+/* =========================================
+   FIX RAW TEXT FLOWING ISSUE
+   ========================================= */
+
+/* If sections lost their wrapper, force block cards */
+.section-card,
+.dashboard-card {
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px;
+  padding: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   MOBILE FIX
+   ========================================= */
+
+@media (max-width: 900px) {
+  .dashboard-main {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

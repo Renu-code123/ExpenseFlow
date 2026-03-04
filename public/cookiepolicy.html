@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cookie Policy | ExpenseFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    /* ================= GLOBAL THEME ================= */
+    :root {
+      --bg-primary: #0b1020;
+      --bg-secondary: #11172e;
+      --card-bg: rgba(255,255,255,0.05);
+      --text-primary: #ffffff;
+      --text-secondary: #cbd5f5;
+      --accent-primary: #6c7cff;
+      --border-color: rgba(255,255,255,0.1);
+    }
+
+    body.light {
+      --bg-primary: #f5f7fb;
+      --bg-secondary: #ffffff;
+      --card-bg: #ffffff;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --accent-primary: #4f46e5;
+      --border-color: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ================= NAVBAR ================= */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(10,15,40,0.85);
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+    }
+
+    body.light .navbar {
+      background: rgba(255,255,255,0.9);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      opacity: 0.85;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-primary);
+      opacity: 1;
+    }
+
+    .theme-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(15deg) scale(1.05);
+    }
+
+    /* ================= HERO ================= */
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #6c7cff, #9f7cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: auto;
+    }
+
+    /* ================= POLICY CARD ================= */
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 2rem;
+    }
+
+    .policy-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      animation: fadeUp 0.8s ease;
+    }
+
+    @keyframes fadeUp {
+      from {opacity:0; transform: translateY(30px);}
+      to {opacity:1; transform: translateY(0);}
+    }
+
+    .policy-card h2 {
+      margin-top: 1.8rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.3rem;
+      color: var(--accent-primary);
+    }
+
+    .policy-card p,
+    .policy-card li {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    .policy-card ul {
+      padding-left: 1.2rem;
+      margin-top: 0.5rem;
+    }
+
+    .policy-note {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    /* ================= FOOTER ================= */
+    .footer {
+      margin-top: 4rem;
+      background: rgba(10,15,40,0.9);
+      border-top: 1px solid var(--border-color);
+    }
+
+    body.light .footer {
+      background: #ffffff;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .footer-section p,
+    .footer-section a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <i class="fas fa-wallet"></i> ExpenseFlow
+      </div>
+      <div class="nav-links">
+        <a href="#">Dashboard</a>
+        <a href="#">Community</a>
+        <a href="#">Help Center</a>
+        <a href="#">About</a>
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Cookie Policy</h1>
+    <p>Learn how ExpenseFlow uses cookies to improve your experience and keep your data secure.</p>
+  </section>
+
+  <!-- POLICY -->
+  <div class="container">
+    <div class="policy-card">
+      <h2>1. What Are Cookies?</h2>
+      <p>Cookies are small text files stored on your device to help websites remember information about your visit.</p>
+
+      <h2>2. How We Use Cookies</h2>
+      <ul>
+        <li>Remember login sessions</li>
+        <li>Store user preferences</li>
+        <li>Improve site performance</li>
+        <li>Analyze usage patterns</li>
+      </ul>
+
+      <h2>3. Types of Cookies</h2>
+      <ul>
+        <li><strong>Essential:</strong> Required for core functionality</li>
+        <li><strong>Functional:</strong> Save your preferences</li>
+        <li><strong>Analytics:</strong> Help improve the platform</li>
+      </ul>
+
+      <h2>4. Third-Party Cookies</h2>
+      <p>We may use trusted third-party services for analytics and performance monitoring.</p>
+
+      <h2>5. Managing Cookies</h2>
+      <p>You can control cookies through your browser settings. Disabling cookies may affect some features.</p>
+
+      <h2>6. Policy Updates</h2>
+      <p>This Cookie Policy may be updated periodically. Changes will be reflected on this page.</p>
+
+      <h2>7. Contact Us</h2>
+      <p>Email us at <strong>support@expenseflow.com</strong> for any cookie-related questions.</p>
+
+      <div class="policy-note">
+        <i class="fas fa-cookie-bite"></i>
+        Last updated: January 2026
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <i class="fas fa-wallet"></i> ExpenseFlow
+        </div>
+        <p>Smart money management made simple.</p>
+      </div>
+
+      <div class="footer-section">
+        <h4>Resources</h4>
+        <ul class="footer-links">
+          <li><a href="f">Finance Tips</a></li>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Community</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      &copy; 2026 ExpenseFlow. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+    }
+  </script>
+
+</body>
+</html>

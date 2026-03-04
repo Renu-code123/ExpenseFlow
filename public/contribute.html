@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How To Contribute- ExpenseFlow</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="expensetracker.css" /> -->
+    <link rel="stylesheet" href="contribute.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        /* Header & Navigation */
+        .header {
+            background: rgba(15, 15, 35, 0.98);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2.5rem;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #64ffda 0%, #667eea 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-logo i {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #64ffda 0%, #667eea 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #a0a0c0;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 1.05rem;
+        }
+
+        .nav-link:hover {
+            color: #64ffda;
+            background: rgba(100, 255, 218, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.2), rgba(102, 126, 234, 0.2));
+            box-shadow: 0 4px 15px rgba(100, 255, 218, 0.2);
+        }
+
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .bar {
+            width: 28px;
+            height: 3px;
+            background: #64ffda;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.1), rgba(102, 126, 234, 0.1));
+            border-radius: 50px;
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.15), rgba(102, 126, 234, 0.15));
+            box-shadow: 0 4px 20px rgba(100, 255, 218, 0.2);
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #64ffda;
+            object-fit: cover;
+        }
+
+        .username {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            min-height: calc(100vh - 90px);
+            padding: 3rem 0;
+        }
+
+
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .nav-menu {
+                position: fixed;
+                top: 80px;
+                left: -100%;
+                width: 100%;
+                flex-direction: column;
+                background: rgba(15, 15, 35, 0.98);
+                backdrop-filter: blur(20px);
+                padding: 2rem;
+                gap: 1rem;
+                transition: left 0.3s ease;
+                border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .nav-toggle {
+                display: flex;
+            }
+
+            .user-profile {
+                display: none;
+            }
+
+
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 1rem 1.5rem;
+            }
+
+            .analytics-container {
+                padding: 0 1.5rem;
+            }
+
+            .analytics-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .analytics-header p {
+                font-size: 1rem;
+            }
+
+            .analytics-card {
+                padding: 2rem;
+            }
+
+            .chart-container {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
+                <div class="nav-menu" id="nav-menu">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                    <a href="contribute.html" class="nav-link active">Contribute</a>
+                    <a href="goals.html" class="nav-link">Goals</a>
+                    <a href="settings.html" class="nav-link">Settings</a>
+                </div>
+                <div class="nav-toggle" id="nav-toggle">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+                <div class="user-profile">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+                        alt="User" class="profile-img">
+                    <span class="username">John Doe</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="contribute-hero">
+            <h1>
+                <i class="fas fa-link"></i>
+                How to Contribute
+            </h1>
+            <p>Follow these simple steps to add your profile card and make your first open-source contribution 🚀</p>
+        </section>
+        <section class="steps-grid">
+            <div class="step-card">
+                <span class="step-number">01</span>
+                <i class="fas fa-image"></i>
+                <h3>Prepare Your Image</h3>
+                <ul>
+                    <li>Square image (1:1 ratio)</li>
+                    <li>jpg or png format</li>
+                    <li>Under 500KB</li>
+                    <li>Name it as your GitHub username</li>
+                </ul>
+            </div>
+            <div class="step-card">
+                <span class="step-number">02</span>
+                <i class="fas fa-code-branch"></i>
+                <h3>Fork & Clone</h3>
+                <p>Fork the repository to your GitHub account, then clone it to your local machine:</p>
+                <pre>
+            git clone https://github.com/your-username/repo-name.git
+        </pre>
+            </div>
+            <div class="step-card">
+                <span class="step-number">03</span>
+                <i class="fas fa-folder-open"></i>
+                <h3>Add Your Details</h3>
+                <p>
+                    Upload your image to <code>images/</code> and update
+                    <code>index.html</code> with your card details.
+                </p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">04</span>
+                <i class="fas fa-check-circle"></i>
+                <h3>Commit & Create PR</h3>
+                                    <pre>
+                    git add .
+                    git commit -m "Add my profile card"
+                    git push origin main
+                        </pre>
+                <p>Create a Pull Request to the main repository.</p>
+            </div>
+        </section>
+        <section class="resources">
+            <h2>
+             <i class="fas fa-book"></i>
+                Additional Resources
+            </h2> 
+            <div class="resources-grid">
+                <div class="resource-card">
+                    <i class="fab fa-github"></i>
+                    <h4>GitHub PR Guide</h4>
+                    <p>Learn how to create Pull Requests</p>
+                </div>
+                  <div class="resource-card">
+                    <i class="fas fa-code"></i>
+                    <h4>Git Documentation</h4>
+                    <p>Official Git commands reference</p>
+                </div>
+                  <div class="resource-card">
+                       <i class="fas fa-heart"></i>
+                        <h4>Open Source Guide</h4>
+                        <p>How to contribute to open source</p>
+                </div>
+            </div>
+        </section>
+    </main>
+       <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
+
+                <p class="footer-description">
+                    Smart money management made simple. Track, analyze, and optimize
+                    your financial habits.
+                </p>
+
+                <div class="social-links">
+                    <a href="https://x.com/9504_renu" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="X (Twitter)">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
+
+                    <a href="https://github.com/Renu-code123/ExpenseFlow" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="Github">
+                        <i class="fab fa-github"></i>
+                    </a>
+
+                    <a href="mailto:renu89857@gmail.com" class="social-link" target="_blank" rel="noopener noreferrer"
+                        aria-label="Email">
+                        <i class="far fa-envelope"></i>
+                    </a>
+
+                    <a href="https://www.linkedin.com/in/renu-kumari-prajapati" class="social-link" target="_blank"
+                        rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="AboutUs.html">About Us</a></li>
+                    <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
+                    <li><a href="terms_service.html">Terms of Service</a></li>
+                    <li><a href="Help-Center.html">Help Center</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-container">
+                <p>
+                    &copy; 2026 ExpenseFlow. All rights reserved. Made with ❤️ for
+                    better financial management.
+                </p>
+                <div class="footer-stats">
+                    <span>🏆 Trusted by 10,000+ users</span>
+                    <span>💰 ₹50M+ tracked</span>
+                    <span>📊 99.9% uptime</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

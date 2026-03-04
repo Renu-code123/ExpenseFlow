@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intercompany Reconciliation - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <div class="logo">
+                <i class="fas fa-handshake"></i>
+                <span>BridgeFlow</span>
+            </div>
+            <div class="nav-links">
+                <a href="dashboard-clean.html"><i class="fas fa-home"></i> Home</a>
+                <a href="#"><i class="fas fa-file-invoice-dollar"></i> Settlements</a>
+            </div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <header class="page-header">
+            <div class="header-text">
+                <h1>Intercompany Reconciliation Hub</h1>
+                <p>Manage internal financial flows and resolve discrepancies between workspaces.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openTxnModal()">
+                    <i class="fas fa-plus"></i> Log Internal Flow
+                </button>
+            </div>
+        </header>
+
+        <!-- Settlement Overview -->
+        <div class="dashboard-grid">
+            <div class="grid-item glass-card col-span-2">
+                <div class="card-header">
+                    <h3>Net Inter-Entity Balances</h3>
+                </div>
+                <div class="entity-balance-grid" id="balance-grid">
+                    <!-- JS Loaded -->
+                    <div class="balance-item loading">Loading intercompany flows...</div>
+                </div>
+            </div>
+
+            <div class="grid-item glass-card">
+                <div class="card-header">
+                    <h3>Settlement Advisor</h3>
+                </div>
+                <div id="settlement-advisor-content">
+                    <p class="small text-muted">Select entities above to view settlement advice.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="mt-20 glass-card">
+            <div class="card-header">
+                <h3>Intercompany Ledger</h3>
+                <div class="filters">
+                    <select id="status-filter" onchange="loadHistory()">
+                        <option value="All">All Transactions</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Matched">Matched</option>
+                        <option value="Settled">Settled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Source Entity</th>
+                            <th>Target Entity</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="intercompany-tbody">
+                        <!-- JS Loaded -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="txn-modal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close" onclick="closeTxnModal()">&times;</span>
+            <h2>Log Intercompany Flow</h2>
+            <form id="recon-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Source Entity</label>
+                        <select id="source-entity" required></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Target Entity</label>
+                        <select id="target-entity" required></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Amount</label>
+                        <input type="number" id="flow-amount" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Flow Type</label>
+                        <select id="flow-type">
+                            <option value="Transfer">Transfer</option>
+                            <option value="Service Charge">Service Charge</option>
+                            <option value="Loan">Loan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Description (Optional)</label>
+                    <textarea id="flow-desc"></textarea>
+                </div>
+                <button type="submit" class="btn-primary full-width">Post to Ledger</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/reconciliation-controller.js"></script>
+</body>
+
+</html>

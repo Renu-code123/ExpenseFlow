@@ -2,6 +2,7 @@ const Invoice = require('../models/Invoice');
 const Client = require('../models/Client');
 const TimeEntry = require('../models/TimeEntry');
 const Expense = require('../models/Expense');
+const emailService = require('./emailService');
 
 class InvoiceService {
     /**
@@ -337,7 +338,15 @@ class InvoiceService {
                     // Auto-send if configured
                     if (parentInvoice.recurring_config.auto_send) {
                         await newInvoice.markAsSent();
-                        // TODO: Send email notification
+
+                        // Send email notification to client
+                        try {
+                            const populatedInvoice = await Invoice.findById(newInvoice._id).populate('client user');
+                            await emailService.sendInvoiceSentNotification(populatedInvoice, populatedInvoice.user);
+                            console.log(`Email notification sent for invoice ${newInvoice.invoice_number}`);
+                        } catch (emailError) {
+                            console.error(`Failed to send email notification for invoice ${newInvoice.invoice_number}:`, emailError);
+                        }
                     }
                 } catch (error) {
                     console.error(`Error generating recurring invoice ${parentInvoice.invoice_number}:`, error);

@@ -441,6 +441,22 @@ class CurrencyService {
       }))
     };
   }
+
+  /**
+   * Clear the exchange rate cache
+   */
+  clearCache() {
+    this.rateCache.clear();
+  }
+
+  /**
+   * Update exchange rates (would be called by a cron job in production)
+   * @param {Object} newRates - New exchange rates to use
+   */
+  updateExchangeRates(newRates) {
+    this.exchangeRates = { ...this.exchangeRates, ...newRates };
+    this.clearCache(); // Clear cache when rates are updated
+  }
 }
 
 module.exports = new CurrencyService();

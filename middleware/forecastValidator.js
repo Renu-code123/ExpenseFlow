@@ -1,91 +1,36 @@
-const Joi = require('joi');
-
 /**
- * Forecast Validation Middleware
+ * Forecast Validator Middleware
+ * Issue #678: Validates complex stochastic parameters for simulations.
  */
 
-const validateForecastGeneration = (req, res, next) => {
-    const schema = Joi.object({
-        period_type: Joi.string()
-            .valid('weekly', 'monthly', 'quarterly', 'yearly')
-            .default('monthly'),
-        category: Joi.string()
-            .optional()
-            .allow(null, ''),
-        algorithm: Joi.string()
-            .valid('linear_regression', 'moving_average', 'exponential_smoothing', 'arima', 'prophet')
-            .default('moving_average'),
-        confidence_level: Joi.number()
-            .min(80)
-            .max(99)
-            .default(95)
-    });
-    
-    const { error, value } = schema.validate(req.body);
-    
-    if (error) {
-        return res.status(400).json({
-            success: false,
-            message: 'Validation error',
-            errors: error.details.map(detail => detail.message)
-        });
-    }
-    
-    req.body = value;
-    next();
-};
+const { body, validationResult } = require('express-validator');
 
-const validateAnomalyDetection = (req, res, next) => {
-    const schema = Joi.object({
-        lookback_days: Joi.number()
-            .min(7)
-            .max(365)
-            .default(90),
-        sensitivity_level: Joi.string()
-            .valid('low', 'medium', 'high')
-            .default('medium')
-    });
-    
-    const { error, value } = schema.validate(req.body);
-    
-    if (error) {
-        return res.status(400).json({
-            success: false,
-            message: 'Validation error',
-            errors: error.details.map(detail => detail.message)
-        });
-    }
-    
-    req.body = value;
-    next();
-};
+const validateScenario = [
+    body('name').trim().notEmpty().withMessage('Scenario name is required'),
+    body('adjustments.incomeChangePct')
+        .optional()
+        .isFloat({ min: -100, max: 1000 })
+        .withMessage('Income change must be between -100% and 1000%'),
+    body('adjustments.expenseChangePct')
+        .optional()
+        .isFloat({ min: -100, max: 1000 })
+        .withMessage('Expense change must be between -100% and 1000%'),
+    body('config.iterationCount')
+        .optional()
+        .isInt({ min: 100, max: 5000 })
+        .withMessage('Iterations must be between 100 and 5000'),
+    body('config.timeHorizonDays')
+        .optional()
+        .isInt({ min: 7, max: 365 })
+        .withMessage('Horizon must be between 7 days and 1 year'),
 
-const validateAnomalyReview = (req, res, next) => {
-    const schema = Joi.object({
-        action: Joi.string()
-            .valid('mark_normal', 'mark_fraud', 'reviewed')
-            .required(),
-        notes: Joi.string()
-            .optional()
-            .allow(null, '')
-    });
-    
-    const { error, value } = schema.validate(req.body);
-    
-    if (error) {
-        return res.status(400).json({
-            success: false,
-            message: 'Validation error',
-            errors: error.details.map(detail => detail.message)
-        });
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+        next();
     }
-    
-    req.body = value;
-    next();
-};
+];
 
-module.exports = {
-    validateForecastGeneration,
-    validateAnomalyDetection,
-    validateAnomalyReview
-};
+module.exports = { validateScenario };

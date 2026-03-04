@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Planner - ExpenseFlow</title>
+    <link rel="stylesheet" href="/expensetracker.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>📊 Budget Planner</h1>
+                <p class="subtitle">Track spending, analyze variance, and manage budgets</p>
+            </div>
+            <div class="header-actions">
+                <button id="create-budget-btn" class="btn-primary">+ New Budget</button>
+                <button id="templates-btn" class="btn-secondary">📋 Templates</button>
+                <a href="/" class="btn-secondary">← Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">💰</div>
+                <div class="metric-content">
+                    <h3>Total Allocated</h3>
+                    <div class="metric-value" id="total-allocated">$--</div>
+                    <div class="metric-label">Across all budgets</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">💸</div>
+                <div class="metric-content">
+                    <h3>Total Spent</h3>
+                    <div class="metric-value" id="total-spent">$--</div>
+                    <div class="metric-label">Year-to-date</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📈</div>
+                <div class="metric-content">
+                    <h3>Variance</h3>
+                    <div class="metric-value" id="total-variance">$--</div>
+                    <div class="metric-label" id="variance-label">Overall difference</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">✅</div>
+                <div class="metric-content">
+                    <h3>Active Budgets</h3>
+                    <div class="metric-value" id="active-budgets">-</div>
+                    <div class="metric-label">Currently tracking</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Banner -->
+        <div id="alert-banner" class="alert-banner hidden"></div>
+
+        <!-- Main Content -->
+        <div class="content-grid">
+            <!-- Active Budgets -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2>📋 Active Budgets</h2>
+                    <div class="budget-filters">
+                        <select id="period-filter" class="filter-select">
+                            <option value="">All Periods</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="budgets-list" class="budgets-list">
+                        <p class="loading-text">Loading budgets...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variance Chart -->
+            <div class="chart-card full-width">
+                <div class="card-header">
+                    <h2>📊 Budget vs Actual</h2>
+                    <select id="chart-budget-selector" class="filter-select">
+                        <option value="">Select budget...</option>
+                    </select>
+                </div>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="variance-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Performance -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🎯 Category Performance</h2>
+                </div>
+                <div class="card-body">
+                    <div id="category-performance" class="category-performance">
+                        <p class="empty-text">Select a budget to view category performance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Health -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🏥 Budget Health</h2>
+                </div>
+                <div class="card-body">
+                    <div id="health-indicators" class="health-indicators">
+                        <div class="health-item">
+                            <span class="health-label">Healthy:</span>
+                            <span class="health-count" id="health-count-healthy">0</span>
+                        </div>
+                        <div class="health-item">
+                            <span class="health-label">Warning:</span>
+                            <span class="health-count" id="health-count-warning">0</span>
+                        </div>
+                        <div class="health-item">
+                            <span class="health-label">Critical:</span>
+                            <span class="health-count" id="health-count-critical">0</span>
+                        </div>
+                        <div class="health-item">
+                            <span class="health-label">Exceeded:</span>
+                            <span class="health-count" id="health-count-exceeded">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Budget Modal -->
+        <div id="budget-modal" class="modal hidden">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2 id="modal-title">Create New Budget</h2>
+                    <button class="modal-close" onclick="closeBudgetModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="budget-form" class="budget-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Budget Name *</label>
+                                <input type="text" id="budget-name" required placeholder="e.g., Monthly Budget">
+                            </div>
+                            <div class="form-group">
+                                <label>Period *</label>
+                                <select id="budget-period" required>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Start Date *</label>
+                                <input type="date" id="budget-start-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="budget-end-date" placeholder="Auto-calculated">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="budget-description" rows="2" placeholder="Optional description..."></textarea>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Category Allocations</h3>
+                            <div id="categories-container">
+                                <div class="category-allocation">
+                                    <input type="text" placeholder="Category" class="cat-name" required>
+                                    <input type="number" placeholder="Amount" class="cat-amount" required min="0"
+                                        step="0.01">
+                                    <button type="button" class="btn-icon remove-category"
+                                        onclick="removeCategory(this)">🗑️</button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-secondary" onclick="addCategory()">+ Add Category</button>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="rollover-enabled">
+                                    Enable Rollover
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-secondary" onclick="closeBudgetModal()">Cancel</button>
+                            <button type="submit" class="btn-primary">Create Budget</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/budget-controller.js"></script>
+</body>
+
+</html>

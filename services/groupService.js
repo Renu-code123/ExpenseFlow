@@ -1,6 +1,7 @@
 const Group = require('../models/Group');
 const User = require('../models/User');
 const Expense = require('../models/Expense');
+const SharedBudget = require('../models/SharedBudget');
 const notificationService = require('./notificationService');
 
 class GroupService {

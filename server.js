@@ -1,26 +1,17 @@
 const express = require('express');
-// Global error handlers for unhandled promise rejections and uncaught exceptions
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Optionally, perform cleanup or alerting here
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception thrown:', err);
-  // Optionally, perform cleanup or alerting here
-});
 const http = require('http');
 const crypto = require('crypto');
-const socketIo = require('socket.io');
 const mongoose = require('mongoose');
-const helmet = require('helmet');
 const cors = require('cors');
+const helmet = require('helmet');
 const socketAuth = require('./middleware/socketAuth');
 const CronJobs = require('./services/cronJobs');
 const { generalLimiter } = require('./middleware/rateLimiter');
 const { sanitizeInput, sanitizationMiddleware, validateDataTypes } = require('./middleware/sanitizer');
 const securityMonitor = require('./services/securityMonitor');
 const apiGateway = require('./middleware/apiGateway');
+const requestContext = require('./middleware/requestContext');
+const requestCorrelation = require('./middleware/requestCorrelation');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -45,6 +36,7 @@ const sessionRecoveryRoutes = require('./routes/sessionRecovery'); // Issue #881
 const sessionHijackingMiddleware = require('./middleware/sessionHijackingDetection'); // Issue #881
 const mlAnomalyRoutes = require('./routes/mlAnomaly'); // Issue #878: Behavioral ML Anomaly Detection
 const crossSessionCorrelationRoutes = require('./routes/crossSessionCorrelation'); // Issue #879: Cross-Session Threat Correlation
+const privilegeTransitionMonitorRoutes = require('./routes/privilegeTransitionMonitor'); // Issue #872: Zero-Trust Privilege Transition Monitoring
 const realtimeCollaborationService = require('./services/realtimeCollaborationService');
 const attackGraphIntegrationService = require('./services/attackGraphIntegrationService'); // Issue #848
 const mlAnomalyDetectionService = require('./services/mlAnomalyDetectionService'); // Issue #878
@@ -54,11 +46,47 @@ const containmentActionSystem = require('./services/containmentActionSystem'); /
 const trustedRelationshipsManager = require('./services/trustedRelationshipsManager'); // Issue #879
 const { transportSecuritySuite } = require('./middleware/transportSecurity');
 const cron = require('node-cron');
+const { Server } = require('socket.io');
 
-// Distributed real-time sync dependencies
-const Redis = require('ioredis');
-const redisPub = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-const redisSub = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+// Distributed real-time sync dependencies (Safe Initialization)
+let redisPub = null;
+let redisSub = null;
+
+const REDIS_ENABLED = !!process.env.REDIS_URL;
+
+if (REDIS_ENABLED) {
+  try {
+    const Redis = require('ioredis');
+
+    redisPub = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 3,
+      retryStrategy: (times) => {
+        if (times > 3) return null;
+        return Math.min(times * 200, 1000);
+      }
+    });
+
+    redisSub = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 3
+    });
+
+    redisPub.on('error', (err) => {
+      console.warn('[Redis Publisher Error]:', err.message);
+    });
+
+    redisSub.on('error', (err) => {
+      console.warn('[Redis Subscriber Error]:', err.message);
+    });
+
+    console.log('✅ Redis initialized');
+  } catch (err) {
+    console.warn('⚠ Redis initialization failed. Running without Redis.');
+    redisPub = null;
+    redisSub = null;
+  }
+} else {
+  console.log('⚠ REDIS_URL not set. Running without Redis.');
+}
 
 // Redis pub/sub channel for distributed sync
 const SYNC_CHANNEL = 'expenseflow:sync';
@@ -67,15 +95,23 @@ const SERVER_INSTANCE_ID = process.env.SERVER_INSTANCE_ID || crypto.randomUUID()
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+
+const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
+    origin: true,
     credentials: true
   }
 });
 
-const PORT = process.env.PORT || 3000;
+
+// Initialize Asynchronous Listeners (Issue #711)
+require('./listeners/EmailListeners').init();
+require('./listeners/AuditListeners').init();
+
+
+/* ================================
+   SECURITY
+================================ */
 
 // Security middleware
 // Transport Security (HTTPS, HSTS, Security Headers)
@@ -92,95 +128,114 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrcAttr: ["'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "https://res.cloudinary.com"],
-      connectSrc: ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://api.exchangerate-api.com", "https://api.frankfurter.app", "https://res.cloudinary.com"],
-      fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
+      connectSrc: [
+        "'self'",
+        "https:",
+        "wss:",
+        "http://localhost:3000",
+        "ws://localhost:3000"
+      ]
     }
-  },
-  crossOriginEmbedderPolicy: false
+  }
 }));
 
-// CORS configuration
-app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
+/* ================================
+   CORS (VERCEL SAFE)
+================================ */
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+app.use(cors({
+  origin: true,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
-app.use(generalLimiter);
-
-// Comprehensive input sanitization and validation middleware
-// Issue #461: Missing Input Validation on User Data
-app.use(sanitizationMiddleware);
-app.use(validateDataTypes);
-
-// Security monitoring
-app.use(securityMonitor.blockSuspiciousIPs());
-
-// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// Static files
-app.use(express.static('public'));
-app.use(express.static('.'));
+// 🔥 Register correlation middleware EARLY
+app.use(requestCorrelation);
 
-// Security logging middleware
-app.use((req, res, next) => {
-  const originalSend = res.send;
-  res.send = function (data) {
-    // Log failed requests
-    if (res.statusCode >= 400) {
-      securityMonitor.logSecurityEvent(req, 'suspicious_activity', {
-        statusCode: res.statusCode,
-        response: typeof data === 'string' ? data.substring(0, 200) : 'Non-string response'
-      });
+app.use(requestContext);
+app.use(require('./middleware/encryptionInterceptor'));
+app.use(require('./middleware/validationInterceptor'));
+app.use(require('./middleware/auditInterceptor'));
+app.use(require('./middleware/auditTraceability'));
+app.use(require('./middleware/taxDeductionInterceptor')); // Issue #843
+app.use(require('./middleware/shardResolver')); // Issue #842: Distributed Ledger Fabric
+app.use(require('./middleware/partitionAwareGuard')); // Issue #868: Multi-Master Consensus
+app.use(require('./middleware/privacyProverGuard')); // Issue #867: ZK-Compliance Attestation
+app.use(require('./middleware/tenantResolver'));
+// Inject Circuit Breaker protection early in the pipeline
+// We pass 'TRANSACTION' as a default, though specific routers might override it
+app.use(require('./middleware/complianceGuard')('TRANSACTION'));
+app.use(require('./middleware/leakageGuard'));
+app.use(require('./middleware/liquidityGuard'));
+app.use(require('./middleware/balanceGuard'));
+app.use(require('./middleware/governanceGuard'));
+app.use(require('./middleware/journalInterceptor'));
+app.use(require('./middleware/fieldMasker'));
+app.use(require('./middleware/performanceInterceptor'));
+app.use(require('./middleware/leakageMonitor'));
+app.use(require('./middleware/integrityMonitor')); // Issue #910: Financial Integrity Watchtower
+app.use(require('./middleware/liquidityAlertGuard')); // Issue #909: Predictive Liquidity Prophet
+app.use(require('./middleware/threatIntelGuard')); // Issue #907: Adversarial Fraud Prevention
+
+
+
+/* ================================
+   DATABASE CONNECTION
+================================ */
+
+async function connectDatabase() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000
+    });
+
+    console.log('✅ MongoDB connected');
+
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const CronJobs = require('./jobs/cronJobs');
+        CronJobs.init();
+
+        require('./jobs/trendAnalyzer').start();
+        require('./jobs/reportScheduler').start();
+        require('./jobs/accessAuditor').start();
+        require('./jobs/forecastRetrainer').start();
+        require('./jobs/taxonomyAuditor').start();
+        require('./jobs/conflictCleaner').start();
+        require('./jobs/logRotator').start();
+        require('./jobs/searchIndexer').start();
+        require('./jobs/searchPruner').start();
+        require('./jobs/conflictPruner').start();
+        require('./jobs/liquidityAnalyzer').start();
+        require('./jobs/liquidityRebalancer').start();
+        require('./jobs/policyAuditor').start();
+        require('./jobs/journalApplier').start();
+        require('./jobs/metricFlusher').start();
+        require('./jobs/integrityAuditor').start();
+        require('./jobs/cachePruner').start();
+        require('./jobs/velocityCalculator').start();
+        require('./jobs/keyRotator').start();
+        require('./jobs/neuralReindexer').start();
+        require('./jobs/nightlyReconciler').start(); // Issue #910: Self-Healing Reconciliation
+        require('./jobs/weeklyProphet').start(); // Issue #909: Predictive Liquidity Prophet
+        require('./jobs/redTeamSweep').start(); // Issue #907: Adversarial Fraud Simulation
+
+        require('./services/jobOrchestrator').start();
+
+        console.log('✓ Cron jobs initialized');
+
+      } catch (err) {
+        console.log('Cron jobs skipped:', err.message);
+      }
     }
-    originalSend.call(this, data);
-  };
-  next();
-});
 
-// Make io available to the  routes
-app.set('io', io);
-
-// Make io globally available for notifications
-global.io = io;
-
-// Database connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('MongoDB connected');
-    // Initialize cron jobs after DB connection (includes backup scheduling)
-    // Issue #462: Automated Backup System for Financial Data
-    CronJobs.init();
-    console.log('✓ Cron jobs initialized (includes backup scheduling)');
-    
-    // Initialize attack graph detection system
-    // Issue #848: Cross-Account Attack Graph Detection
     attackGraphIntegrationService.initialize();
     console.log('✓ Attack graph detection initialized');
-    
+
     // Initialize ML anomaly detection system
     // Issue #878: Behavioral ML Anomaly Detection
     mlAnomalyDetectionService.initialize()
@@ -196,7 +251,7 @@ mongoose.connect(process.env.MONGODB_URI)
     // Issue #877: Real-Time Threat Intelligence Integration
     threatIntelIntegrationService.initialize();
     console.log('✓ Threat intelligence integration initialized');
-    
+
     // Initialize cross-session threat correlation system
     // Issue #879: Cross-Session Threat Correlation
     crossSessionThreatCorrelationService.initialize()
@@ -206,7 +261,7 @@ mongoose.connect(process.env.MONGODB_URI)
       .catch(err => {
         console.error('Cross-session correlation initialization error:', err);
       });
-    
+
     // Initialize containment action system
     containmentActionSystem.initialize()
       .then(() => {
@@ -215,7 +270,7 @@ mongoose.connect(process.env.MONGODB_URI)
       .catch(err => {
         console.error('Containment action system initialization error:', err);
       });
-    
+
     // Initialize trusted relationships manager
     trustedRelationshipsManager.initialize()
       .then(() => {
@@ -224,53 +279,45 @@ mongoose.connect(process.env.MONGODB_URI)
       .catch(err => {
         console.error('Trusted relationships manager initialization error:', err);
       });
-    
+
     // Initialize session hijacking detection system
     // Issue #881: Session Hijacking Prevention & Recovery
     console.log('✓ Session hijacking detection initialized');
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+  }
+}
 
-// Socket.IO authentication
+connectDatabase();
+
+
+
+
 io.use(socketAuth);
 
-// Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log(`User ${socket.user.name} connected`);
-
-  // Join user-specific room
-  socket.join(`user_${socket.userId}`);
-
-  // Handle sync requests
-  socket.on('sync_request', async (data) => {
-    try {
-      // Process sync queue for this user
-      const SyncQueue = require('./models/SyncQueue');
-      const pendingSync = await SyncQueue.find({
-        user: socket.userId,
-        processed: false
-      }).sort({ createdAt: 1 });
-
-      socket.emit('sync_data', pendingSync);
-    } catch (error) {
-      socket.emit('sync_error', { error: error.message });
-    }
-  });
+  console.log(`User ${socket.user.name} connected to instance ${SERVER_INSTANCE_ID}`);
 
   // Listen for client expense changes and broadcast to Redis
   socket.on('expense_created', (expense) => {
     io.emit('expense_created', expense);
-    redisPub.publish(SYNC_CHANNEL, JSON.stringify({ type: 'expense_created', expense }));
+    if (redisPub) {
+      redisPub.publish(SYNC_CHANNEL, JSON.stringify({ type: 'expense_created', expense }));
+    }
   });
 
   socket.on('expense_updated', (expense) => {
     io.emit('expense_updated', expense);
-    redisPub.publish(SYNC_CHANNEL, JSON.stringify({ type: 'expense_updated', expense }));
+    if (redisPub) {
+      redisPub.publish(SYNC_CHANNEL, JSON.stringify({ type: 'expense_updated', expense }));
+    }
   });
 
   socket.on('expense_deleted', (data) => {
     io.emit('expense_deleted', data);
-    redisPub.publish(SYNC_CHANNEL, JSON.stringify({ type: 'expense_deleted', data }));
+    if (redisPub) {
+      redisPub.publish(SYNC_CHANNEL, JSON.stringify({ type: 'expense_deleted', data }));
+    }
   });
 
   socket.on('collab:join', async (payload = {}) => {
@@ -336,7 +383,9 @@ io.on('connection', (socket) => {
       };
 
       socket.to(`collab_doc_${documentId}`).emit('collab:operations', eventPayload);
-      redisPub.publish(COLLAB_CHANNEL, JSON.stringify(eventPayload));
+      if (redisPub) {
+        redisPub.publish(COLLAB_CHANNEL, JSON.stringify(eventPayload));
+      }
     } catch (error) {
       socket.emit('collab:error', { error: error.message });
     }
@@ -368,43 +417,55 @@ io.on('connection', (socket) => {
 });
 
 // Listen for Redis sync events and broadcast to local clients
-redisSub.subscribe(SYNC_CHANNEL, (err) => {
-  if (err) console.error('Redis subscribe error:', err);
-});
+if (redisSub) {
+  redisSub.subscribe(SYNC_CHANNEL, (err) => {
+    if (err) console.error('Redis subscribe error:', err);
+  });
 
-redisSub.subscribe(COLLAB_CHANNEL, (err) => {
-  if (err) console.error('Redis collab subscribe error:', err);
-});
+  redisSub.subscribe(COLLAB_CHANNEL, (err) => {
+    if (err) console.error('Redis collab subscribe error:', err);
+  });
 
-redisSub.on('message', (channel, message) => {
-  try {
-    const payload = JSON.parse(message);
+  redisSub.on('message', (channel, message) => {
+    try {
+      const payload = JSON.parse(message);
 
-    if (channel === COLLAB_CHANNEL) {
-      if (payload.serverInstanceId === SERVER_INSTANCE_ID) {
+      if (channel === COLLAB_CHANNEL) {
+        if (payload.serverInstanceId === SERVER_INSTANCE_ID) {
+          return;
+        }
+        if (payload.documentId) {
+          io.to(`collab_doc_${payload.documentId}`).emit('collab:operations', payload);
+        }
         return;
       }
-      if (payload.documentId) {
-        io.to(`collab_doc_${payload.documentId}`).emit('collab:operations', payload);
+
+      if (channel !== SYNC_CHANNEL) {
+        return;
       }
-      return;
-    }
 
-    if (channel !== SYNC_CHANNEL) {
-      return;
+      if (payload.type === 'expense_created') {
+        io.emit('expense_created', payload.expense);
+      } else if (payload.type === 'expense_updated') {
+        io.emit('expense_updated', payload.expense);
+      } else if (payload.type === 'expense_deleted') {
+        io.emit('expense_deleted', payload.data);
+      }
+    } catch (e) {
+      console.error('Redis sync event error:', e);
     }
+  });
+}
 
-    if (payload.type === 'expense_created') {
-      io.emit('expense_created', payload.expense);
-    } else if (payload.type === 'expense_updated') {
-      io.emit('expense_updated', payload.expense);
-    } else if (payload.type === 'expense_deleted') {
-      io.emit('expense_deleted', payload.data);
-    }
-  } catch (e) {
-    console.error('Redis sync event error:', e);
-  }
-});
+// Add issue specific jobs here
+if (process.env.NODE_ENV !== 'production') {
+  require('./jobs/entropyPruner').start(); // Issue #868: Metadata management
+  require('./jobs/nightlyProver').start(); // Issue #867: ZK-Compliance Proving
+  require('./jobs/dnaAttestation').start(); // Issue #866: Genetic Money Integrity
+}
+
+// Lineage & Eligibility Middleware
+app.use(require('./middleware/lineageGuard')); // Issue #866: DNA-Based Eligibility check
 
 app.use('/api/correlation', crossSessionCorrelationRoutes); // Issue #879: Cross-Session Threat Correlation
 app.use('/api/session-recovery', sessionRecoveryRoutes); // Issue #881: Session Hijacking Prevention & Recovery
@@ -468,12 +529,30 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Root route to serve the UI
 app.get('/', (req, res) => {
-  res.sendFile(require('path').join(__dirname, 'public', 'index.html'));
+  res.json({ status: 'Server running 🚀' });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('Security features enabled: Rate limiting, Input sanitization, Security headers');
-});
+/* ================================
+   ERROR HANDLER
+================================ */
+
+app.use(require('./middleware/globalErrorHandler'));
+
+/* ================================
+   SERVER START (ONLY DEV)
+================================ */
+
+const PORT = process.env.PORT || 5000;
+
+if (process.env.NODE_ENV !== 'production') {
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
+
+/* ================================
+   EXPORT FOR VERCEL
+================================ */
+
+module.exports = app;

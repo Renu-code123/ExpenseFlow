@@ -7,8 +7,7 @@ const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const SecurityEvent = require('../models/SecurityEvent');
 const emailService = require('./emailService');
-const fp = require('fingerprint-generator');
-const suspiciousLoginDetectionService = require('./suspiciousLoginDetectionService');
+// const fp = require('fingerprint-generator');
 
 /**
  * 2FA Service

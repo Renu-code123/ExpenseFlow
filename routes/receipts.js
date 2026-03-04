@@ -10,7 +10,7 @@ const router = express.Router();
 
 /**
  * @route   POST /api/receipts/scan
- * @desc    Upload receipt and extract data using AI OCR
+ * @desc    Upload receipt and extract data using AI OCR with itemization
  * @access  Private
  */
 router.post('/scan', auth, upload, handleMulterError, async (req, res) => {
@@ -19,10 +19,17 @@ router.post('/scan', auth, upload, handleMulterError, async (req, res) => {
       return res.status(400).json({ error: 'No receipt image uploaded' });
     }
 
-    // 1. Process OCR
+    // 1. Process OCR with deep parsing
     const extractedData = await ocrService.processReceipt(req.file.buffer);
 
-    // 2. Temporarily upload to Cloudinary to provide a preview URL
+    if (!extractedData.success) {
+      return res.status(400).json({
+        error: 'Failed to process receipt',
+        message: extractedData.message
+      });
+    }
+
+    // 2. Upload to Cloudinary for preview
     const filename = `scan_temp_${req.user._id}_${Date.now()}`;
     const uploadResult = await fileUploadService.uploadToCloudinary(
       req.file.buffer,
@@ -33,7 +40,17 @@ router.post('/scan', auth, upload, handleMulterError, async (req, res) => {
     res.json({
       success: true,
       data: {
-        ...extractedData,
+        merchant: extractedData.merchant,
+        amount: extractedData.amount,
+        date: extractedData.date,
+        category: extractedData.category,
+        confidence: extractedData.confidence,
+        rawText: extractedData.rawText,
+        items: extractedData.items || [],
+        itemCount: extractedData.itemCount || 0,
+        itemsTotal: extractedData.itemsTotal || 0,
+        hasMultipleItems: extractedData.hasMultipleItems || false,
+        totalMatch: extractedData.totalMatch || false,
         fileUrl: uploadResult.secure_url,
         cloudinaryId: uploadResult.public_id,
         originalName: req.file.originalname
@@ -43,6 +60,51 @@ router.post('/scan', auth, upload, handleMulterError, async (req, res) => {
   } catch (error) {
     console.error('[Receipt Scan] Error:', error);
     res.status(500).json({ error: 'Failed to scan receipt: ' + error.message });
+  }
+});
+
+/**
+ * @route   POST /api/receipts/scan-deep
+ * @desc    Deep scan receipt and return detailed itemization
+ * @access  Private
+ */
+router.post('/scan-deep', auth, upload, handleMulterError, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No receipt image uploaded' });
+    }
+
+    // Full receipt extraction with expense suggestions
+    const result = await ocrService.extractReceiptData(req.file.buffer);
+
+    if (!result.success) {
+      return res.status(400).json({
+        error: 'Failed to process receipt',
+        message: result.message
+      });
+    }
+
+    // Upload to Cloudinary
+    const filename = `scan_deep_${req.user._id}_${Date.now()}`;
+    const uploadResult = await fileUploadService.uploadToCloudinary(
+      req.file.buffer,
+      filename,
+      `receipts/${req.user._id}`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        ...result.data,
+        fileUrl: uploadResult.secure_url,
+        cloudinaryId: uploadResult.public_id,
+        originalName: req.file.originalname
+      }
+    });
+
+  } catch (error) {
+    console.error('[Deep Scan] Error:', error);
+    res.status(500).json({ error: 'Failed to deep scan receipt: ' + error.message });
   }
 });
 
@@ -62,7 +124,8 @@ router.post('/save-scanned', auth, async (req, res) => {
       fileUrl,
       cloudinaryId,
       originalName,
-      type = 'expense'
+      type = 'expense',
+      folderId = null
     } = req.body;
 
     // 1. Create Expense
@@ -75,7 +138,8 @@ router.post('/save-scanned', auth, async (req, res) => {
       merchant: merchant || '',
       date: date || new Date(),
       originalAmount: amount,
-      originalCurrency: 'INR' // Defaulting to user preference or base system currency
+      originalCurrency: 'INR',
+      source: 'receipt_scan'
     });
 
     await expense.save();
@@ -89,12 +153,13 @@ router.post('/save-scanned', auth, async (req, res) => {
       fileUrl,
       cloudinaryId,
       fileType: 'image',
-      fileSize: 0, // Simplified for scan flow
+      fileSize: 0,
+      folder: folderId,
       ocrData: {
         extractedText: 'Stored from scan flow',
         extractedAmount: amount,
         extractedDate: date,
-        confidence: 100 // Manually confirmed by user
+        confidence: 100
       }
     });
 
@@ -109,6 +174,98 @@ router.post('/save-scanned', auth, async (req, res) => {
   } catch (error) {
     console.error('[Save Scanned] Error:', error);
     res.status(500).json({ error: 'Failed to save scanned expense' });
+  }
+});
+
+/**
+ * @route   POST /api/receipts/save-itemized
+ * @desc    Save multiple expense items from one receipt (auto-split)
+ * @access  Private
+ */
+router.post('/save-itemized', auth, async (req, res) => {
+  try {
+    const {
+      items,
+      merchant,
+      date,
+      fileUrl,
+      cloudinaryId,
+      originalName,
+      rawText
+    } = req.body;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: 'No items provided' });
+    }
+
+    const createdExpenses = [];
+    const expenseIds = [];
+
+    // Create expense for each item
+    for (const item of items) {
+      if (!item.amount || item.amount <= 0) continue;
+
+      const expense = new Expense({
+        user: req.user._id,
+        description: item.description || `Item from ${merchant}`,
+        amount: item.amount,
+        category: item.category || 'other',
+        type: 'expense',
+        merchant: merchant || '',
+        date: date || new Date(),
+        originalAmount: item.amount,
+        originalCurrency: 'INR',
+        source: 'receipt_itemized'
+      });
+
+      await expense.save();
+      createdExpenses.push(expense);
+      expenseIds.push(expense._id);
+    }
+
+    // Create single receipt linked to first expense (or all via metadata)
+    const receipt = new Receipt({
+      user: req.user._id,
+      expense: expenseIds[0], // Primary expense
+      filename: cloudinaryId ? cloudinaryId.split('/').pop() : `receipt_${Date.now()}`,
+      originalName: originalName || 'Itemized Receipt',
+      fileUrl: fileUrl || '',
+      cloudinaryId: cloudinaryId || '',
+      fileType: 'image',
+      fileSize: 0,
+      ocrData: {
+        extractedText: rawText || '',
+        itemizedExpenses: expenseIds,
+        itemCount: createdExpenses.length,
+        totalAmount: createdExpenses.reduce((sum, e) => sum + e.amount, 0),
+        confidence: 85
+      }
+    });
+
+    await receipt.save();
+
+    // Emit socket event for real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${req.user._id}`).emit('expenses_created', {
+        count: createdExpenses.length,
+        expenses: createdExpenses
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Created ${createdExpenses.length} expenses from receipt`,
+      data: {
+        expenses: createdExpenses,
+        receipt,
+        totalAmount: createdExpenses.reduce((sum, e) => sum + e.amount, 0)
+      }
+    });
+
+  } catch (error) {
+    console.error('[Save Itemized] Error:', error);
+    res.status(500).json({ error: 'Failed to save itemized expenses' });
   }
 });
 
@@ -203,11 +360,22 @@ router.get('/expense/:expenseId', auth, async (req, res) => {
   }
 });
 
-// Get all receipts for user
+// Get all receipts for user (with optional folder filter)
 router.get('/', auth, async (req, res) => {
   try {
-    const receipts = await Receipt.find({ user: req.user._id })
+    const query = { user: req.user._id };
+    if (req.query.folderId) {
+      // If folderId is 'null' string or explicitly null, filter for unfiled
+      if (req.query.folderId === 'null') {
+        query.folder = null;
+      } else {
+        query.folder = req.query.folderId;
+      }
+    }
+
+    const receipts = await Receipt.find(query)
       .populate('expense', 'description amount category type date')
+      .populate('folder', 'name color')
       .select('-cloudinaryId')
       .sort({ createdAt: -1 });
 
@@ -261,6 +429,39 @@ router.get('/:receiptId/ocr', auth, async (req, res) => {
     res.json(receipt.ocrData);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @route   PUT /api/receipts/:id/move
+ * @desc    Move receipt to a folder
+ * @access  Private
+ */
+router.put('/:id/move', auth, async (req, res) => {
+  try {
+    const { folderId } = req.body;
+
+    // Validate folder ownership if folderId is provided
+    if (folderId) {
+      const DocumentFolder = require('../models/DocumentFolder');
+      const folder = await DocumentFolder.findOne({ _id: folderId, user: req.user._id });
+      if (!folder) {
+        return res.status(404).json({ error: 'Folder not found' });
+      }
+    }
+
+    const receipt = await Receipt.findOne({ _id: req.params.id, user: req.user._id });
+    if (!receipt) {
+      return res.status(404).json({ error: 'Receipt not found' });
+    }
+
+    receipt.folder = folderId || null;
+    await receipt.save();
+
+    res.json(receipt);
+  } catch (error) {
+    console.error('Error moving receipt:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

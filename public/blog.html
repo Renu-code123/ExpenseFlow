@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#64ffda">
+    <meta name="description" content="Read financial tips, budgeting strategies, and smart money insights on the ExpenseFlow Blog">
+    <meta name="keywords" content="ExpenseFlow blog, budgeting tips, finance articles, saving money">
+    <meta name="author" content="ExpenseFlow">
+
+    <title>Blog - ExpenseFlow</title>
+
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="blog.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    /* BLOG HEADER */
+
+.blog-header{
+    padding:120px 20px 60px;
+    text-align:center;
+}
+
+.blog-title{
+    font-size:2.8rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.blog-subtitle{
+    color:var(--text-secondary);
+    margin-top:10px;
+}
+
+/* SEARCH */
+.blog-search-container{
+    margin-top:30px;
+    position:relative;
+    max-width:450px;
+    margin-inline:auto;
+}
+
+.blog-search-input{
+    width:100%;
+    padding:12px 45px 12px 15px;
+    border-radius:10px;
+    border:1px solid var(--border-glass);
+    background:var(--card-bg);
+    color:var(--text-primary);
+}
+
+.blog-search-icon{
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--accent-primary);
+}
+
+/* GRID */
+.blog-main{
+    padding:40px 20px;
+}
+
+.blog-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:25px;
+}
+
+/* CARD */
+.blog-card{
+    background:var(--card-bg);
+    border:1.5px solid var(--border-glass);
+    padding:25px;
+    border-radius:15px;
+    cursor:pointer;
+    transition:0.3s ease;
+}
+
+.blog-card:hover{
+    transform:translateY(-5px);
+    border-color:var(--accent-primary);
+}
+
+.blog-meta{
+    color:var(--text-secondary);
+    font-size:.85rem;
+    margin-bottom:10px;
+}
+
+/* MODAL */
+.blog-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.7);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.blog-modal-content{
+    background:var(--card-bg);
+    padding:30px;
+    border-radius:15px;
+    max-width:700px;
+    width:100%;
+    max-height:80vh;
+    overflow-y:auto;
+}
+
+.close-btn{
+    float:right;
+    cursor:pointer;
+    color:var(--accent-primary);
+}
+/* ===============================
+   GLOBAL DARK FIX
+================================*/
+body{
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ===============================
+   BLOG HEADER
+================================*/
+.blog-header{
+    padding:130px 20px 70px;
+    text-align:center;
+    background: radial-gradient(circle at top, #1e293b 0%, #0f172a 70%);
+}
+
+.blog-title{
+    font-size:3rem;
+    font-weight:700;
+    background: linear-gradient(90deg,#64ffda,#4f46e5);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:15px;
+}
+
+.blog-subtitle{
+    color:#94a3b8;
+    font-size:1.1rem;
+}
+
+/* ===============================
+   SEARCH BAR
+================================*/
+.blog-search-container{
+    margin-top:35px;
+    position:relative;
+    max-width:480px;
+    margin-inline:auto;
+}
+
+.blog-search-input{
+    width:100%;
+    padding:14px 50px 14px 20px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.05);
+    color:#fff;
+    backdrop-filter: blur(10px);
+    transition:0.3s;
+}
+
+.blog-search-input:focus{
+    outline:none;
+    border-color:#64ffda;
+    box-shadow:0 0 15px rgba(100,255,218,0.3);
+}
+
+.blog-search-icon{
+    position:absolute;
+    right:18px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#64ffda;
+}
+
+/* ===============================
+   BLOG GRID
+================================*/
+.blog-main{
+    padding:60px 20px;
+}
+
+.blog-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:30px;
+}
+
+/* ===============================
+   BLOG CARD (Premium Glass)
+================================*/
+.blog-card{
+    background: rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    padding:28px;
+    border-radius:18px;
+    cursor:pointer;
+    transition: all 0.35s ease;
+    backdrop-filter: blur(15px);
+    position:relative;
+    overflow:hidden;
+}
+
+.blog-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg,transparent,rgba(100,255,218,0.1),transparent);
+    transform:translateX(-100%);
+    transition:0.6s;
+}
+
+.blog-card:hover::before{
+    transform:translateX(100%);
+}
+
+.blog-card:hover{
+    transform:translateY(-8px);
+    border-color:#64ffda;
+    box-shadow:0 15px 35px rgba(0,0,0,0.6);
+}
+
+.blog-card h3{
+    font-size:1.3rem;
+    margin-bottom:10px;
+    color:#ffffff;
+}
+
+.blog-meta{
+    color:#94a3b8;
+    font-size:0.85rem;
+    margin-bottom:12px;
+}
+
+.blog-card p{
+    color:#cbd5e1;
+    font-size:0.95rem;
+    line-height:1.6;
+}
+
+/* ===============================
+   MODAL
+================================*/
+.blog-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.8);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.blog-modal-content{
+    background:#1e293b;
+    padding:35px;
+    border-radius:20px;
+    max-width:750px;
+    width:100%;
+    max-height:85vh;
+    overflow-y:auto;
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.close-btn{
+    float:right;
+    font-size:1.2rem;
+    cursor:pointer;
+    color:#64ffda;
+}
+
+/* ===============================
+   FOOTER (Modern SaaS Style)
+================================*/
+.footer{
+    background:#0b1220;
+    border-top:1px solid rgba(255,255,255,0.08);
+    padding:70px 20px 30px;
+    margin-top:80px;
+}
+
+.footer-content{
+    max-width:1200px;
+    margin:auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:40px;
+}
+
+.footer-section h4{
+    margin-bottom:18px;
+    font-size:1.1rem;
+    color:#ffffff;
+}
+
+.footer-section ul{
+    list-style:none;
+    padding:0;
+}
+
+.footer-section ul li{
+    margin-bottom:12px;
+}
+
+.footer-section ul li a{
+    text-decoration:none;
+    color:#94a3b8;
+    transition:0.3s;
+    position:relative;
+}
+
+.footer-section ul li a::after{
+    content:"";
+    position:absolute;
+    left:0;
+    bottom:-3px;
+    width:0%;
+    height:2px;
+    background:#64ffda;
+    transition:0.3s;
+}
+
+.footer-section ul li a:hover{
+    color:#64ffda;
+}
+
+.footer-section ul li a:hover::after{
+    width:100%;
+}
+
+/* Social Icons */
+.social-links{
+    display:flex;
+    gap:15px;
+}
+
+.social-links a{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    background:rgba(255,255,255,0.05);
+    border-radius:50%;
+    color:#64ffda;
+    transition:0.3s;
+}
+
+.social-links a:hover{
+    background:#64ffda;
+    color:#0f172a;
+}
+
+/* Bottom */
+.footer-bottom{
+    text-align:center;
+    margin-top:50px;
+    color:#64748b;
+    font-size:0.9rem;
+}
+</style>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+            <i class="fas fa-wallet"></i> ExpenseFlow
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="faq.html" class="nav-link">FAQ</a>
+            <a href="blog.html" class="nav-link active">Blog</a>
+            <a href="login.html" class="nav-link">Login</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Blog Header -->
+<section class="blog-header">
+    <div class="blog-header-content">
+        <h1 class="blog-title">ExpenseFlow Blog</h1>
+        <p class="blog-subtitle">Smart finance tips & powerful money strategies</p>
+
+        <!-- Search -->
+        <div class="blog-search-container">
+            <input 
+                type="text" 
+                id="blogSearch" 
+                class="blog-search-input"
+                placeholder="Search articles..."
+            >
+            <i class="fas fa-search blog-search-icon"></i>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Content -->
+<main class="blog-main">
+    <div class="blog-container">
+        <div class="blog-grid" id="blogGrid"></div>
+    </div>
+</main>
+
+<!-- Blog Modal -->
+<div class="blog-modal" id="blogModal">
+    <div class="blog-modal-content">
+        <span class="close-btn" onclick="closeBlog()">
+            <i class="fas fa-times"></i>
+        </span>
+        <h2 id="modalTitle"></h2>
+        <p class="blog-meta" id="modalMeta"></p>
+        <p id="modalContent"></p>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4>Product</h4>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="#">Roadmap</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h4>Company</h4>
+            <ul>
+                <li><a href="AboutUs.html">About Us</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="PrivacyPolicy.html">Privacy Policy</a></li>
+                <li><a href="terms_service.html">Terms of Service</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h4>Help & Support</h4>
+            <ul>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="#">Documentation</a></li>
+                <li><a href="contact.html">Contact Support</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h4>Follow Us</h4>
+            <ul class="social-links">
+                <li><a href="#"><i class="fa-brands fa-x-twitter"></i></a></li>
+                <li><a href="#"><i class="fab fa-linkedin"></i></a></li>
+                <li><a href="#"><i class="fab fa-github"></i></a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
+    </div>
+</footer>
+<script>
+    const blogs = [
+    {title:"Mastering Monthly Budgeting",date:"Feb 26, 2026",author:"Finance Team",
+     content:"Budgeting is the foundation of financial freedom..."},
+    {title:"Emergency Fund Guide",date:"Feb 20, 2026",author:"Advisor",
+     content:"An emergency fund protects you..."},
+    {title:"Tracking Subscriptions",date:"Feb 18, 2026",author:"Product Team",
+     content:"Recurring payments silently reduce savings..."},
+    {title:"Smart Saving for Students",date:"Feb 15, 2026",author:"Community",
+     content:"Students should prioritize budgeting..."},
+    {title:"Debt Repayment Methods",date:"Feb 12, 2026",author:"Finance Expert",
+     content:"Choose snowball or avalanche methods..."},
+    {title:"Financial Goal Setting",date:"Feb 10, 2026",author:"Team",
+     content:"Set clear financial milestones..."},
+    {title:"Reducing Daily Expenses",date:"Feb 8, 2026",author:"Advisor",
+     content:"Small daily habits can save thousands..."},
+    {title:"Investment Basics",date:"Feb 5, 2026",author:"Finance Team",
+     content:"Start with diversified portfolios..."},
+    {title:"Weekly Review Strategy",date:"Feb 2, 2026",author:"Product Team",
+     content:"Review expenses weekly..."},
+    {title:"Automation in Finance",date:"Jan 30, 2026",author:"Team",
+     content:"Automating bills and savings ensures consistency..."}
+];
+
+const grid = document.getElementById("blogGrid");
+
+blogs.forEach((blog,i)=>{
+    const card=document.createElement("div");
+    card.className="blog-card";
+    card.innerHTML=`
+        <h3>${blog.title}</h3>
+        <div class="blog-meta">${blog.date} · ${blog.author}</div>
+        <p>${blog.content.substring(0,90)}...</p>
+    `;
+    card.onclick=()=>openBlog(i);
+    grid.appendChild(card);
+});
+
+function openBlog(i){
+    document.getElementById("modalTitle").innerText=blogs[i].title;
+    document.getElementById("modalMeta").innerText=blogs[i].date+" · "+blogs[i].author;
+    document.getElementById("modalContent").innerText=blogs[i].content;
+    document.getElementById("blogModal").style.display="flex";
+}
+
+function closeBlog(){
+    document.getElementById("blogModal").style.display="none";
+}
+
+/* Search */
+document.getElementById("blogSearch").addEventListener("input",function(){
+    const value=this.value.toLowerCase();
+    document.querySelectorAll(".blog-card").forEach(card=>{
+        card.style.display = card.innerText.toLowerCase().includes(value) ? "block":"none";
+    });
+});
+</script>
+<script src="blog.js"></script>
+
+</body>
+</html>

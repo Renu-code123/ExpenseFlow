@@ -1,13 +1,13 @@
-const IncidentPlaybook = require('../models/IncidentPlaybook');
-const PlaybookExecution = require('../models/PlaybookExecution');
-const PlaybookActionAudit = require('../models/PlaybookActionAudit');
-const PlaybookApprovalPolicy = require('../models/PlaybookApprovalPolicy');
-const SecurityIncident = require('../models/SecurityIncident');
-const User = require('../models/User');
+const IncidentPlaybook = require('../../models/IncidentPlaybook');
+const PlaybookExecution = require('../../models/PlaybookExecution');
+const PlaybookActionAudit = require('../../models/PlaybookActionAudit');
+const PlaybookApprovalPolicy = require('../../models/PlaybookApprovalPolicy');
+const SecurityIncident = require('../../models/SecurityIncident');
+const User = require('../../models/User');
 const crypto = require('crypto');
-const PlaybookExecutorService = require('./playbooks/playbookExecutorService');
-const PlaybookApprovalGateService = require('./playbooks/playbookApprovalGateService');
-const notificationService = require('./notificationService');
+const PlaybookExecutorService = require('./playbookExecutorService');
+const PlaybookApprovalGateService = require('./playbookApprovalGateService');
+const notificationService = require('../notificationService');
 
 /**
  * Incident Playbook Engine Service

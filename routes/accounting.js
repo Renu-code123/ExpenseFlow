@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const accountingService = require('../services/accountingService');
 const auth = require('../middleware/auth');
+const {requireAuth,getUserId}=require('../middleware/clerkAuth');
 
 // Get auth URL for platform
-router.get('/auth/:platform', auth, async (req, res) => {
+router.get('/auth/:platform', requireAuth, async (req, res) => {
   try {
     const { platform } = req.params;
     const userId = req.user.id;
@@ -49,7 +50,7 @@ router.get('/callback/:platform', async (req, res) => {
 });
 
 // Get user's connected platforms
-router.get('/connections', auth, async (req, res) => {
+router.get('/connections', requireAuth, async (req, res) => {
   try {
     const connections = await accountingService.getUserConnections(req.user.id);
     res.json(connections);
@@ -60,7 +61,7 @@ router.get('/connections', auth, async (req, res) => {
 });
 
 // Sync expenses to platform
-router.post('/sync/:platform', auth, async (req, res) => {
+router.post('/sync/:platform', requireAuth, async (req, res) => {
   try {
     const { platform } = req.params;
     const result = await accountingService.syncExpensesToAccounting(req.user.id, platform);
@@ -72,7 +73,7 @@ router.post('/sync/:platform', auth, async (req, res) => {
 });
 
 // Disconnect platform
-router.delete('/disconnect/:platform', auth, async (req, res) => {
+router.delete('/disconnect/:platform', requireAuth, async (req, res) => {
   try {
     const { platform } = req.params;
     await accountingService.disconnectPlatform(req.user.id, platform);
