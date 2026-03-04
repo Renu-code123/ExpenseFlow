@@ -14,7 +14,7 @@ let RedisStore = null;
 
 try {
   // Try to load Redis modules only if they are installed
-  RedisStore = require('rate-limit-redis');
+  RedisStore = require('rate-limit-redis').RedisStore;
   const redis = require('redis');
   
   redisClient = redis.createClient({
@@ -61,9 +61,9 @@ const createRateLimiter = (options) => {
   // Use Redis store if available, otherwise use memory store
   if (redisClient && RedisStore && options.useRedis !== false) {
     config.store = new RedisStore({
-      client: redisClient,
-      prefix: options.prefix || 'rate-limit:'
-    });
+  sendCommand: (...args) => redisClient.sendCommand(args),
+  prefix: options.prefix || 'rate-limit:'
+});
   }
 
   return rateLimit(config);

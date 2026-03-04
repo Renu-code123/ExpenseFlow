@@ -1,15 +1,17 @@
-const logger = require('../utils/structuredLogger');
 const crypto = require('crypto');
+const logger = require('../utils/structuredLogger');
 
 /**
  * Request Correlation Middleware
- * Issue #713: Ensures every request has a unique Trace ID for log aggregation.
+ * Issue #883: Introduce per-request Trace ID for end-to-end observability.
  */
 const requestCorrelation = (req, res, next) => {
-    // Generate or propagate Trace ID
     const traceId = req.header('x-trace-id') || crypto.randomUUID();
 
-    // Set response header for client-side tracking
+    // Attach to request object for downstream access
+    req.traceId = traceId;
+
+    // Return trace ID to client
     res.setHeader('x-trace-id', traceId);
 
     const context = {
@@ -21,7 +23,6 @@ const requestCorrelation = (req, res, next) => {
         userId: req.user ? req.user._id : null
     };
 
-    // Run the rest of the request within the async context
     logger.getStorage().run(context, () => {
         next();
     });

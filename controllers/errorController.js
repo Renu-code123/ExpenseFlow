@@ -2,7 +2,7 @@ const logger = require('../utils/structuredLogger');
 
 /**
  * Error Controller
- * Issue #712: Logic to format error responses based on environment.
+ * Standardized API Error Response
  */
 
 /**
@@ -10,48 +10,48 @@ const logger = require('../utils/structuredLogger');
  */
 const sendErrorDev = (err, res) => {
     res.status(err.statusCode).json({
-        status: err.status,
-        error: err,
+        success: false,
+        code: err.code || "INTERNAL_SERVER_ERROR",
         message: err.message,
-        stack: err.stack,
-        requestId: err.requestId  // 👈 ADD THIS
+        timestamp: new Date().toISOString(),
+        requestId: err.requestId,
+        stack: err.stack
     });
-};if (err.isOperational) {
-    res.status(err.statusCode).json({
-        status: err.status,
-        message: err.message,
-        requestId: err.requestId  
-    });
-}
+};
 
 /**
  * Send sanitized error information in Production
  */
 const sendErrorProd = (err, res) => {
-    // 1. Operational, trusted error: send message to client
+
     if (err.isOperational) {
         res.status(err.statusCode).json({
-            status: err.status,
-            message: err.message
+            success: false,
+            code: err.code || "OPERATIONAL_ERROR",
+            message: err.message,
+            timestamp: new Date().toISOString(),
+            requestId: err.requestId
         });
-    }
-    // 2. Programming or unknown error: don't leak details
-    else {
-        // Log the actual crash details for developers
+
+    } else {
+
         logger.critical('CRASH DETECTED', {
             error: err.message,
             stack: err.stack
         });
 
         res.status(500).json({
-    status: 'error',
-    message: 'An unexpected internal error occurred. Please try again later.',
-    requestId: err.requestId  // 👈 ADD THIS
-});
+            success: false,
+            code: "INTERNAL_SERVER_ERROR",
+            message: "An unexpected internal error occurred. Please try again later.",
+            timestamp: new Date().toISOString(),
+            requestId: err.requestId
+        });
     }
 };
 
 module.exports = (err, req, res, next) => {
+
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
 
@@ -60,4 +60,5 @@ module.exports = (err, req, res, next) => {
     } else {
         sendErrorProd(err, res);
     }
+
 };

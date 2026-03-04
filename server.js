@@ -1,3 +1,4 @@
+const { registerServer, setupGracefulShutdown } = require('./utils/gracefulShutdown');
 const express = require('express');
 const http = require('http');
 const crypto = require('crypto');
@@ -51,6 +52,9 @@ const { Server } = require('socket.io');
 // Distributed real-time sync dependencies (Safe Initialization)
 let redisPub = null;
 let redisSub = null;
+
+global.redisPub = redisPub;
+global.redisSub = redisSub;
 
 const REDIS_ENABLED = !!process.env.REDIS_URL;
 
@@ -558,6 +562,12 @@ if (process.env.NODE_ENV !== 'production') {
   server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
+
+  // Register server for graceful shutdown
+  registerServer(server);
+
+  // Setup shutdown listeners
+  setupGracefulShutdown();
 }
 
 /* ================================
