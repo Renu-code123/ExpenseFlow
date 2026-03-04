@@ -9,6 +9,44 @@
 <body>
 
         <!-- Smooth Cursor Trail -->
+  <!-- Sidebar Navigation for Advanced Reporting -->
+  <aside id="dashboard-sidebar" style="width:260px;position:fixed;top:0;left:0;height:100vh;background:#1a2636;color:#fff;z-index:1000;box-shadow:2px 0 12px rgba(0,0,0,0.08);display:flex;flex-direction:column;">
+    <h2 style="margin:24px 0 12px 24px;font-size:1.5em;letter-spacing:1px;">Financial Dashboard</h2>
+    <nav style="flex:1;">
+      <ul style="list-style:none;padding:0 0 0 24px;margin:0;">
+        <li><a href="#report-gen" style="color:#64ffda;text-decoration:none;font-weight:600;">Report Generation</a></li>
+        <li><a href="#health-score" style="color:#64ffda;text-decoration:none;font-weight:600;">Financial Health Score</a></li>
+        <li><a href="#budget-actual" style="color:#64ffda;text-decoration:none;font-weight:600;">Budget vs Actual</a></li>
+        <li><a href="#expense-trends" style="color:#64ffda;text-decoration:none;font-weight:600;">Expense Trends</a></li>
+        <li><a href="#cash-flow" style="color:#64ffda;text-decoration:none;font-weight:600;">Cash Flow Forecast</a></li>
+        <li><a href="#budget-auto" style="color:#64ffda;text-decoration:none;font-weight:600;">Budget Automation</a></li>
+        <li><a href="#category-dive" style="color:#64ffda;text-decoration:none;font-weight:600;">Category Deep Dive</a></li>
+        <li><a href="#comparative" style="color:#64ffda;text-decoration:none;font-weight:600;">Comparative Analysis</a></li>
+        <li><a href="#goal-tracking" style="color:#64ffda;text-decoration:none;font-weight:600;">Goal Tracking</a></li>
+        <li><a href="#scenario" style="color:#64ffda;text-decoration:none;font-weight:600;">Scenario Planning</a></li>
+        <li><a href="#custom-report" style="color:#64ffda;text-decoration:none;font-weight:600;">Custom Report Builder</a></li>
+        <li><a href="#scheduled-reports" style="color:#64ffda;text-decoration:none;font-weight:600;">Scheduled Reports</a></li>
+        <li><a href="#interactive" style="color:#64ffda;text-decoration:none;font-weight:600;">Interactive Dashboard</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Dashboard Content -->
+  <main id="dashboard-main" style="margin-left:260px;padding:32px 48px 32px 32px;">
+    <section id="report-gen"><h3>Professional Report Generation</h3><div id="report-gen-content"></div></section>
+    <section id="health-score"><h3>Financial Health Score</h3><div id="health-score-content"></div></section>
+    <section id="budget-actual"><h3>Budget vs Actual Analysis</h3><div id="budget-actual-content"></div></section>
+    <section id="expense-trends"><h3>Expense Trend Analysis</h3><div id="expense-trends-content"></div></section>
+    <section id="cash-flow"><h3>Cash Flow Forecasting</h3><div id="cash-flow-content"></div></section>
+    <section id="budget-auto"><h3>Budget Automation</h3><div id="budget-auto-content"></div></section>
+    <section id="category-dive"><h3>Category Deep Dives</h3><div id="category-dive-content"></div></section>
+    <section id="comparative"><h3>Comparative Analysis</h3><div id="comparative-content"></div></section>
+    <section id="goal-tracking"><h3>Goal Tracking Dashboard</h3><div id="goal-tracking-content"></div></section>
+    <section id="scenario"><h3>Scenario Planning</h3><div id="scenario-content"></div></section>
+    <section id="custom-report"><h3>Custom Report Builder</h3><div id="custom-report-content"></div></section>
+    <section id="scheduled-reports"><h3>Scheduled Reports</h3><div id="scheduled-reports-content"></div></section>
+    <section id="interactive"><h3>Interactive Dashboard</h3><div id="interactive-content"></div></section>
+  </main>
 <style>
   .cursor-trail-container {
     position: fixed;
@@ -261,6 +299,15 @@
                 <button class="action-btn" id="view-budgets-btn">View Budgets</button>
                 <button class="action-btn" id="export-data-btn">Export Data</button>
             </div>
+              <!-- Report Export Modal -->
+              <div id="report-export-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:99999;align-items:center;justify-content:center;">
+                <div style="background:#fff;padding:32px 40px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;">
+                  <h2 style="margin-bottom:24px;">Export Financial Report</h2>
+                  <button id="export-pdf-btn" style="margin-right:16px;padding:10px 24px;background:#64ffda;color:#1a2636;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Export as PDF</button>
+                  <button id="export-excel-btn" style="padding:10px 24px;background:#1a2636;color:#64ffda;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Export as Excel</button>
+                  <button onclick="document.getElementById('report-export-modal').style.display='none'" style="margin-left:24px;padding:10px 24px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:500;cursor:pointer;">Cancel</button>
+                </div>
+              </div>
         </main>
     </div>
 

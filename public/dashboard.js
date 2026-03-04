@@ -7,6 +7,7 @@ class Dashboard {
         this.loadMockData();
         this.setupEventListeners();
         this.initializeChart();
+        this.displayFinancialHealthScore();
     }
 
     loadMockData() {
@@ -163,10 +164,14 @@ class Dashboard {
         document.getElementById('view-analytics-btn').addEventListener('click', () => {
             alert('Analytics page coming soon!');
         });
-        
         document.getElementById('export-data-btn').addEventListener('click', () => {
-            alert('Export functionality coming soon!');
+            this.openReportExportModal();
         });
+        // Add event listeners for report export modal buttons
+        const pdfBtn = document.getElementById('export-pdf-btn');
+        if (pdfBtn) pdfBtn.addEventListener('click', () => this.exportReportPDF());
+        const excelBtn = document.getElementById('export-excel-btn');
+        if (excelBtn) excelBtn.addEventListener('click', () => this.exportReportExcel());
     }
 
     openTransactionModal(type) {
@@ -184,6 +189,99 @@ class Dashboard {
         const modal = document.getElementById('transaction-modal');
         modal.style.display = 'none';
         document.getElementById('transaction-form').reset();
+    }
+
+    openReportExportModal() {
+        // Show modal for export options
+        const modal = document.getElementById('report-export-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    closeReportExportModal() {
+        const modal = document.getElementById('report-export-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    exportReportPDF() {
+        // Example: Export dashboard data to PDF using jsPDF
+        if (window.jsPDF) {
+            const doc = new jsPDF();
+            doc.text('ExpenseFlow Financial Report', 20, 20);
+            doc.text('Total Balance: ' + document.getElementById('total-balance').textContent, 20, 40);
+            doc.text('Monthly Income: ' + document.getElementById('month-income').textContent, 20, 60);
+            doc.text('Monthly Expenses: ' + document.getElementById('month-expenses').textContent, 20, 80);
+            doc.text('Savings Rate: ' + document.getElementById('savings-rate').textContent, 20, 100);
+            doc.save('ExpenseFlow_Report.pdf');
+        } else {
+            alert('jsPDF library not loaded.');
+        }
+        this.closeReportExportModal();
+    }
+
+    exportReportExcel() {
+        // Example: Export dashboard data to Excel using SheetJS
+        if (window.XLSX) {
+            const wb = XLSX.utils.book_new();
+            const ws_data = [
+                ['Metric', 'Value'],
+                ['Total Balance', document.getElementById('total-balance').textContent],
+                ['Monthly Income', document.getElementById('month-income').textContent],
+                ['Monthly Expenses', document.getElementById('month-expenses').textContent],
+                ['Savings Rate', document.getElementById('savings-rate').textContent]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, 'Report');
+            XLSX.writeFile(wb, 'ExpenseFlow_Report.xlsx');
+        } else {
+            alert('SheetJS (XLSX) library not loaded.');
+        }
+        this.closeReportExportModal();
+    }
+
+    // Financial Health Score Algorithm
+    calculateFinancialHealthScore() {
+        // Example metrics: savings rate, debt-to-income, expense ratio
+        const income = this.getNumericValue('month-income');
+        const expenses = this.getNumericValue('month-expenses');
+        const balance = this.getNumericValue('total-balance');
+        const debt = this.getNumericValue('total-debt'); // Add this metric to UI
+        const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0;
+        const debtToIncome = income > 0 ? (debt / income) * 100 : 0;
+        const expenseRatio = income > 0 ? (expenses / income) * 100 : 0;
+
+        // Composite score (weighted)
+        let score = 100;
+        score -= Math.min(expenseRatio, 100) * 0.4;
+        score -= Math.min(debtToIncome, 100) * 0.4;
+        score += Math.max(savingsRate, 0) * 0.2;
+        score = Math.max(0, Math.min(100, Math.round(score)));
+        return {
+            score,
+            savingsRate: Math.round(savingsRate),
+            debtToIncome: Math.round(debtToIncome),
+            expenseRatio: Math.round(expenseRatio)
+        };
+    }
+
+    getNumericValue(id) {
+        const el = document.getElementById(id);
+        if (!el) return 0;
+        const val = el.textContent.replace(/[^\d.-]/g, '');
+        return parseFloat(val) || 0;
+    }
+
+    displayFinancialHealthScore() {
+        const result = this.calculateFinancialHealthScore();
+        const scoreEl = document.getElementById('health-score-content');
+        if (scoreEl) {
+            scoreEl.innerHTML = `
+                <div style="font-size:2.5em;font-weight:700;color:${result.score>80?'#4CAF50':result.score>60?'#FFC107':'#F44336'};">${result.score}/100</div>
+                <div style="margin-top:12px;">Savings Rate: <strong>${result.savingsRate}%</strong></div>
+                <div>Debt-to-Income: <strong>${result.debtToIncome}%</strong></div>
+                <div>Expense Ratio: <strong>${result.expenseRatio}%</strong></div>
+                <div style="margin-top:16px;">${result.score>80?'Excellent':result.score>60?'Good':'Needs Improvement'} Financial Health</div>
+            `;
+        }
     }
 }
 
