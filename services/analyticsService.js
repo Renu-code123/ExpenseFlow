@@ -1,6 +1,8 @@
-const Expense = require('../models/Expense');
-const Budget = require('../models/Budget');
-const AnalyticsCache = require('../models/AnalyticsCache');
+const expenseRepository = require('../repositories/expenseRepository');
+const budgetRepository = require('../repositories/budgetRepository');
+const multiTierCache = require('../utils/multiTierCache');
+const invalidationManager = require('../services/invalidationManager');
+const Workspace = require('../models/Workspace');
 const mongoose = require('mongoose');
 
 const CACHE_KEYS = {
@@ -25,6 +27,23 @@ class AnalyticsService {
         // Z-Score configuration
         this.Z_SCORE_THRESHOLD = 2.0;
         this.MINIMUM_DATA_POINTS = 5;
+    }
+
+    async _getScopedKey(type, userId, params, workspaceId = null) {
+        let epoch = 0;
+        if (workspaceId) {
+            const ws = await Workspace.findById(workspaceId).select('epochSequence');
+            epoch = ws ? ws.epochSequence : 0;
+        }
+        const paramStr = JSON.stringify(params);
+        const key = `analytics:${type}:${userId}:${workspaceId || 'global'}:v${epoch}:${paramStr}`;
+
+        // Track dependency for invalidation
+        if (workspaceId) {
+            invalidationManager.track(`workspace:${workspaceId}`, key);
+        }
+
+        return key;
     }
 
     formatCurrency(amount, locale = this.defaultLocale, currency = this.defaultCurrency) {
@@ -66,13 +85,15 @@ class AnalyticsService {
         const {
             months = 6,
             threshold = this.Z_SCORE_THRESHOLD,
-            useCache = true
+            useCache = true,
+            workspaceId = null
         } = options;
 
         const cacheParams = { months, threshold };
-        
+        const cacheKey = await this._getScopedKey('zscore_anomalies', userId, cacheParams, workspaceId);
+
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('zscore_anomalies', userId, cacheParams);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -80,23 +101,23 @@ class AnalyticsService {
         startDate.setMonth(startDate.getMonth() - months);
 
         // Get all expenses grouped by category and date
-        const expenses = await Expense.find({
+        const expenses = await expenseRepository.findAll({
             user: userId,
             type: 'expense',
             date: { $gte: startDate }
-        }).sort({ date: 1 });
+        }, { sort: { date: 1 } });
 
         // Group by category
         const categoryData = {};
         expenses.forEach(expense => {
-            if (!categoryData[expense.category]) {
-                categoryData[expense.category] = [];
+            if (!categoryData[Transaction.category]) {
+                categoryData[Transaction.category] = [];
             }
-            categoryData[expense.category].push({
-                id: expense._id,
-                amount: expense.amount,
-                date: expense.date,
-                description: expense.description
+            categoryData[Transaction.category].push({
+                id: Transaction._id,
+                amount: Transaction.amount,
+                date: Transaction.date,
+                description: Transaction.description
             });
         });
 
@@ -106,7 +127,7 @@ class AnalyticsService {
         // Calculate statistics and detect anomalies per category
         for (const [category, transactions] of Object.entries(categoryData)) {
             const amounts = transactions.map(t => t.amount);
-            
+
             if (amounts.length < this.MINIMUM_DATA_POINTS) {
                 categoryStats[category] = {
                     mean: amounts.length > 0 ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0,
@@ -133,7 +154,7 @@ class AnalyticsService {
             // Detect anomalies
             transactions.forEach(transaction => {
                 const zScore = this.calculateZScore(transaction.amount, mean, stdDev);
-                
+
                 if (Math.abs(zScore) >= threshold) {
                     anomalies.push({
                         transactionId: transaction.id,
@@ -166,8 +187,8 @@ class AnalyticsService {
             summary: {
                 totalTransactions: expenses.length,
                 totalAnomalies: anomalies.length,
-                anomalyRate: expenses.length > 0 
-                    ? Math.round((anomalies.length / expenses.length) * 1000) / 10 
+                anomalyRate: expenses.length > 0
+                    ? Math.round((anomalies.length / expenses.length) * 1000) / 10
                     : 0,
                 criticalCount: anomalies.filter(a => a.severity === 'critical').length,
                 highCount: anomalies.filter(a => a.severity === 'high').length,
@@ -185,7 +206,7 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache('zscore_anomalies', userId, cacheParams, result, 30);
+            await multiTierCache.set(cacheKey, result, 30 * 60000); // 30 mins
         }
 
         return result;
@@ -198,7 +219,8 @@ class AnalyticsService {
         const { months = 6, useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('volatility_analysis', userId, { months });
+            const cacheKey = await this._getScopedKey('volatility_analysis', userId, { months }, options.workspaceId);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -206,7 +228,7 @@ class AnalyticsService {
         startDate.setMonth(startDate.getMonth() - months);
 
         // Get monthly spending by category
-        const monthlyData = await Expense.aggregate([
+        const monthlyData = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -312,7 +334,8 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache('volatility_analysis', userId, { months }, result, 60);
+            const cacheKey = await this._getScopedKey('volatility_analysis', userId, { months }, options.workspaceId);
+            await multiTierCache.set(cacheKey, result, 60);
         }
 
         return result;
@@ -329,8 +352,9 @@ class AnalyticsService {
 
         // Check cache
         if (useCache) {
-            const cached = await AnalyticsCache.getCache(CACHE_KEYS.SPENDING_TRENDS
-                , userId, { period, months });
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.SPENDING_TRENDS
+                , userId, { period, months }, options.workspaceId);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -357,7 +381,7 @@ class AnalyticsService {
                 groupFormat = { $dateToString: { format: '%Y-%m', date: '$date' } };
         }
 
-        const trends = await Expense.aggregate([
+        const trends = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -424,8 +448,9 @@ class AnalyticsService {
 
         // Cache result
         if (useCache) {
-            await AnalyticsCache.setCache(CACHE_KEYS.SPENDING_TRENDS
-                , userId, { period, months }, result, CACHE_TTL.MEDIUM);
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.SPENDING_TRENDS
+                , userId, { period, months }, options.workspaceId);
+            await multiTierCache.set(cacheKey, result, CACHE_TTL.MEDIUM);
         }
 
         return result;
@@ -481,7 +506,8 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache(CACHE_KEYS.CATEGORY_BREAKDOWN, userId, cacheParams);
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.CATEGORY_BREAKDOWN, userId, cacheParams, options.workspaceId);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -496,7 +522,7 @@ class AnalyticsService {
             matchQuery.date.$lte = new Date(endDate);
         }
 
-        const breakdown = await Expense.aggregate([
+        const breakdown = await expenseRepository.aggregate([
             { $match: matchQuery },
             {
                 $group: {
@@ -529,7 +555,8 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache(CACHE_KEYS.CATEGORY_BREAKDOWN, userId, cacheParams, result, CACHE_TTL.SHORT);
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.CATEGORY_BREAKDOWN, userId, cacheParams, options.workspaceId);
+            await multiTierCache.set(cacheKey, result, CACHE_TTL.SHORT);
         }
 
         return result;
@@ -542,15 +569,16 @@ class AnalyticsService {
         const { months = 3, useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache(CACHE_KEYS.MONTHLY_COMPARISON, userId, { months });
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.MONTHLY_COMPARISON, userId, { months }, options.workspaceId);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
         const now = new Date();
         const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
-        
+
         // Optimize: Use a single aggregation to get all monthly stats instead of multiple queries in a loop
-        const allStats = await Expense.aggregate([
+        const allStats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -602,7 +630,8 @@ class AnalyticsService {
         const result = { comparisons };
 
         if (useCache) {
-            await AnalyticsCache.setCache(CACHE_KEYS.MONTHLY_COMPARISON, userId, { months }, result, CACHE_TTL.MEDIUM);
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.MONTHLY_COMPARISON, userId, { months }, options.workspaceId);
+            await multiTierCache.set(cacheKey, result, CACHE_TTL.MEDIUM);
         }
 
         return result;
@@ -612,7 +641,7 @@ class AnalyticsService {
      * Get stats for a specific month
      */
     async getMonthStats(userId, startDate, endDate) {
-        const stats = await Expense.aggregate([
+        const stats = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -650,7 +679,8 @@ class AnalyticsService {
         const { useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache(CACHE_KEYS.INSIGHTS, userId, {});
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.INSIGHTS, userId, {}, options.workspaceId);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -660,7 +690,7 @@ class AnalyticsService {
         // Get last 3 months of data using aggregation for better performance
         const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
 
-        const [aggregateData] = await Expense.aggregate([
+        const [aggregateData] = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -785,14 +815,15 @@ class AnalyticsService {
 
         // Insight 4: Unusual expenses - fetch separately with limit to avoid fetching everything
         const avgExpense = totalExpense / expenseCount;
-        const unusualExpenses = await Expense.find({
+        const unusualExpenses = await expenseRepository.findAll({
             user: userId,
             type: 'expense',
             date: { $gte: threeMonthsAgo },
             amount: { $gt: avgExpense * 3 }
-        })
-        .sort({ amount: -1 })
-        .limit(3);
+        }, {
+            sort: { amount: -1 },
+            limit: 3
+        });
 
         if (unusualExpenses.length > 0) {
             insights.push({
@@ -819,7 +850,8 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache(CACHE_KEYS.INSIGHTS, userId, {}, result, CACHE_TTL.LONG);
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.INSIGHTS, userId, {}, options.workspaceId);
+            await multiTierCache.set(cacheKey, result, CACHE_TTL.LONG);
         }
 
         return result;
@@ -832,7 +864,8 @@ class AnalyticsService {
         const { useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache(CACHE_KEYS.PREDICTIONS, userId, {});
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.PREDICTIONS, userId, {}, options.workspaceId);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -840,7 +873,7 @@ class AnalyticsService {
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-        const monthlyData = await Expense.aggregate([
+        const monthlyData = await expenseRepository.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -896,7 +929,8 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache(CACHE_KEYS.PREDICTIONS, userId, {}, result, CACHE_TTL.XLONG);
+            const cacheKey = await this._getScopedKey(CACHE_KEYS.PREDICTIONS, userId, {}, options.workspaceId);
+            await multiTierCache.set(cacheKey, result, CACHE_TTL.XLONG);
         }
 
         return result;
@@ -906,7 +940,7 @@ class AnalyticsService {
      * Predict spending by category
      */
     async predictCategorySpending(userId, startDate) {
-        const categoryData = await Expense.aggregate([
+        const categoryData = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -940,7 +974,8 @@ class AnalyticsService {
         const { useCache = true } = options;
 
         if (useCache) {
-            const cached = await AnalyticsCache.getCache('velocity', userId, {});
+            const cacheKey = await this._getScopedKey('velocity', userId, {}, options.workspaceId);
+            const cached = await multiTierCache.get(cacheKey);
             if (cached) return cached;
         }
 
@@ -950,7 +985,7 @@ class AnalyticsService {
 
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const currentMonthExpenses = await Expense.aggregate([
+        const currentMonthExpenses = await Transaction.aggregate([
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
@@ -982,7 +1017,8 @@ class AnalyticsService {
         };
 
         if (useCache) {
-            await AnalyticsCache.setCache('velocity', userId, {}, result, 15);
+            const cacheKey = await this._getScopedKey('velocity', userId, {}, options.workspaceId);
+            await multiTierCache.set(cacheKey, result, 15);
         }
 
         return result;
@@ -1031,6 +1067,42 @@ class AnalyticsService {
      */
     capitalizeFirst(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    /**
+     * Get probabilistic liquidity insights using the Forecasting Engine
+     * Issue #678: Predictive risk analysis for dashboard integration
+     */
+    async getLiquidityInsights(userId) {
+        const forecastingEngine = require('./forecastingEngine');
+        const forecast = await forecastingEngine.runSimulation(userId); // Run baseline
+
+        const { summary } = forecast;
+        const insights = [];
+
+        if (summary.riskOfInsolvencyPct > 10) {
+            insights.push({
+                type: 'critical',
+                title: 'Liquidity Risk Alert',
+                message: `Based on your spending velocity, there is a ${summary.riskOfInsolvencyPct.toFixed(1)}% probability of reaching a zero balance in the next 90 days.`,
+                impact: 'High'
+            });
+        }
+
+        if (summary.medianFinalBalance < summary.startBalance) {
+            insights.push({
+                type: 'warning',
+                title: 'Negative Cash Flow Trend',
+                message: 'Your probabilistic 90-day trajectory shows a net decline in total liquidity.',
+                impact: 'Medium'
+            });
+        }
+
+        return {
+            forecastSummary: summary,
+            insights,
+            generatedAt: new Date()
+        };
     }
 
     /**

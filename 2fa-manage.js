@@ -45,6 +45,7 @@ function displayTwoFAStatus() {
     const disableCard = document.getElementById('disable-card');
     const backupCodesCard = document.getElementById('backup-codes-card');
     const methodCard = document.getElementById('method-card');
+    const adaptiveCard = document.getElementById('adaptive-mfa-card');
 
     if (twoFAStatus.enabled) {
         // Show 2FA enabled status
@@ -70,6 +71,7 @@ function displayTwoFAStatus() {
         disableCard.style.display = 'block';
         backupCodesCard.style.display = 'block';
         methodCard.style.display = 'block';
+        adaptiveCard.style.display = 'block'; // Show adaptive MFA card
 
         displayBackupCodesInfo();
         displayMethodInfo();
@@ -86,6 +88,7 @@ function displayTwoFAStatus() {
         disableCard.style.display = 'none';
         backupCodesCard.style.display = 'none';
         methodCard.style.display = 'none';
+        adaptiveCard.style.display = 'none'; // Hide adaptive MFA card
     }
 }
 
@@ -651,6 +654,310 @@ function closeModal() {
     document.getElementById('recovery-email').value = '';
     document.getElementById('verify-error').classList.remove('show');
     document.getElementById('recovery-error').classList.remove('show');
+});
+
+// ============================================
+// Adaptive MFA Functions
+// Issue #871: Adaptive MFA Orchestrator
+// ============================================
+
+let adaptiveSettings = {};
+
+/**
+ * Load adaptive MFA status
+ */
+async function loadAdaptiveStatus() {
+    try {
+        const response = await fetch('/api/2fa/adaptive/status', {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load adaptive MFA status');
+        }
+
+        adaptiveSettings = await response.json();
+        displayAdaptiveStatus();
+    } catch (error) {
+        console.error('Error loading adaptive status:', error);
+        document.getElementById('adaptive-status').innerHTML = '<p class="error-message">Failed to load adaptive settings</p>';
+    }
+}
+
+/**
+ * Display adaptive MFA status
+ */
+function displayAdaptiveStatus() {
+    const statusDiv = document.getElementById('adaptive-status');
+    const controlsDiv = document.getElementById('adaptive-controls');
+
+    if (!adaptiveSettings.enabled) {
+        statusDiv.innerHTML = '<p class="warning">Enable 2FA first to use adaptive features</p>';
+        return;
+    }
+
+    let html = `
+        <div class="adaptive-status-info">
+            <div class="status-item">
+                <span class="status-label">Adaptive MFA:</span>
+                <span class="status-value ${adaptiveSettings.adaptiveEnabled ? 'enabled' : 'disabled'}">
+                    ${adaptiveSettings.adaptiveEnabled ? '✓ Enabled' : '✗ Disabled'}
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Available Methods:</span>
+                <span class="status-value">${adaptiveSettings.availableMethods.length}</span>
+            </div>
+        </div>
+    `;
+
+    statusDiv.innerHTML = html;
+    controlsDiv.style.display = 'block';
+
+    // Update form controls
+    document.getElementById('adaptive-enabled').checked = adaptiveSettings.adaptiveEnabled;
+
+    if (adaptiveSettings.settings?.confidenceThresholds) {
+        document.getElementById('high-threshold').value = adaptiveSettings.settings.confidenceThresholds.high;
+        document.getElementById('medium-threshold').value = adaptiveSettings.settings.confidenceThresholds.medium;
+        updateThresholdDisplay('high');
+        updateThresholdDisplay('medium');
+    }
+
+    // Show settings if adaptive is enabled
+    document.getElementById('adaptive-settings').style.display = adaptiveSettings.adaptiveEnabled ? 'block' : 'none';
+
+    // Load available methods
+    displayAvailableMethods();
+}
+
+/**
+ * Display available MFA methods
+ */
+function displayAvailableMethods() {
+    const methodsDiv = document.getElementById('method-grid');
+
+    if (adaptiveSettings.availableMethods.length === 0) {
+        methodsDiv.innerHTML = '<p>No MFA methods configured yet</p>';
+        return;
+    }
+
+    const methodConfig = {
+        totp: { name: 'TOTP', icon: '⏰', description: 'Time-based one-time password' },
+        webauthn: { name: 'WebAuthn', icon: '🔐', description: 'Hardware security key' },
+        push: { name: 'Push', icon: '📱', description: 'Push notification approval' },
+        knowledge: { name: 'Knowledge', icon: '🧠', description: 'Security questions' },
+        biometric: { name: 'Biometric', icon: '👆', description: 'Fingerprint/Face ID' }
+    };
+
+    let html = '';
+    adaptiveSettings.availableMethods.forEach(method => {
+        const config = methodConfig[method] || { name: method, icon: '❓', description: 'Unknown method' };
+        html += `
+            <div class="method-item ${method}">
+                <div class="method-icon">${config.icon}</div>
+                <div class="method-details">
+                    <h4>${config.name}</h4>
+                    <p>${config.description}</p>
+                </div>
+                <div class="method-status">✓ Configured</div>
+            </div>
+        `;
+    });
+
+    methodsDiv.innerHTML = html;
+}
+
+/**
+ * Toggle adaptive MFA
+ */
+async function toggleAdaptiveMFA() {
+    const enabled = document.getElementById('adaptive-enabled').checked;
+
+    try {
+        const response = await fetch('/api/2fa/adaptive/settings', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ adaptiveEnabled: enabled })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update adaptive MFA settings');
+        }
+
+        adaptiveSettings.adaptiveEnabled = enabled;
+        document.getElementById('adaptive-settings').style.display = enabled ? 'block' : 'none';
+
+        showNotification(enabled ? 'Adaptive MFA enabled' : 'Adaptive MFA disabled', 'success');
+    } catch (error) {
+        console.error('Error toggling adaptive MFA:', error);
+        document.getElementById('adaptive-enabled').checked = !enabled; // Revert
+        showNotification('Failed to update adaptive MFA settings', 'error');
+    }
+}
+
+/**
+ * Update threshold display
+ */
+function updateThresholdDisplay(level) {
+    const slider = document.getElementById(`${level}-threshold`);
+    const display = document.getElementById(`${level}-threshold-value`);
+    display.textContent = slider.value;
+}
+
+/**
+ * Save adaptive settings
+ */
+async function saveAdaptiveSettings() {
+    const highThreshold = parseFloat(document.getElementById('high-threshold').value);
+    const mediumThreshold = parseFloat(document.getElementById('medium-threshold').value);
+
+    if (mediumThreshold >= highThreshold) {
+        showNotification('Medium threshold must be lower than high threshold', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/2fa/adaptive/settings', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                confidenceThresholds: {
+                    high: highThreshold,
+                    medium: mediumThreshold,
+                    low: mediumThreshold * 0.5 // Auto-calculate low threshold
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save adaptive settings');
+        }
+
+        showNotification('Adaptive MFA settings saved successfully', 'success');
+        loadAdaptiveStatus(); // Refresh
+    } catch (error) {
+        console.error('Error saving adaptive settings:', error);
+        showNotification('Failed to save adaptive MFA settings', 'error');
+    }
+}
+
+/**
+ * Test confidence scoring
+ */
+async function testConfidenceScoring() {
+    const resultDiv = document.getElementById('confidence-result');
+
+    try {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<div class="loading">Testing confidence scoring...</div>';
+
+        const response = await fetch('/api/2fa/adaptive/test-confidence', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                location: {} // Will be filled by backend
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to test confidence scoring');
+        }
+
+        const result = await response.json();
+
+        let html = `
+            <h4>Confidence Analysis Results</h4>
+            <div class="confidence-score">
+                <div class="score-circle" style="background: conic-gradient(var(--primary-color) 0% ${result.confidence.score * 100}%, #e0e0e0 ${result.confidence.score * 100}% 100%)">
+                    <span class="score-text">${Math.round(result.confidence.score * 100)}%</span>
+                </div>
+                <div class="score-details">
+                    <div class="risk-level">Risk Level: <strong>${getRiskLevelText(result.confidence.score)}</strong></div>
+                    <div class="decision">MFA Required: <strong>${result.decision.required ? 'Yes' : 'No'}</strong></div>
+                </div>
+            </div>
+            <div class="confidence-factors">
+                <h5>Contributing Factors:</h5>
+                <ul>
+        `;
+
+        for (const [factor, value] of Object.entries(result.confidence.factors)) {
+            if (value !== undefined) {
+                html += `<li><strong>${factor}:</strong> ${Math.round(value * 100)}%</li>`;
+            }
+        }
+
+        html += `
+                </ul>
+            </div>
+            <div class="confidence-reasoning">
+                <h5>Reasoning:</h5>
+                <ul>
+        `;
+
+        result.confidence.reasoning.forEach(reason => {
+            html += `<li>${reason}</li>`;
+        });
+
+        html += `
+                </ul>
+            </div>
+        `;
+
+        resultDiv.innerHTML = html;
+    } catch (error) {
+        console.error('Error testing confidence scoring:', error);
+        resultDiv.innerHTML = '<p class="error-message">Failed to test confidence scoring</p>';
+    }
+}
+
+/**
+ * Get risk level text
+ */
+function getRiskLevelText(score) {
+    if (score >= 0.8) return 'Low Risk';
+    if (score >= 0.5) return 'Medium Risk';
+    return 'High Risk';
+}
+
+/**
+ * Show notification
+ */
+function showNotification(message, type = 'info') {
+    // Simple notification - you might want to enhance this
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 16px;
+        border-radius: 4px;
+        color: white;
+        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 /**
@@ -674,6 +981,14 @@ function getToken() {
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// Initialize adaptive MFA when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    loadTwoFAStatus();
+    loadTrustedDevices();
+    loadActivityLog();
+    loadAdaptiveStatus(); // Add this line
+});
 
 // Close modals when clicking outside
 window.addEventListener('click', (e) => {

@@ -527,3 +527,35 @@ body {
         margin-top: 8px;
     }
 }
+/* Fix chart grid for smaller screens */
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .chart-container {
+        padding: 15px;
+    }
+}.chart-container canvas {
+    width: 100% !important;
+    height: auto !important;
+}@media (max-width: 768px) {
+    .report-table th,
+    .report-table td {
+        padding: 10px;
+        font-size: 14px;
+    }
+}@media (max-width: 768px) {
+    .nav-content {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .nav-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}html, body {
+    overflow-x: hidden;
+}

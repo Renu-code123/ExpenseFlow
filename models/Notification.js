@@ -1,125 +1,57 @@
 const mongoose = require('mongoose');
 
+/**
+ * Notification Model
+ * Issue #646: Centralized persistence for all alert history
+ */
 const notificationSchema = new mongoose.Schema({
-  user: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   title: {
     type: String,
     required: true,
-    maxlength: 100
+    trim: true
   },
   message: {
     type: String,
-    required: true,
-    maxlength: 500
+    required: true
   },
   type: {
     type: String,
-    enum: ['budget_alert', 'goal_achieved', 'expense_added', 'security_alert', 'system', 'custom'],
-    required: true
+    enum: ['info', 'warning', 'error', 'success', 'budget_alert', 'subscription_reminder', 'system'],
+    default: 'info'
   },
   priority: {
     type: String,
     enum: ['low', 'medium', 'high', 'critical'],
     default: 'medium'
   },
-  channels: [{
+  status: {
     type: String,
-    enum: ['in_app', 'email', 'push', 'sms', 'webhook']
+    enum: ['unread', 'read', 'archived'],
+    default: 'unread',
+    index: true
+  },
+  channels: [{
+    name: { type: String, enum: ['in_app', 'email', 'webhook', 'push'] },
+    status: { type: String, enum: ['pending', 'sent', 'failed'], default: 'pending' },
+    deliveredAt: Date,
+    error: String
   }],
-  data: {
+  metadata: {
     type: mongoose.Schema.Types.Mixed
   },
-  read: {
-    type: Boolean,
-    default: false
-  },
-  readAt: Date,
-  delivered: {
-    in_app: { type: Boolean, default: false },
-    email: { type: Boolean, default: false },
-    push: { type: Boolean, default: false },
-    sms: { type: Boolean, default: false },
-    webhook: { type: Boolean, default: false }
-  },
-  deliveredAt: {
-    in_app: Date,
-    email: Date,
-    push: Date,
-    sms: Date,
-    webhook: Date
-  },
-  scheduledFor: Date,
+  link: String,
   expiresAt: Date
 }, {
   timestamps: true
 });
 
-// User notification preferences schema
-const notificationPreferencesSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true
-  },
-  channels: {
-    email: {
-      enabled: { type: Boolean, default: true },
-      types: [{
-        type: String,
-        enum: ['budget_alert', 'goal_achieved', 'expense_added', 'security_alert', 'system']
-      }]
-    },
-    push: {
-      enabled: { type: Boolean, default: true },
-      subscription: mongoose.Schema.Types.Mixed,
-      types: [{
-        type: String,
-        enum: ['budget_alert', 'goal_achieved', 'expense_added', 'security_alert', 'system']
-      }]
-    },
-    sms: {
-      enabled: { type: Boolean, default: false },
-      phoneNumber: String,
-      types: [{
-        type: String,
-        enum: ['budget_alert', 'security_alert', 'system']
-      }]
-    },
-    webhook: {
-      enabled: { type: Boolean, default: false },
-      url: String,
-      secret: String,
-      types: [{
-        type: String,
-        enum: ['budget_alert', 'goal_achieved', 'expense_added', 'security_alert', 'system']
-      }]
-    }
-  },
-  quietHours: {
-    enabled: { type: Boolean, default: false },
-    start: String, // HH:MM format
-    end: String,   // HH:MM format
-    timezone: { type: String, default: 'UTC' }
-  },
-  frequency: {
-    budget_alerts: { type: String, enum: ['immediate', 'daily', 'weekly'], default: 'immediate' },
-    goal_updates: { type: String, enum: ['immediate', 'daily', 'weekly'], default: 'daily' },
-    expense_summaries: { type: String, enum: ['daily', 'weekly', 'monthly'], default: 'weekly' }
-  }
-}, {
-  timestamps: true
-});
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ status: 1 });
 
-notificationSchema.index({ user: 1, createdAt: -1 });
-notificationSchema.index({ scheduledFor: 1 });
-notificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-const Notification = mongoose.model('Notification', notificationSchema);
-const NotificationPreferences = mongoose.model('NotificationPreferences', notificationPreferencesSchema);
-
-module.exports = { Notification, NotificationPreferences };
+module.exports = mongoose.model('Notification', notificationSchema);

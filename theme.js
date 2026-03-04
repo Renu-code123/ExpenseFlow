@@ -49,7 +49,8 @@ class ThemeManager {
     if (theme === this.LIGHT_THEME) {
       html.setAttribute('data-theme', this.LIGHT_THEME);
     } else {
-      html.setAttribute('data-theme', this.DARK_THEME);
+      // For dark theme, remove the attribute so default :root styles apply
+      html.removeAttribute('data-theme');
     }
 
     this.setStoredTheme(theme);
@@ -65,6 +66,10 @@ class ThemeManager {
     const currentTheme = document.documentElement.getAttribute('data-theme') || this.DARK_THEME;
     const newTheme = currentTheme === this.LIGHT_THEME ? this.DARK_THEME : this.LIGHT_THEME;
     this.applyTheme(newTheme);
+    
+    // Dispatch custom event for theme change
+    const event = new CustomEvent('themechange', { detail: { theme: newTheme } });
+    document.dispatchEvent(event);
   }
 
   updateToggleButton(theme) {

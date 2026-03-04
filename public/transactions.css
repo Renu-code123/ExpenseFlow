@@ -746,4 +746,33 @@ body {
         width: 95%;
         margin: 10% auto;
     }
+}/* ==============================
+   FIX: Select & Option Text Visibility
+   ============================== */
+
+/* Select box text */
+select {
+  color: #e0e0e0 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Dropdown options (CRITICAL FIX) */
+select option {
+  background-color: #1a1a2e !important;
+  color: #e0e0e0 !important;
+}
+
+/* For Webkit browsers (Chrome, Edge) */
+select optgroup {
+  background-color: #1a1a2e !important;
+  color: #e0e0e0 !important;
+}
+
+/* Disabled / placeholder option */
+select option[value=""] {
+  color: #a0a0a0 !important;
+}
+select:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }

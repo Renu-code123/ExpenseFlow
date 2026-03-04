@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExpenseFlow - Final Modal Test</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+        color: white;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      .header {
+        padding: 1rem 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+      }
+
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #64ffda;
+      }
+
+      .auth-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .auth-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .main-content {
+        padding: 4rem 2rem;
+        text-align: center;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #64ffda 0%, #667eea 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.8;
+        margin-bottom: 2rem;
+      }
+
+      .test-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 16px;
+        margin: 2rem 0;
+        border: 1px solid rgba(100, 255, 218, 0.1);
+      }
+
+      /* Auth Prompt Styles */
+      .auth-prompt {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(15, 15, 35, 0.95) 0%,
+          rgba(26, 26, 46, 0.95) 100%
+        );
+        backdrop-filter: blur(10px);
+        z-index: 1500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s ease;
+        padding: 2rem;
+      }
+
+      .auth-prompt.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .auth-prompt-content {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        transform: scale(0.9) translateY(30px);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .auth-prompt.show .auth-prompt-content {
+        transform: scale(1) translateY(0);
+      }
+
+      .auth-prompt-icon {
+        font-size: 4rem;
+        color: #64ffda;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 0 20px rgba(100, 255, 218, 0.3);
+      }
+
+      .auth-prompt h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #fff;
+      }
+
+      .auth-prompt p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+      }
+
+      .auth-prompt-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .auth-prompt-btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 140px;
+        justify-content: center;
+      }
+
+      .auth-prompt-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .auth-prompt-btn.primary:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .auth-prompt-btn.secondary {
+        background: transparent;
+        color: #64ffda;
+        border: 2px solid rgba(100, 255, 218, 0.3);
+      }
+
+      .auth-prompt-btn.secondary:hover {
+        background: rgba(100, 255, 218, 0.1);
+        border-color: #64ffda;
+      }
+
+      /* Login Modal Styles */
+      .login-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 15, 35, 0.8);
+        backdrop-filter: blur(12px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2500;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .login-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .login-modal {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(14px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 420px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        color: #ffffff;
+        position: relative;
+        border: 1px solid rgba(100, 255, 218, 0.1);
+        transform: scale(0.8) translateY(50px);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .login-modal-overlay.active .login-modal {
+        transform: scale(1) translateY(0);
+      }
+
+      .login-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        color: #cfd3ff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: all 0.2s ease;
+      }
+
+      .login-modal-close:hover {
+        background: rgba(255, 107, 157, 0.2);
+        color: #ff6b9d;
+        transform: rotate(90deg);
+      }
+
+      .login-modal-content h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-weight: 600;
+        color: #fff;
+        font-size: 1.8rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+        color: #cfd3ff;
+        font-weight: 500;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        outline: none;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        transition: all 0.2s ease;
+      }
+
+      .form-group input:focus {
+        border-color: #64ffda;
+        box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .login-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+      }
+
+      .login-btn:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .login-signup-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #cfd3ff;
+      }
+
+      .login-signup-link a {
+        color: #64ffda;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .login-signup-link a:hover {
+        text-decoration: underline;
+      }
+
+      /* Modal active state - blur background */
+      body.modal-active .header,
+      body.modal-active .main-content {
+        filter: blur(5px);
+        transition: filter 0.3s ease;
+      }
+
+      body.modal-active {
+        overflow: hidden;
+      }
+
+      /* Status indicator */
+      .status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        z-index: 3000;
+      }
+
+      .status.authenticated {
+        border-left: 4px solid #00e676;
+      }
+
+      .status.unauthenticated {
+        border-left: 4px solid #ff5722;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status" class="status unauthenticated">
+      🔒 Not Authenticated - Modal System Active
+    </div>
+
+    <header class="header">
+      <nav class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          ExpenseFlow
+        </div>
+        <div id="auth-controls">
+          <button class="auth-btn" onclick="openLoginModal()">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </button>
+          <button class="auth-btn" onclick="openSignupModal()">
+            <i class="fas fa-user-plus"></i>
+            Sign Up
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <h1 class="hero-title">ExpenseFlow</h1>
+      <p class="hero-subtitle">
+        Smart Money Management with Modal Authentication
+      </p>
+
+      <div class="test-section">
+        <h3>🔐 Authentication System Test</h3>
+        <p>
+          This page demonstrates the working modal authentication system. The
+          auth prompt should appear automatically, and clicking "Login" should
+          open the modal overlay with blur background.
+        </p>
+
+        <div style="margin: 1rem 0">
+          <button class="auth-btn" onclick="forceShowAuthPrompt()">
+            Show Auth Prompt
+          </button>
+          <button class="auth-btn" onclick="testLogin()">
+            Test Login Modal
+          </button>
+          <button class="auth-btn" onclick="simulateLogin()">
+            Simulate Success
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Authentication Prompt -->
+    <div id="authPrompt" class="auth-prompt show">
+      <div class="auth-prompt-content">
+        <div class="auth-prompt-icon">
+          <i class="fas fa-lock"></i>
+        </div>
+        <h2>Welcome to ExpenseFlow</h2>
+        <p>
+          Please sign in to access all features and start managing your finances
+          effectively.
+        </p>
+        <div class="auth-prompt-buttons">
+          <button class="auth-prompt-btn primary" onclick="openLoginModal()">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </button>
+          <button class="auth-prompt-btn secondary" onclick="openSignupModal()">
+            <i class="fas fa-user-plus"></i>
+            Sign Up
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="login-modal-overlay">
+      <div class="login-modal">
+        <button class="login-modal-close" onclick="closeLoginModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="login-modal-content">
+          <h2>Welcome Back</h2>
+          <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input
+                type="email"
+                id="email"
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+            <div class="form-group">
+              <label for="password">Password:</label>
+              <input
+                type="password"
+                id="password"
+                required
+                placeholder="Enter your password"
+              />
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+          </form>
+          <p class="login-signup-link">
+            Don't have an account?
+            <a href="javascript:void(0)" onclick="switchToSignup()"
+              >Sign up here</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="login-modal-overlay">
+      <div class="login-modal">
+        <button class="login-modal-close" onclick="closeSignupModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="login-modal-content">
+          <h2>Create Account</h2>
+          <form onsubmit="handleSignup(event)">
+            <div class="form-group">
+              <label for="signupEmail">Email:</label>
+              <input
+                type="email"
+                id="signupEmail"
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+            <div class="form-group">
+              <label for="signupPassword">Password:</label>
+              <input
+                type="password"
+                id="signupPassword"
+                required
+                placeholder="Create a password"
+              />
+            </div>
+            <button type="submit" class="login-btn">Create Account</button>
+          </form>
+          <p class="login-signup-link">
+            Already have an account?
+            <a href="javascript:void(0)" onclick="switchToLogin()"
+              >Login here</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      console.log("🚀 ExpenseFlow Modal System Initialized");
+
+      // Authentication state
+      let isAuthenticated = false;
+
+      // Modal functions
+      function openLoginModal() {
+        console.log("📖 Opening login modal...");
+        const modal = document.getElementById("loginModal");
+        const authPrompt = document.getElementById("authPrompt");
+
+        if (modal) {
+          authPrompt.classList.remove("show");
+          modal.classList.add("active");
+          document.body.classList.add("modal-active");
+
+          setTimeout(() => {
+            document.getElementById("email")?.focus();
+          }, 300);
+
+          console.log("✅ Login modal opened successfully");
+        } else {
+          console.error("❌ Login modal not found!");
+        }
+      }
+
+      function closeLoginModal() {
+        const modal = document.getElementById("loginModal");
+        const authPrompt = document.getElementById("authPrompt");
+
+        if (modal) {
+          modal.classList.remove("active");
+          document.body.classList.remove("modal-active");
+
+          if (!isAuthenticated) {
+            setTimeout(() => authPrompt.classList.add("show"), 300);
+          }
+        }
+      }
+
+      function openSignupModal() {
+        console.log("📝 Opening signup modal...");
+        const modal = document.getElementById("signupModal");
+        const authPrompt = document.getElementById("authPrompt");
+
+        if (modal) {
+          authPrompt.classList.remove("show");
+          modal.classList.add("active");
+          document.body.classList.add("modal-active");
+        }
+      }
+
+      function closeSignupModal() {
+        const modal = document.getElementById("signupModal");
+        const authPrompt = document.getElementById("authPrompt");
+
+        if (modal) {
+          modal.classList.remove("active");
+          document.body.classList.remove("modal-active");
+
+          if (!isAuthenticated) {
+            setTimeout(() => authPrompt.classList.add("show"), 300);
+          }
+        }
+      }
+
+      function switchToLogin() {
+        closeSignupModal();
+        setTimeout(openLoginModal, 100);
+      }
+
+      function switchToSignup() {
+        closeLoginModal();
+        setTimeout(openSignupModal, 100);
+      }
+
+      function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        if (email && password.length >= 3) {
+          simulateLogin();
+        } else {
+          alert("Please enter valid credentials (password min 3 chars)");
+        }
+      }
+
+      function handleSignup(event) {
+        event.preventDefault();
+        const email = document.getElementById("signupEmail").value;
+        const password = document.getElementById("signupPassword").value;
+
+        if (email && password.length >= 3) {
+          simulateLogin();
+        } else {
+          alert("Please enter valid credentials (password min 3 chars)");
+        }
+      }
+
+      function simulateLogin() {
+        console.log("🎉 Login successful!");
+        isAuthenticated = true;
+
+        // Hide modals and auth prompt\n            closeLoginModal();
+        closeSignupModal();
+        document.getElementById("authPrompt").classList.remove("show");
+
+        // Update UI
+        document.getElementById("auth-controls").innerHTML = `
+                <span style="color: #64ffda; margin-right: 1rem;">✅ Logged In</span>
+                <button class="auth-btn" onclick="logout()" style="background: linear-gradient(135deg, #ff5722 0%, #e91e63 100%);">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            `;
+
+        document.getElementById("status").className = "status authenticated";
+        document.getElementById("status").innerHTML =
+          "🔓 Authenticated - Full Access";
+      }
+
+      function logout() {
+        console.log("👋 Logging out...");
+        isAuthenticated = false;
+
+        // Reset UI
+        document.getElementById("auth-controls").innerHTML = `
+                <button class="auth-btn" onclick="openLoginModal()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+                <button class="auth-btn" onclick="openSignupModal()">
+                    <i class="fas fa-user-plus"></i>
+                    Sign Up
+                </button>
+            `;
+
+        document.getElementById("status").className = "status unauthenticated";
+        document.getElementById("status").innerHTML =
+          "🔒 Not Authenticated - Modal System Active";
+
+        // Show auth prompt again
+        setTimeout(() => {
+          document.getElementById("authPrompt").classList.add("show");
+        }, 500);
+      }
+
+      // Test functions
+      function forceShowAuthPrompt() {
+        document.getElementById("authPrompt").classList.add("show");
+      }
+
+      function testLogin() {
+        openLoginModal();
+      }
+
+      // Close modals on outside click
+      document.addEventListener("click", function (event) {
+        if (event.target.classList.contains("login-modal-overlay")) {
+          closeLoginModal();
+          closeSignupModal();
+        }
+
+        if (event.target.classList.contains("auth-prompt")) {
+          // Auth prompt can be closed by clicking outside (optional)
+          // document.getElementById('authPrompt').classList.remove('show');
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeLoginModal();
+          closeSignupModal();
+        }
+      });
+
+      console.log("🎯 All modal functions loaded and ready!");
+    </script>
+  </body>
+</html>

@@ -552,3 +552,314 @@ body {
         width: 95%;
     }
 }
+
+/* ============================================
+   Adaptive MFA Styles
+   Issue #871: Adaptive MFA Orchestrator
+   ============================================ */
+
+.beta-badge {
+    background: var(--warning-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.adaptive-status-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.status-label {
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.status-value {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.status-value.enabled {
+    color: var(--success-color);
+}
+
+.status-value.disabled {
+    color: var(--text-light);
+}
+
+.adaptive-toggle {
+    margin-bottom: 20px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 24px;
+    transition: var(--transition);
+}
+
+.toggle-slider:before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+input[type="checkbox"]:checked + .toggle-slider {
+    background: var(--primary-color);
+}
+
+input[type="checkbox"]:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.adaptive-settings {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.adaptive-settings h3 {
+    margin-bottom: 16px;
+    color: var(--text-dark);
+}
+
+.threshold-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.threshold-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.threshold-item label {
+    min-width: 140px;
+    font-weight: 500;
+}
+
+.threshold-item input[type="range"] {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #ddd;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.threshold-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+}
+
+.threshold-item input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: none;
+}
+
+.threshold-item span {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.method-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    transition: var(--transition);
+}
+
+.method-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.method-icon {
+    font-size: 24px;
+    width: 40px;
+    text-align: center;
+}
+
+.method-details h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.method-details p {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.method-status {
+    margin-left: auto;
+    color: var(--success-color);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.adaptive-test {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.confidence-result {
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.confidence-score {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.score-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.score-details {
+    flex: 1;
+}
+
+.risk-level, .decision {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.confidence-factors ul, .confidence-reasoning ul {
+    list-style: none;
+    padding: 0;
+}
+
+.confidence-factors li, .confidence-reasoning li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.confidence-factors li:last-child, .confidence-reasoning li:last-child {
+    border-bottom: none;
+}
+
+.notification {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Responsive adjustments for adaptive MFA */
+@media (max-width: 768px) {
+    .adaptive-status-info {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .confidence-score {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .method-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .threshold-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

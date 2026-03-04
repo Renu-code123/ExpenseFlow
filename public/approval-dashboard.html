@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Approvals - ExpenseFlow</title>
+    <!-- Step 1: CSS Integration – shared/global stylesheets -->
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* =============================================
+           Step 1 – Base Reset & Font Override
+           ============================================= */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* =============================================
+           Step 2 – Page Title (centered, themed)
+           ============================================= */
+        .page-title-section {
+            text-align: center;
+            padding: 2.5rem 1rem 1rem;
+        }
+
+        .page-title-section h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #64ffda);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.2;
+        }
+
+        .page-title-section p {
+            color: #a8b3cf;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* =============================================
+           Step 3 – Proper Spacing on Cards & Sections
+           ============================================= */
+        .stats-row {
+            display: flex;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.75rem;
+        }
+
+        .stat-card {
+            flex: 1 1 160px;
+            padding: 1.5rem;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(12px);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(102,126,234,0.25);
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.pending  { background: rgba(255,193,7,0.18);  color: #ffc107; }
+        .stat-icon.approved { background: rgba(100,255,218,0.18); color: #64ffda; }
+        .stat-icon.rejected { background: rgba(255,82,82,0.18);   color: #ff5252; }
+
+        .stat-info span {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .stat-info label {
+            font-size: 0.85rem;
+            color: #a8b3cf;
+        }
+
+        .approvals-section,
+        .history-section {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 1.75rem;
+            margin-bottom: 1.75rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-header h2 i {
+            color: #667eea;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn-sm:hover {
+            opacity: 0.88;
+            transform: translateY(-1px);
+        }
+
+        .loading-placeholder {
+            color: #a8b3cf;
+            text-align: center;
+            padding: 2rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal.hidden { display: none; }
+
+        .modal-content {
+            background: #1a1a2e;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 18px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 520px;
+            backdrop-filter: blur(16px);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #a8b3cf;
+            line-height: 1;
+        }
+
+        .form-group {
+            margin-top: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #a8b3cf;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            color: #ffffff;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .btn-approve {
+            padding: 0.6rem 1.4rem;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #64ffda, #00b4d8);
+            color: #0f0f23;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-reject {
+            padding: 0.6rem 1.4rem;
+            border-radius: 9px;
+            background: rgba(255,82,82,0.18);
+            color: #ff5252;
+            font-weight: 700;
+            border: 1px solid rgba(255,82,82,0.35);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-approve:hover { opacity: 0.88; }
+        .btn-reject:hover  { background: rgba(255,82,82,0.3); }
+
+        /* =============================================
+           Step 4 – Main Container Layout Wrapper
+           ============================================= */
+        .main-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        /* =============================================
+           Step 5 – Responsive Enhancements
+           ============================================= */
+        @media (max-width: 768px) {
+            .page-title-section h1 {
+                font-size: 1.6rem;
+            }
+
+            .stats-row {
+                flex-direction: column;
+            }
+
+            .stat-card {
+                flex: 1 1 100%;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .approvals-section,
+            .history-section {
+                padding: 1.25rem;
+            }
+
+            .modal-content {
+                padding: 1.25rem;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+
+            .btn-approve,
+            .btn-reject {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title-section h1 {
+                font-size: 1.3rem;
+            }
+
+            .stat-info span {
+                font-size: 1.5rem;
+            }
+
+            .main-container {
+                padding: 0 1rem 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Expense Approvals</div>
+            <div class="nav-user" id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span id="pending-count">0</span>
+                        <label>Pending Approvals</label>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon approved"><i class="fas fa-check"></i></div>
+                    <div class="stat-info">
+                        <span id="approved-count">0</span>
+                        <label>Approved Today</label>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon rejected"><i class="fas fa-times"></i></div>
+                    <div class="stat-info">
+                        <span id="rejected-count">0</span>
+                        <label>Rejected Today</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval List -->
+            <section class="approvals-section glass-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-tasks"></i> Pending Review</h2>
+                    <div class="header-actions">
+                        <button class="btn-sm" onclick="bulkApprove()"><i class="fas fa-check-double"></i> Bulk
+                            Approve</button>
+                    </div>
+                </div>
+                <div id="approvals-list" class="approvals-list">
+                    <div class="loading-placeholder">Loading assignments...</div>
+                </div>
+            </section>
+
+            <!-- Submission History -->
+            <section class="history-section glass-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> My Submissions</h2>
+                </div>
+                <div id="submissions-list" class="history-list">
+                    <div class="loading-placeholder">Loading your submissions...</div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Review Expense</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div id="modal-details"></div>
+            <div class="form-group">
+                <label>Approver Comments (Mandatory for rejection)</label>
+                <textarea id="approver-comment" placeholder="Add feedback or reason for rejection..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-reject" onclick="processApproval('reject')">Reject</button>
+                <button class="btn-approve" onclick="processApproval('approve')">Approve Expense</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/approval-controller.js"></script>
+</body>
+
+</html>

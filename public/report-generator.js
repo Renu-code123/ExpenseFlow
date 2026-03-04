@@ -5,7 +5,7 @@
 
 class ReportGenerator {
   constructor() {
-    this.baseUrl = '/api/reports';
+    this.baseUrl = '/api/expenses';
     this.previewData = null;
     this.isGenerating = false;
   }
@@ -36,8 +36,13 @@ class ReportGenerator {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+      // Try to parse error message
+      let errorMsg = `HTTP ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.message || errorData.error || errorMsg;
+      } catch (e) { }
+      throw new Error(errorMsg);
     }
 
     return response;
@@ -47,21 +52,25 @@ class ReportGenerator {
    * Get report preview with charts
    */
   async getPreview(options = {}) {
-    const params = new URLSearchParams({
+    const body = {
       startDate: options.startDate || this.getDefaultStartDate(),
       endDate: options.endDate || new Date().toISOString().split('T')[0],
-      reportType: options.reportType || 'comprehensive',
-      currency: options.currency || 'USD'
+      category: 'all', // Simplify for now or map from options
+      type: 'all'
+    };
+
+    const response = await this.apiRequest('/report/preview', {
+      method: 'POST',
+      body: JSON.stringify(body)
     });
 
-    const response = await this.apiRequest(`/preview?${params}`);
     const result = await response.json();
-    
+
     if (result.success) {
       this.previewData = result.data;
       return result.data;
     }
-    
+
     throw new Error(result.error || 'Failed to generate preview');
   }
 
@@ -73,19 +82,29 @@ class ReportGenerator {
     this.isGenerating = true;
 
     try {
-      const params = new URLSearchParams({
+      const body = {
+        format: 'pdf',
         startDate: options.startDate || this.getDefaultStartDate(),
         endDate: options.endDate || new Date().toISOString().split('T')[0],
-        reportType: options.reportType || 'comprehensive',
-        includeCharts: options.includeCharts !== false ? 'true' : 'false',
-        includeTransactions: options.includeTransactions !== false ? 'true' : 'false',
         currency: options.currency || 'USD',
-        title: options.title || ''
+        title: 'Expense Report'
+      };
+
+      // For file download, we handle response differently
+      const token = this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/export`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
       });
 
-      const response = await this.apiRequest(`/pdf/download?${params}`);
+      if (!response.ok) throw new Error('Failed to download PDF');
+
       const blob = await response.blob();
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -110,17 +129,27 @@ class ReportGenerator {
     this.isGenerating = true;
 
     try {
-      const params = new URLSearchParams({
+      const body = {
+        format: 'excel',
         startDate: options.startDate || this.getDefaultStartDate(),
         endDate: options.endDate || new Date().toISOString().split('T')[0],
-        reportType: options.reportType || 'comprehensive',
-        includeAllTransactions: options.includeAllTransactions !== false ? 'true' : 'false',
         currency: options.currency || 'USD'
+      };
+
+      const token = this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/export`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
       });
 
-      const response = await this.apiRequest(`/excel/download?${params}`);
+      if (!response.ok) throw new Error('Failed to download Excel');
+
       const blob = await response.blob();
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -164,7 +193,7 @@ class ReportGenerator {
       body: JSON.stringify(scheduleOptions)
     });
     const result = await response.json();
-    
+
     if (result.success) {
       return result.data;
     }
@@ -180,7 +209,7 @@ class ReportGenerator {
       body: JSON.stringify({ reportType })
     });
     const result = await response.json();
-    
+
     if (result.success) {
       return result.data;
     }
@@ -375,10 +404,10 @@ class ReportModalController {
     // Set default dates
     const startInput = document.getElementById('report-start-date');
     const endInput = document.getElementById('report-end-date');
-    
+
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     startInput.value = firstDayOfMonth.toISOString().split('T')[0];
     endInput.value = now.toISOString().split('T')[0];
   }
@@ -412,7 +441,7 @@ class ReportModalController {
   async handlePreview() {
     const btn = document.getElementById('preview-report-btn');
     const container = document.getElementById('report-preview-container');
-    
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     container.innerHTML = '<p class="loading">Generating preview...</p>';
@@ -430,7 +459,7 @@ class ReportModalController {
 
   async handleDownloadPDF() {
     const btn = document.getElementById('download-pdf-btn');
-    
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
 
@@ -447,7 +476,7 @@ class ReportModalController {
 
   async handleDownloadExcel() {
     const btn = document.getElementById('download-excel-btn');
-    
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
 

@@ -1,0 +1,310 @@
+const StockItem = require('../models/StockItem');
+const BackOrder = require('../models/BackOrder');
+const stockMath = require('../utils/stockMath');
+
+class ReplenishmentService {
+    /**
+     * Scan inventory and generate replenishment recommendations
+     */
+    async scanAndRecommend(userId) {
+        const stockItems = await StockItem.find({
+            userId,
+            isActive: true,
+            stockStatus: { $in: ['low_stock', 'out_of_stock'] }
+        }).populate('warehouseId');
+
+        const recommendations = [];
+
+        for (const item of stockItems) {
+            const recommendation = await this.generateRecommendation(item);
+            if (recommendation) {
+                recommendations.push(recommendation);
+            }
+        }
+
+        // Sort by priority
+        recommendations.sort((a, b) => {
+            const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+            return priorityOrder[b.priority] - priorityOrder[a.priority];
+        });
+
+        return {
+            totalRecommendations: recommendations.length,
+            urgentCount: recommendations.filter(r => r.priority === 'urgent').length,
+            recommendations
+        };
+    }
+
+    /**
+     * Generate replenishment recommendation for a single item
+     */
+    async generateRecommendation(stockItem) {
+        const currentStock = stockItem.quantity.current;
+        const reorderPoint = stockItem.reorderPoint;
+        const safetyStock = stockItem.safetyStock;
+
+        // Check if replenishment is needed
+        if (currentStock > reorderPoint) {
+            return null;
+        }
+
+        // Calculate suggested order quantity
+        let orderQuantity;
+
+        if (stockItem.supplier && stockItem.supplier.leadTime) {
+            // Use EOQ if we have enough data
+            // For simplicity, using a basic calculation
+            const avgDailyUsage = this.estimateDailyUsage(stockItem);
+            const leadTime = stockItem.supplier.leadTime;
+
+            orderQuantity = Math.round(
+                (avgDailyUsage * leadTime) + safetyStock - currentStock
+            );
+        } else {
+            // Default to safety stock * 2
+            orderQuantity = Math.max(safetyStock * 2, reorderPoint - currentStock);
+        }
+
+        // Ensure minimum order quantity
+        orderQuantity = Math.max(orderQuantity, 1);
+
+        // Determine priority
+        let priority;
+        if (currentStock === 0) {
+            priority = 'urgent';
+        } else if (currentStock <= safetyStock) {
+            priority = 'high';
+        } else if (currentStock <= reorderPoint) {
+            priority = 'medium';
+        } else {
+            priority = 'low';
+        }
+
+        // Check for pending back orders
+        const backOrders = await BackOrder.find({
+            stockItemId: stockItem._id,
+            status: { $in: ['pending', 'partially_fulfilled'] }
+        });
+
+        const totalBackOrderQty = backOrders.reduce((sum, bo) => sum + bo.pendingQuantity, 0);
+
+        return {
+            sku: stockItem.sku,
+            itemName: stockItem.itemName,
+            warehouse: stockItem.warehouseId.warehouseName,
+            warehouseCode: stockItem.warehouseId.warehouseCode,
+            currentStock,
+            reorderPoint,
+            safetyStock,
+            suggestedOrderQty: orderQuantity + totalBackOrderQty,
+            estimatedCost: (orderQuantity + totalBackOrderQty) * stockItem.pricing.costPrice,
+            priority,
+            supplier: stockItem.supplier?.supplierName || 'Not specified',
+            leadTime: stockItem.supplier?.leadTime || 0,
+            backOrdersCount: backOrders.length,
+            backOrderQty: totalBackOrderQty,
+            reason: this.getReplenishmentReason(currentStock, reorderPoint, safetyStock, backOrders.length)
+        };
+    }
+
+    /**
+     * Auto-generate procurement requests for critical items
+     */
+    async autoGenerateProcurementRequests(userId) {
+        const recommendations = await this.scanAndRecommend(userId);
+
+        // Filter only urgent and high priority items
+        const criticalItems = recommendations.recommendations.filter(r =>
+            r.priority === 'urgent' || r.priority === 'high'
+        );
+
+        const procurementRequests = [];
+
+        for (const item of criticalItems) {
+            // In a real implementation, this would create actual ProcurementOrder records
+            const pr = {
+                prNumber: `PR-${Date.now()}-${item.sku}`,
+                sku: item.sku,
+                itemName: item.itemName,
+                quantity: item.suggestedOrderQty,
+                estimatedCost: item.estimatedCost,
+                supplier: item.supplier,
+                priority: item.priority,
+                warehouse: item.warehouse,
+                requestedDate: new Date(),
+                reason: item.reason,
+                autoGenerated: true
+            };
+
+            procurementRequests.push(pr);
+        }
+
+        return {
+            generated: procurementRequests.length,
+            totalValue: procurementRequests.reduce((sum, pr) => sum + pr.estimatedCost, 0),
+            requests: procurementRequests
+        };
+    }
+
+    /**
+     * Estimate daily usage based on movement history
+     */
+    estimateDailyUsage(stockItem) {
+        const outMovements = stockItem.movements.filter(m => m.movementType === 'out');
+
+        if (outMovements.length === 0) {
+            return 1; // Default to 1 unit per day
+        }
+
+        // Calculate total quantity moved out
+        const totalOut = outMovements.reduce((sum, m) => sum + m.quantity, 0);
+
+        // Calculate time span
+        const firstMovement = outMovements[0].movementDate;
+        const lastMovement = outMovements[outMovements.length - 1].movementDate;
+        const daysDiff = Math.max(1, (lastMovement - firstMovement) / (1000 * 60 * 60 * 24));
+
+        return totalOut / daysDiff;
+    }
+
+    /**
+     * Get replenishment reason
+     */
+    getReplenishmentReason(currentStock, reorderPoint, safetyStock, backOrdersCount) {
+        if (currentStock === 0) {
+            return 'Stock depleted - Urgent replenishment required';
+        } else if (backOrdersCount > 0) {
+            return `${backOrdersCount} pending back order(s) - High priority`;
+        } else if (currentStock <= safetyStock) {
+            return 'Below safety stock level - Risk of stock-out';
+        } else if (currentStock <= reorderPoint) {
+            return 'Reorder point reached - Normal replenishment';
+        } else {
+            return 'Preventive replenishment';
+        }
+    }
+
+    /**
+     * Calculate optimal reorder parameters for an item
+     */
+    async calculateOptimalParameters(stockItem) {
+        const movements = stockItem.movements.filter(m => m.movementType === 'out');
+
+        if (movements.length < 5) {
+            return {
+                message: 'Insufficient data for optimization',
+                currentReorderPoint: stockItem.reorderPoint,
+                currentSafetyStock: stockItem.safetyStock
+            };
+        }
+
+        // Calculate usage statistics
+        const dailyUsages = this.calculateDailyUsages(movements);
+        const avgDailyUsage = dailyUsages.reduce((a, b) => a + b, 0) / dailyUsages.length;
+        const maxDailyUsage = Math.max(...dailyUsages);
+
+        // Estimate lead time (use supplier lead time or default)
+        const leadTime = stockItem.supplier?.leadTime || 7;
+        const maxLeadTime = leadTime * 1.5; // Add 50% buffer
+
+        // Calculate optimal safety stock
+        const optimalSafetyStock = stockMath.calculateSafetyStock(
+            maxDailyUsage,
+            maxLeadTime,
+            avgDailyUsage,
+            leadTime
+        );
+
+        // Calculate optimal reorder point
+        const optimalReorderPoint = stockMath.calculateReorderPoint(
+            avgDailyUsage,
+            leadTime,
+            optimalSafetyStock
+        );
+
+        return {
+            current: {
+                reorderPoint: stockItem.reorderPoint,
+                safetyStock: stockItem.safetyStock
+            },
+            recommended: {
+                reorderPoint: optimalReorderPoint,
+                safetyStock: optimalSafetyStock
+            },
+            statistics: {
+                avgDailyUsage: Math.round(avgDailyUsage * 100) / 100,
+                maxDailyUsage: Math.round(maxDailyUsage * 100) / 100,
+                leadTime,
+                dataPoints: movements.length
+            }
+        };
+    }
+
+    /**
+     * Calculate daily usages from movements
+     */
+    calculateDailyUsages(movements) {
+        if (movements.length === 0) return [0];
+
+        // Group movements by day
+        const dailyMap = new Map();
+
+        for (const movement of movements) {
+            const dateKey = new Date(movement.movementDate).toISOString().split('T')[0];
+            dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + movement.quantity);
+        }
+
+        return Array.from(dailyMap.values());
+    }
+
+    /**
+     * Get replenishment analytics
+     */
+    async getReplenishmentAnalytics(userId) {
+        const stockItems = await StockItem.find({ userId, isActive: true });
+
+        const analytics = {
+            totalItems: stockItems.length,
+            itemsByStatus: {
+                in_stock: 0,
+                low_stock: 0,
+                out_of_stock: 0
+            },
+            replenishmentNeeded: 0,
+            estimatedReplenishmentCost: 0,
+            averageStockLevel: 0,
+            itemsWithBackOrders: 0
+        };
+
+        let totalStockValue = 0;
+
+        for (const item of stockItems) {
+            analytics.itemsByStatus[item.stockStatus]++;
+            totalStockValue += item.valuation.totalValue;
+
+            if (item.quantity.current <= item.reorderPoint) {
+                analytics.replenishmentNeeded++;
+                const orderQty = Math.max(item.safetyStock * 2, item.reorderPoint - item.quantity.current);
+                analytics.estimatedReplenishmentCost += orderQty * item.pricing.costPrice;
+            }
+
+            // Check for back orders
+            const backOrders = await BackOrder.countDocuments({
+                stockItemId: item._id,
+                status: { $in: ['pending', 'partially_fulfilled'] }
+            });
+
+            if (backOrders > 0) {
+                analytics.itemsWithBackOrders++;
+            }
+        }
+
+        analytics.averageStockLevel = stockItems.length > 0
+            ? totalStockValue / stockItems.length
+            : 0;
+
+        return analytics;
+    }
+}
+
+module.exports = new ReplenishmentService();

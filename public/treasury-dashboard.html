@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategic Treasury & Liquidity Management - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Strategic Treasury</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Treasury Header -->
+        <div class="treasury-header">
+            <div class="header-main">
+                <h1>Enterprise Liquidity Command Center</h1>
+                <p>Real-time cash runway forecasting, FX risk management, and automated threshold monitoring</p>
+            </div>
+            <div class="header-metrics">
+                <div class="metric-card glass-card">
+                    <label>Total Liquidity</label>
+                    <h2 id="total-liquidity">₹0</h2>
+                    <span class="metric-trend positive"><i class="fas fa-arrow-up"></i> Available</span>
+                </div>
+                <div class="metric-card glass-card">
+                    <label>Cash Runway</label>
+                    <h2 id="cash-runway">0 days</h2>
+                    <span class="metric-trend" id="runway-trend">Calculating...</span>
+                </div>
+                <div class="metric-card glass-card">
+                    <label>Health Score</label>
+                    <h2 id="health-score">0%</h2>
+                    <div class="health-bar">
+                        <div class="health-fill" id="health-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Treasury Grid -->
+        <div class="treasury-grid">
+            <!-- Left Column: Vaults & Thresholds -->
+            <div class="treasury-sidebar">
+                <section class="glass-card section-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-vault"></i> Treasury Vaults</h3>
+                        <button class="btn-sm" onclick="openVaultModal()"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="vaults-list" class="vaults-list">
+                        <div class="loading-placeholder">Loading vaults...</div>
+                    </div>
+                </section>
+
+                <section class="glass-card section-card mt-20">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bell"></i> Alert Thresholds</h3>
+                        <button class="btn-sm" onclick="openThresholdModal()"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="thresholds-list" class="thresholds-list">
+                        <!-- Loaded via JS -->
+                    </div>
+                </section>
+
+                <section class="glass-card section-card mt-20">
+                    <div class="card-header">
+                        <h3><i class="fas fa-exchange-alt"></i> FX Hedges</h3>
+                        <button class="btn-sm" onclick="openHedgeModal()"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="hedges-list" class="hedges-list">
+                        <!-- Loaded via JS -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Forecasting & Analytics -->
+            <div class="treasury-main">
+                <section class="glass-card section-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> Cash Runway Forecast</h3>
+                        <div class="forecast-controls">
+                            <select id="forecast-horizon" onchange="updateForecast()">
+                                <option value="90">90 Days</option>
+                                <option value="180" selected>180 Days</option>
+                                <option value="365">1 Year</option>
+                            </select>
+                            <select id="forecast-model" onchange="updateForecast()">
+                                <option value="ensemble" selected>Ensemble</option>
+                                <option value="simple">Simple Linear</option>
+                                <option value="movingAverage">Moving Average</option>
+                                <option value="seasonal">Seasonal</option>
+                                <option value="mlLike">ML-Like</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="runwayChart"></canvas>
+                    </div>
+                    <div id="forecast-insights" class="forecast-insights">
+                        <!-- Insights loaded via JS -->
+                    </div>
+                </section>
+
+                <div class="analytics-row mt-20">
+                    <section class="glass-card section-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-coins"></i> Vault Distribution</h3>
+                        </div>
+                        <div class="chart-container-small">
+                            <canvas id="vaultDistChart"></canvas>
+                        </div>
+                    </section>
+
+                    <section class="glass-card section-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-pie"></i> Portfolio Metrics</h3>
+                        </div>
+                        <div class="portfolio-metrics">
+                            <div class="metric-item">
+                                <label>Sharpe Ratio</label>
+                                <strong id="sharpe-ratio">0.00</strong>
+                            </div>
+                            <div class="metric-item">
+                                <label>VaR (95%)</label>
+                                <strong id="var-95">₹0</strong>
+                            </div>
+                            <div class="metric-item">
+                                <label>Diversification</label>
+                                <strong id="diversification">0%</strong>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vault Modal -->
+    <div id="vault-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Create Treasury Vault</h3>
+                <span class="close-modal" onclick="closeVaultModal()">&times;</span>
+            </div>
+            <form id="vault-form">
+                <div class="form-group">
+                    <label>Vault Name</label>
+                    <input type="text" id="vault-name" required placeholder="e.g. Operating Reserve">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="vault-type">
+                            <option value="operating">Operating</option>
+                            <option value="reserve">Reserve</option>
+                            <option value="investment">Investment</option>
+                            <option value="forex">Forex</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select id="vault-currency">
+                            <option value="INR">INR</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Initial Balance</label>
+                    <input type="number" id="vault-balance" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Create Vault</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Threshold Modal -->
+    <div id="threshold-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Create Liquidity Threshold</h3>
+                <span class="close-modal" onclick="closeThresholdModal()">&times;</span>
+            </div>
+            <form id="threshold-form">
+                <div class="form-group">
+                    <label>Threshold Name</label>
+                    <input type="text" id="threshold-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Vault</label>
+                    <select id="threshold-vault" required>
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="threshold-type">
+                            <option value="absolute">Absolute Amount</option>
+                            <option value="percentage">Percentage</option>
+                            <option value="runway_days">Runway Days</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Trigger Value</label>
+                        <input type="number" id="threshold-value" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Severity</label>
+                    <select id="threshold-severity">
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="critical">Critical</option>
+                        <option value="emergency">Emergency</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Create Threshold</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hedge Modal -->
+    <div id="hedge-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Create FX Hedge</h3>
+                <span class="close-modal" onclick="closeHedgeModal()">&times;</span>
+            </div>
+            <form id="hedge-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Base Currency</label>
+                        <select id="hedge-base">
+                            <option value="INR">INR</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Currency</label>
+                        <select id="hedge-target">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Hedge Type</label>
+                    <select id="hedge-type">
+                        <option value="forward_contract">Forward Contract</option>
+                        <option value="option">Option</option>
+                        <option value="swap">Swap</option>
+                        <option value="natural_hedge">Natural Hedge</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Notional Amount</label>
+                        <input type="number" id="hedge-amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contract Rate</label>
+                        <input type="number" step="0.0001" id="hedge-rate" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Maturity Date</label>
+                    <input type="date" id="hedge-maturity" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Create Hedge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/treasury-controller.js"></script>
+</body>
+
+</html>
