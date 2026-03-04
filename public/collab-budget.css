@@ -1,0 +1,90 @@
+/* collab-budget.css
+   Styles for collaborative budget editor
+*/
+.collab-budget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f5f5f5;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ddd;
+}
+#.collab-budget-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  background: #f9f9f9;
+  padding: 10px 20px;
+  border-bottom: 1px solid #eee;
+}
+#.collab-budget-controls label {
+  font-size: 14px;
+  color: #333;
+}
+#.collab-budget-controls select,
+#.collab-budget-controls input {
+  margin-left: 5px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+}
+#.collab-budget-controls button {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+#.collab-budget-controls button:hover {
+  background: #218838;
+}
+#budget-list {
+  margin: 20px 0;
+}
+.budget-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+.budget-item span {
+  flex: 1;
+}
+.budget-item button {
+  margin-left: 10px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.budget-item button:hover {
+  background: #0056b3;
+}
+.edit-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 20px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  min-width: 300px;
+  max-width: 90vw;
+}
+#collab-users {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+  background: #f1f1f1;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
