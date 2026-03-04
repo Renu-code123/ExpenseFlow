@@ -1,0 +1,19 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[functions]
+  directory = "netlify/functions"
+
+# Environment variables (set these in Netlify dashboard)
+# MONGODB_URI = your_mongodb_connection_string
+# JWT_SECRET = your_jwt_secret
+# FRONTEND_URL = your_frontend_url

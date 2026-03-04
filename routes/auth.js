@@ -7,16 +7,24 @@ const AuditLog = require('../models/AuditLog');
 const emailService = require('../services/emailService');
 const securityMonitor = require('../services/securityMonitor');
 const SecurityService = require('../services/securityService');
-const accountTakeoverAlertingService = require('../services/accountTakeoverAlertingService');
+const authService = require('../services/authService');
+const DeviceFingerprint = require('../models/DeviceFingerprint');
+const { captureDeviceFingerprint, generateFingerprint } = require('../middleware/deviceFingerprint');
 const auth = require('../middleware/auth');
 const { AuthSchemas, validateRequest } = require('../middleware/inputValidator');
-const { 
-  loginLimiter, 
-  registerLimiter, 
-  passwordResetLimiter, 
+const AppEventBus = require('../utils/AppEventBus');
+const EVENTS = require('../config/eventRegistry');
+
+const {
+  loginLimiter,
+  registerLimiter,
+  passwordResetLimiter,
   emailVerifyLimiter,
-  totpVerifyLimiter 
+  totpVerifyLimiter
 } = require('../middleware/rateLimiter');
+const ResponseFactory = require('../utils/ResponseFactory');
+const { asyncHandler } = require('../middleware/errorMiddleware');
+const { ConflictError, UnauthorizedError, BadRequestError } = require('../utils/AppError');
 const router = express.Router();
 
 /**
@@ -27,50 +35,67 @@ const router = express.Router();
  */
 
 // Register
-router.post('/register', registerLimiter, validateRequest(AuthSchemas.register), async (req, res) => {
+router.post('/register', registerLimiter, validateRequest(AuthSchemas.register), asyncHandler(async (req, res) => {
+  const existingUser = await User.findOne({ email: req.body.email });
+  if (existingUser) throw new ConflictError('User already exists');
+
+  const user = new User(req.body);
+  await user.save();
+
+  // Use centralized AuthService
+  const { token, jwtId } = authService.generateToken(user);
+
+  // Create session
+  await authService.createSession(user, jwtId, req, {
+    loginMethod: 'password',
+    rememberMe: false
+  });
+
+  // Log registration
+  await AuditLog.logAuthEvent(user._id, 'user_register', req, {
+    severity: 'low',
+    status: 'success'
+  });
+
+  // Decoupled Event Trigger - Replaces direct emailService call
+  AppEventBus.publish(EVENTS.USER.REGISTERED, user);
+
+
+  // Capture Device Fingerprint
   try {
-    const existingUser = await User.findOne({ email: req.body.email });
-    if (existingUser) return res.status(400).json({ error: 'User already exists' });
+    // Scope fingerprint to user
+    const baseFingerprint = generateFingerprint(req);
+    const fingerprintHash = `${baseFingerprint}_${user._id}`;
 
-    const user = new User(req.body);
-    await user.save();
-
-    // Generate JWT with unique ID for session tracking
-    const jwtId = crypto.randomBytes(16).toString('hex');
-    const token = jwt.sign(
-      { id: user._id, jti: jwtId },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '24h' }
-    );
-
-    // Create session
-    await Session.createSession(user._id, jwtId, req, {
-      loginMethod: 'password',
-      rememberMe: false
+    await DeviceFingerprint.create({
+      user: user._id,
+      fingerprint: fingerprintHash,
+      deviceInfo: {
+        userAgent: req.headers['user-agent'],
+        screen: {},
+        language: req.headers['accept-language'],
+        platform: req.headers['sec-ch-ua-platform']
+      },
+      networkInfo: {
+        ipAddress: req.ip || req.connection.remoteAddress
+      },
+      status: 'trusted'
     });
-
-    // Log registration
-    await AuditLog.logAuthEvent(user._id, 'user_register', req, {
-      severity: 'low',
-      status: 'success'
-    });
-
-    // Send welcome email
-    try {
-      await emailService.sendWelcomeEmail(user);
-    } catch (emailError) {
-      console.error('Welcome email failed:', emailError);
-    }
-
-    res.status(201).json({
-      token,
-      user: { id: user._id, name: user.name, email: user.email, locale: user.locale, preferredCurrency: user.preferredCurrency }
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: error.message });
+  } catch (fpError) {
+    console.error('Failed to save device fingerprint on register:', fpError);
   }
-});
+
+  return ResponseFactory.created(res, {
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      locale: user.locale,
+      preferredCurrency: user.preferredCurrency
+    }
+  }, 'Registration successful');
+}));
 
 // Login
 router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (req, res) => {
@@ -91,7 +116,7 @@ router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (r
         status: 'blocked'
       });
       const lockoutMinutes = Math.ceil((user.security.lockoutUntil - Date.now()) / 60000);
-      return res.status(423).json({ 
+      return res.status(423).json({
         error: `Account is locked. Please try again in ${lockoutMinutes} minutes.`,
         lockedUntil: user.security.lockoutUntil
       });
@@ -156,36 +181,48 @@ router.post('/login', loginLimiter, validateRequest(AuthSchemas.login), async (r
       }
     });
 
-    // Trigger account takeover alerting for new device login
+    // Capture Device Fingerprint
     try {
-      await accountTakeoverAlertingService.alertNewDeviceLogin(
-        user._id,
-        {
-          deviceName: req.body.deviceName,
-          deviceType: req.body.deviceType || 'unknown',
-          userAgent: req.get('User-Agent'),
-          ipAddress: req.ip,
-          location: {
-            city: req.body.location?.city,
-            country: req.body.location?.country,
-            coordinates: req.body.location?.coordinates
-          }
-        },
-        session
-      );
-    } catch (alertError) {
-      console.error('Error sending account takeover alert:', alertError);
-      // Don't fail login if alerting fails
+      // Scope fingerprint to user to allow multiple users on same device (prevents unique constraint error)
+      const baseFingerprint = generateFingerprint(req);
+      const fingerprintHash = `${baseFingerprint}_${user._id}`;
+
+      const existingDevice = await DeviceFingerprint.findOne({ fingerprint: fingerprintHash });
+
+      if (!existingDevice) {
+        await DeviceFingerprint.create({
+          user: user._id,
+          fingerprint: fingerprintHash,
+          deviceInfo: {
+            userAgent: req.headers['user-agent'],
+            screen: req.body.screen || {},
+            language: req.headers['accept-language'],
+            platform: req.headers['sec-ch-ua-platform']
+          },
+          networkInfo: {
+            ipAddress: req.ip || req.connection.remoteAddress
+          },
+          status: 'trusted'
+        });
+      } else {
+        // Update last seen
+        existingDevice.lastSeen = new Date();
+        existingDevice.loginCount += 1;
+        await existingDevice.save();
+      }
+    } catch (fpError) {
+      console.error('Failed to save device fingerprint:', fpError);
+      // Don't block login on fingerprint error
     }
 
     res.json({
       token,
       sessionId: session._id,
-      user: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        locale: user.locale, 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        locale: user.locale,
         preferredCurrency: user.preferredCurrency,
         twoFactorEnabled: user.twoFactorAuth?.enabled || false
       }
@@ -267,11 +304,11 @@ router.post('/verify-2fa', async (req, res) => {
     res.json({
       token,
       sessionId: session._id,
-      user: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        locale: user.locale, 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        locale: user.locale,
         preferredCurrency: user.preferredCurrency,
         twoFactorEnabled: true
       },
@@ -326,7 +363,7 @@ router.post('/2fa/setup', auth, async (req, res) => {
 router.post('/2fa/verify-setup', auth, async (req, res) => {
   try {
     const { token } = req.body;
-    
+
     if (!token || token.length !== 6) {
       return res.status(400).json({ error: 'Valid 6-digit token required' });
     }
@@ -343,7 +380,7 @@ router.post('/2fa/verify-setup', auth, async (req, res) => {
 router.post('/2fa/disable', auth, async (req, res) => {
   try {
     const { password } = req.body;
-    
+
     if (!password) {
       return res.status(400).json({ error: 'Password required to disable 2FA' });
     }
@@ -371,7 +408,7 @@ router.get('/2fa/status', auth, async (req, res) => {
 router.post('/2fa/backup-codes/regenerate', auth, async (req, res) => {
   try {
     const { token } = req.body;
-    
+
     if (!token || token.length !== 6) {
       return res.status(400).json({ error: 'Valid 6-digit token required' });
     }
@@ -392,7 +429,7 @@ router.post('/2fa/backup-codes/regenerate', auth, async (req, res) => {
 router.get('/sessions', auth, async (req, res) => {
   try {
     const sessions = await SecurityService.getActiveSessions(req.user._id);
-    
+
     // Mark current session
     const currentJwtId = req.jwtId;
     const sessionsWithCurrent = sessions.map(session => ({
@@ -513,7 +550,7 @@ router.post('/security/change-password', auth, async (req, res) => {
     }
 
     const user = await User.findById(req.user._id);
-    
+
     // Verify current password
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
@@ -554,9 +591,9 @@ router.post('/security/change-password', auth, async (req, res) => {
       // Don't fail password change if alerting fails
     }
 
-    res.json({ 
-      success: true, 
-      message: 'Password changed successfully. Other sessions have been logged out.' 
+    res.json({
+      success: true,
+      message: 'Password changed successfully. Other sessions have been logged out.'
     });
   } catch (error) {
     console.error('Change password error:', error);

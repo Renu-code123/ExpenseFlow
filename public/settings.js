@@ -92,179 +92,7 @@ class NotificationSettingsController {
 
   createModal() {
     const modalHTML = `
-      <div id="notificationSettingsModal" class="settings-modal">
-        <div class="settings-modal-content">
-          <div class="settings-modal-header">
-            <h2>🔔 Notification Preferences</h2>
-            <button class="settings-modal-close" aria-label="Close">&times;</button>
-          </div>
-          
-          <div class="settings-modal-body">
-            <div class="settings-loading" id="settingsLoading">
-              <div class="settings-spinner"></div>
-              <p>Loading preferences...</p>
-            </div>
-            
-            <div class="settings-content" id="settingsContent" style="display: none;">
-              <!-- Channel Section: Email -->
-              <div class="settings-section">
-                <div class="settings-section-header">
-                  <div class="channel-toggle">
-                    <span class="channel-icon">📧</span>
-                    <span class="channel-name">Email Notifications</span>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="emailEnabled">
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-                <div class="settings-section-content" id="emailSettings">
-                  <p class="settings-help-text">Select which notifications to receive via email:</p>
-                  <div class="notification-types" id="emailTypes"></div>
-                </div>
-              </div>
-
-              <!-- Channel Section: Push -->
-              <div class="settings-section">
-                <div class="settings-section-header">
-                  <div class="channel-toggle">
-                    <span class="channel-icon">🔔</span>
-                    <span class="channel-name">Push Notifications</span>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="pushEnabled">
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-                <div class="settings-section-content" id="pushSettings">
-                  <div class="push-subscription-status" id="pushStatus">
-                    <span class="status-text">Not subscribed</span>
-                    <button class="btn btn-sm btn-primary" id="subscribePushBtn">Enable Push</button>
-                  </div>
-                  <p class="settings-help-text">Select which notifications to receive as push:</p>
-                  <div class="notification-types" id="pushTypes"></div>
-                </div>
-              </div>
-
-              <!-- Channel Section: SMS -->
-              <div class="settings-section">
-                <div class="settings-section-header">
-                  <div class="channel-toggle">
-                    <span class="channel-icon">📱</span>
-                    <span class="channel-name">SMS Notifications</span>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="smsEnabled">
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-                <div class="settings-section-content" id="smsSettings">
-                  <div class="form-group">
-                    <label for="smsPhoneNumber">Phone Number</label>
-                    <input type="tel" id="smsPhoneNumber" placeholder="+1234567890" class="form-control">
-                    <small class="form-text">Include country code (e.g., +1 for US)</small>
-                  </div>
-                  <p class="settings-help-text">SMS is best for critical alerts. Select notifications:</p>
-                  <div class="notification-types" id="smsTypes"></div>
-                </div>
-              </div>
-
-              <!-- Channel Section: Webhook -->
-              <div class="settings-section">
-                <div class="settings-section-header">
-                  <div class="channel-toggle">
-                    <span class="channel-icon">🔗</span>
-                    <span class="channel-name">Webhook Integration</span>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="webhookEnabled">
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-                <div class="settings-section-content" id="webhookSettings">
-                  <div class="form-group">
-                    <label for="webhookUrl">Webhook URL</label>
-                    <input type="url" id="webhookUrl" placeholder="https://your-server.com/webhook" class="form-control">
-                  </div>
-                  <div class="form-group">
-                    <label for="webhookSecret">Secret Key (for signature verification)</label>
-                    <input type="password" id="webhookSecret" placeholder="Optional secret for HMAC signature" class="form-control">
-                  </div>
-                  <p class="settings-help-text">Select which events to send to your webhook:</p>
-                  <div class="notification-types" id="webhookTypes"></div>
-                </div>
-              </div>
-
-              <!-- Quiet Hours Section -->
-              <div class="settings-section">
-                <div class="settings-section-header">
-                  <div class="channel-toggle">
-                    <span class="channel-icon">🌙</span>
-                    <span class="channel-name">Quiet Hours</span>
-                    <label class="toggle-switch">
-                      <input type="checkbox" id="quietHoursEnabled">
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-                <div class="settings-section-content" id="quietHoursSettings">
-                  <p class="settings-help-text">Non-critical notifications will be delayed during quiet hours:</p>
-                  <div class="quiet-hours-config">
-                    <div class="form-group">
-                      <label for="quietStart">Start Time</label>
-                      <input type="time" id="quietStart" value="22:00" class="form-control">
-                    </div>
-                    <div class="form-group">
-                      <label for="quietEnd">End Time</label>
-                      <input type="time" id="quietEnd" value="08:00" class="form-control">
-                    </div>
-                    <div class="form-group">
-                      <label for="quietTimezone">Timezone</label>
-                      <select id="quietTimezone" class="form-control">
-                        <option value="UTC">UTC</option>
-                        <option value="America/New_York">Eastern Time</option>
-                        <option value="America/Chicago">Central Time</option>
-                        <option value="America/Denver">Mountain Time</option>
-                        <option value="America/Los_Angeles">Pacific Time</option>
-                        <option value="Europe/London">London</option>
-                        <option value="Europe/Paris">Paris</option>
-                        <option value="Asia/Tokyo">Tokyo</option>
-                        <option value="Asia/Shanghai">Shanghai</option>
-                        <option value="Australia/Sydney">Sydney</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Test Notification -->
-              <div class="settings-section">
-                <div class="settings-section-header">
-                  <span class="channel-icon">🧪</span>
-                  <span class="channel-name">Test Notifications</span>
-                </div>
-                <div class="settings-section-content">
-                  <p class="settings-help-text">Send a test notification to verify your settings:</p>
-                  <div class="test-buttons">
-                    <button class="btn btn-outline" id="testEmailBtn">Test Email</button>
-                    <button class="btn btn-outline" id="testPushBtn">Test Push</button>
-                    <button class="btn btn-outline" id="testSmsBtn">Test SMS</button>
-                    <button class="btn btn-outline" id="testWebhookBtn">Test Webhook</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="settings-modal-footer">
-            <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
-            <button class="btn btn-primary" id="saveSettingsBtn">
-              <span class="btn-text">Save Preferences</span>
-              <span class="btn-spinner" style="display: none;"></span>
-            </button>
-          </div>
-        </div>
-      </div>
+    <div> </div>
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -274,13 +102,13 @@ class NotificationSettingsController {
   attachEventListeners() {
     // Close button
     this.modal.querySelector('.settings-modal-close').addEventListener('click', () => this.close());
-    
+
     // Cancel button
     document.getElementById('cancelSettingsBtn').addEventListener('click', () => this.close());
-    
+
     // Save button
     document.getElementById('saveSettingsBtn').addEventListener('click', () => this.savePreferences());
-    
+
     // Close on backdrop click
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) this.close();
@@ -324,7 +152,7 @@ class NotificationSettingsController {
 
     try {
       const response = await fetch('/api/notifications/preferences', {
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
 
       if (response.ok) {
@@ -337,7 +165,7 @@ class NotificationSettingsController {
       await this.loadVapidKey();
 
       this.populateForm();
-      
+
       document.getElementById('settingsLoading').style.display = 'none';
       document.getElementById('settingsContent').style.display = 'block';
     } catch (error) {
@@ -349,7 +177,7 @@ class NotificationSettingsController {
   async loadVapidKey() {
     try {
       const response = await fetch('/api/notifications/push/vapid-key', {
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
       if (response.ok) {
         const data = await response.json();
@@ -377,31 +205,31 @@ class NotificationSettingsController {
     };
   }
 
-  populateForm() {
+  async populateForm() {
     const prefs = this.preferences;
 
     // Email settings
     document.getElementById('emailEnabled').checked = prefs.channels?.email?.enabled ?? true;
-    this.populateNotificationTypes('email', prefs.channels?.email?.types || []);
+    await this.populateNotificationTypes('email', prefs.channels?.email?.types || []);
     document.getElementById('emailSettings').style.display = prefs.channels?.email?.enabled ? 'block' : 'none';
 
     // Push settings
     document.getElementById('pushEnabled').checked = prefs.channels?.push?.enabled ?? false;
-    this.populateNotificationTypes('push', prefs.channels?.push?.types || []);
+    await this.populateNotificationTypes('push', prefs.channels?.push?.types || []);
     document.getElementById('pushSettings').style.display = prefs.channels?.push?.enabled ? 'block' : 'none';
     this.updatePushStatus();
 
     // SMS settings
     document.getElementById('smsEnabled').checked = prefs.channels?.sms?.enabled ?? false;
     document.getElementById('smsPhoneNumber').value = prefs.channels?.sms?.phoneNumber || '';
-    this.populateNotificationTypes('sms', prefs.channels?.sms?.types || []);
+    await this.populateNotificationTypes('sms', prefs.channels?.sms?.types || []);
     document.getElementById('smsSettings').style.display = prefs.channels?.sms?.enabled ? 'block' : 'none';
 
     // Webhook settings
     document.getElementById('webhookEnabled').checked = prefs.channels?.webhook?.enabled ?? false;
     document.getElementById('webhookUrl').value = prefs.channels?.webhook?.url || '';
     document.getElementById('webhookSecret').value = prefs.channels?.webhook?.secret || '';
-    this.populateNotificationTypes('webhook', prefs.channels?.webhook?.types || []);
+    await this.populateNotificationTypes('webhook', prefs.channels?.webhook?.types || []);
     document.getElementById('webhookSettings').style.display = prefs.channels?.webhook?.enabled ? 'block' : 'none';
 
     // Quiet hours
@@ -412,7 +240,7 @@ class NotificationSettingsController {
     document.getElementById('quietHoursSettings').style.display = prefs.quietHours?.enabled ? 'block' : 'none';
   }
 
-  populateNotificationTypes(channel, selectedTypes) {
+  async populateNotificationTypes(channel, selectedTypes) {
     const container = document.getElementById(`${channel}Types`);
     container.innerHTML = '';
 
@@ -514,7 +342,7 @@ class NotificationSettingsController {
     try {
       const response = await fetch('/api/notifications/push/unsubscribe', {
         method: 'POST',
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
 
       if (response.ok) {
@@ -587,7 +415,7 @@ class NotificationSettingsController {
       const response = await fetch('/api/notifications/preferences', {
         method: 'PUT',
         headers: {
-          ...this.getAuthHeaders(),
+          ...(await this.getAuthHeaders()),
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(preferences)
@@ -614,7 +442,7 @@ class NotificationSettingsController {
       const response = await fetch('/api/notifications/test', {
         method: 'POST',
         headers: {
-          ...this.getAuthHeaders(),
+          ...(await this.getAuthHeaders()),
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ channel })
@@ -631,9 +459,26 @@ class NotificationSettingsController {
     }
   }
 
-  getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+ async  getAuthHeaders() {
+    try {
+      if (!window.Clerk) await this._waitForClerk();
+      if (window.Clerk?.session) {
+        const token = await window.Clerk.session.getToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+      }
+    } catch (e) { console.warn('getAuthHeaders failed:', e); }
+    return {};
+  }
+
+  _waitForClerk() {
+    return new Promise((resolve) => {
+      const maxWait = 8000; let waited = 0;
+      const check = setInterval(() => {
+        if (window.Clerk?.session) { clearInterval(check); resolve(); }
+        waited += 100;
+        if (waited >= maxWait) { clearInterval(check); resolve(); }
+      }, 100);
+    });
   }
 
   showToast(message, type = 'info') {
@@ -662,11 +507,17 @@ class NotificationCenterController {
     this.init();
   }
 
-  init() {
+  async init() {
     this.createPanel();
     this.attachEventListeners();
-    this.loadUnreadCount();
     this.setupSocketListeners();
+    // Wait for Clerk before loading data
+    try {
+      await this._waitForClerk();
+      this.loadUnreadCount();
+    } catch (e) {
+      console.warn('NotificationCenter: Clerk not ready, skipping initial load');
+    }
   }
 
   createPanel() {
@@ -776,7 +627,7 @@ class NotificationCenterController {
   async loadNotifications() {
     try {
       const response = await fetch(`/api/notifications?page=${this.page}&limit=20`, {
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
 
       if (response.ok) {
@@ -794,7 +645,7 @@ class NotificationCenterController {
     this.page++;
     try {
       const response = await fetch(`/api/notifications?page=${this.page}&limit=20`, {
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
 
       if (response.ok) {
@@ -811,7 +662,7 @@ class NotificationCenterController {
 
   renderNotifications() {
     const container = document.getElementById('notificationList');
-    
+
     if (this.notifications.length === 0) {
       container.innerHTML = `
         <div class="notification-empty">
@@ -823,7 +674,7 @@ class NotificationCenterController {
     }
 
     container.innerHTML = this.notifications.map(n => this.renderNotification(n)).join('');
-    
+
     const loadMoreBtn = document.getElementById('loadMoreNotifications');
     if (loadMoreBtn) {
       loadMoreBtn.style.display = this.hasMore ? 'block' : 'none';
@@ -857,7 +708,7 @@ class NotificationCenterController {
     this.notifications.unshift(notification);
     this.unreadCount++;
     this.updateBadge(this.unreadCount);
-    
+
     if (this.isOpen) {
       this.renderNotifications();
     }
@@ -868,7 +719,7 @@ class NotificationCenterController {
 
   async handleNotificationClick(notificationId) {
     const notification = this.notifications.find(n => n._id === notificationId);
-    
+
     if (!notification?.read) {
       await this.markAsRead(notificationId);
     }
@@ -884,7 +735,7 @@ class NotificationCenterController {
     try {
       await fetch(`/api/notifications/${notificationId}/read`, {
         method: 'PATCH',
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
 
       const notification = this.notifications.find(n => n._id === notificationId);
@@ -903,7 +754,7 @@ class NotificationCenterController {
     try {
       await fetch('/api/notifications/mark-all-read', {
         method: 'PATCH',
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
 
       this.notifications.forEach(n => n.read = true);
@@ -918,7 +769,7 @@ class NotificationCenterController {
   async loadUnreadCount() {
     try {
       const response = await fetch('/api/notifications/unread-count', {
-        headers: this.getAuthHeaders()
+        headers: await this.getAuthHeaders()
       });
 
       if (response.ok) {
@@ -941,7 +792,7 @@ class NotificationCenterController {
 
   getTimeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-    
+
     const intervals = {
       year: 31536000,
       month: 2592000,
@@ -957,7 +808,7 @@ class NotificationCenterController {
         return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
       }
     }
-    
+
     return 'Just now';
   }
 
@@ -974,7 +825,7 @@ class NotificationCenterController {
     `;
 
     document.body.appendChild(toast);
-    
+
     toast.querySelector('.toast-close').addEventListener('click', () => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
@@ -987,9 +838,233 @@ class NotificationCenterController {
     }, 5000);
   }
 
-  getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  async getAuthHeaders() {
+    try {
+      if (!window.Clerk) await this._waitForClerk();
+      if (window.Clerk?.session) {
+        const token = await window.Clerk.session.getToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+      }
+    } catch (e) { console.warn('getAuthHeaders failed:', e); }
+    return {};
+  }
+
+  _waitForClerk() {
+    return new Promise((resolve) => {
+      const maxWait = 8000; let waited = 0;
+      const check = setInterval(() => {
+        if (window.Clerk?.session) { clearInterval(check); resolve(); }
+        waited += 100;
+        if (waited >= maxWait) { clearInterval(check); resolve(); }
+      }, 100);
+    });
+  }
+}
+
+
+class SecurityController {
+  constructor() {
+    this.sessionsList = document.getElementById('active-sessions-list');
+    this.securityLogBody = document.getElementById('security-log-body');
+    this.init();
+  }
+
+  init() {
+    // Attach listener to Security tab button
+    // Find the button that switches to security tab
+    const securityTabBtn = document.querySelector('button[data-tab="security"]') ||
+      Array.from(document.querySelectorAll('.nav-item')).find(btn => btn.textContent.trim().includes('Security'));
+
+    if (securityTabBtn) {
+      securityTabBtn.addEventListener('click', () => this.loadData());
+    }
+
+    // Also load if already active (e.g. on page load if hash matches)
+    if (document.getElementById('security-tab').classList.contains('active')) {
+      this.loadData();
+    }
+
+    // Attach event listeners for Revoke buttons (delegation)
+    if (this.sessionsList) {
+      this.sessionsList.addEventListener('click', (e) => {
+        if (e.target.closest('.revoke-session-btn')) {
+          const btn = e.target.closest('.revoke-session-btn');
+          this.revokeSession(btn.dataset.id);
+        }
+      });
+    }
+
+    // Revoke All button
+    const revokeAllBtn = document.getElementById('revoke-all-btn');
+    if (revokeAllBtn) {
+      revokeAllBtn.addEventListener('click', () => this.revokeAllSessions());
+    }
+  }
+
+  async loadData() {
+    await Promise.all([
+      this.loadActiveSessions(),
+      this.loadSecurityLog()
+    ]);
+  }
+
+  async getAuthHeaders() {
+    try {
+      if (!window.Clerk) await this._waitForClerk();
+      if (window.Clerk?.session) {
+        const token = await window.Clerk.session.getToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+      }
+    } catch (e) { console.warn('getAuthHeaders failed:', e); }
+    return {};
+  }
+
+  _waitForClerk() {
+    return new Promise((resolve) => {
+      const maxWait = 8000; let waited = 0;
+      const check = setInterval(() => {
+        if (window.Clerk?.session) { clearInterval(check); resolve(); }
+        waited += 100;
+        if (waited >= maxWait) { clearInterval(check); resolve(); }
+      }, 100);
+    });
+  }
+
+  async loadActiveSessions() {
+    if (!this.sessionsList) return;
+
+    try {
+      this.sessionsList.innerHTML = '<div class="setting-item"><div class="setting-info">Loading...</div></div>';
+
+      const response = await fetch('/api/auth/sessions', {
+        headers: await this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.renderSessions(data.sessions);
+      } else {
+        throw new Error('Failed to load sessions');
+      }
+    } catch (error) {
+      console.error('Load sessions error:', error);
+      this.sessionsList.innerHTML = '<div class="setting-item"><div class="setting-info" style="color:red">Failed to load sessions</div></div>';
+    }
+  }
+
+  renderSessions(sessions) {
+    if (sessions.length === 0) {
+      this.sessionsList.innerHTML = '<div class="setting-item"><div class="setting-info">No active sessions found.</div></div>';
+      return;
+    }
+
+    this.sessionsList.innerHTML = sessions.map(session => {
+      const isCurrent = session.isCurrent;
+      const deviceName = session.device?.userAgent?.match(/\(([^)]+)\)/)?.[1] || session.device?.userAgent || 'Unknown Device';
+      // Simple parse for Browser/OS could be better but using UA or custom fields
+
+      return `
+        <div class="setting-item session-item">
+          <div class="setting-info">
+            <div class="setting-label">
+                ${session.device?.platform || 'Device'} 
+                ${isCurrent ? '<span class="session-badge current" style="background:#64ffda; color:#0a192f; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-left:8px;">Current</span>' : ''}
+            </div>
+            <div class="setting-description">
+              ${session.location?.city ? `${session.location.city}, ${session.location.country}` : 'Unknown Location'} • 
+              Last active: ${new Date(session.lastAccessAt).toLocaleString()}
+              <br>
+              <small style="opacity:0.7">${deviceName}</small>
+            </div>
+          </div>
+          <div class="setting-control">
+            ${!isCurrent ? `<button class="btn-danger-sm revoke-session-btn" data-id="${session.id}">Revoke</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async loadSecurityLog() {
+    if (!this.securityLogBody) return;
+
+    try {
+      this.securityLogBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem;">Loading...</td></tr>';
+
+      const response = await fetch('/api/auth/security/audit-trail?limit=15', {
+        headers: await this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.renderSecurityLog(data.auditTrail);
+      } else {
+        throw new Error('Failed to load security log');
+      }
+    } catch (error) {
+      console.error('Load security log error:', error);
+      this.securityLogBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:red;">Failed to load logs</td></tr>';
+    }
+  }
+
+  renderSecurityLog(logs) {
+    if (!logs || logs.length === 0) {
+      this.securityLogBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem;">No recent activity</td></tr>';
+      return;
+    }
+
+    this.securityLogBody.innerHTML = logs.map(log => `
+      <tr style="border-bottom: 1px solid rgba(100,255,218,0.1);">
+        <td style="padding: 1rem;">${this.formatEventType(log.action)}</td>
+        <td style="padding: 1rem;">${log.ipAddress || 'Unknown'}</td>
+        <td style="padding: 1rem;">${log.deviceInfo?.platform || 'Unknown'}</td>
+        <td style="padding: 1rem;">${new Date(log.createdAt).toLocaleString()}</td>
+      </tr>
+    `).join('');
+  }
+
+  formatEventType(action) {
+    return action.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  }
+
+  async revokeSession(sessionId) {
+    if (!confirm('Are you sure you want to revoke this session?')) return;
+
+    try {
+      const response = await fetch(`/api/auth/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: await this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        this.loadActiveSessions(); // Reload list
+        // showToast('Session revoked', 'success'); // Assuming showToast exists or I can add it
+      } else {
+        alert('Failed to revoke session');
+      }
+    } catch (error) {
+      console.error('Revoke error:', error);
+    }
+  }
+
+  async revokeAllSessions() {
+    if (!confirm('Are you sure you want to sign out of all other devices?')) return;
+
+    try {
+      const response = await fetch('/api/auth/sessions/revoke-all', {
+        method: 'POST',
+        headers: await this.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        this.loadActiveSessions();
+        alert('All other sessions revoked');
+      } else {
+        alert('Failed to revoke sessions');
+      }
+    } catch (error) {
+      console.error('Revoke all error:', error);
+    }
   }
 }
 
@@ -997,4 +1072,285 @@ class NotificationCenterController {
 document.addEventListener('DOMContentLoaded', () => {
   window.notificationSettings = new NotificationSettingsController();
   window.notificationCenter = new NotificationCenterController();
+  window.securityController = new SecurityController();
+  window.profileController = new ProfileController();
 });
+
+
+/**
+ * Profile Controller
+ * Uses Clerk Frontend SDK directly for profile management.
+ * Names & avatar → Clerk user object
+ * Phone & bio → Clerk unsafeMetadata (persisted in Clerk cloud)
+ * Falls back to backend API when available.
+ */
+class ProfileController {
+  constructor() {
+    this.profileData = null;
+    this.isSaving = false;
+    this.isUploadingAvatar = false;
+    this.init();
+  }
+
+  async init() {
+    try {
+      await this.waitForClerk();
+      this.attachEventListeners();
+      this.loadProfile();
+    } catch (err) {
+      console.error('ProfileController init failed:', err);
+    }
+  }
+
+  async waitForClerk() {
+    if (window.Clerk?.user) return;
+    return new Promise((resolve, reject) => {
+      const maxWait = 10000;
+      let waited = 0;
+      const check = setInterval(async () => {
+        if (window.Clerk) {
+          clearInterval(check);
+          try {
+            await window.Clerk.load();
+            resolve();
+          } catch (err) { reject(err); }
+        }
+        waited += 100;
+        if (waited >= maxWait) { clearInterval(check); reject(new Error('Clerk SDK timeout')); }
+      }, 100);
+    });
+  }
+
+  attachEventListeners() {
+    const saveBtn = document.getElementById('save-profile-btn');
+    if (saveBtn) saveBtn.addEventListener('click', () => this.saveProfile());
+
+    const cancelBtn = document.querySelector('#profile-tab .btn-secondary');
+    if (cancelBtn) cancelBtn.addEventListener('click', () => this.resetForm());
+
+    const changeAvatarBtn = document.getElementById('change-avatar-btn');
+    const avatarFileInput = document.getElementById('avatar-file-input');
+    if (changeAvatarBtn && avatarFileInput) {
+      changeAvatarBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        avatarFileInput.click();
+      });
+      avatarFileInput.addEventListener('change', (e) => {
+        if (e.target.files?.[0]) this.uploadAvatar(e.target.files[0]);
+      });
+    }
+  }
+
+  /**
+   * Load profile entirely from Clerk frontend SDK
+   */
+  loadProfile() {
+    const user = window.Clerk?.user;
+    if (!user) return;
+
+    const meta = user.unsafeMetadata || {};
+
+    this.profileData = {
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.primaryEmailAddress?.emailAddress || '',
+      imageUrl: user.imageUrl || '',
+      phone: meta.phone || '',
+      bio: meta.bio || ''
+    };
+
+    this.populateForm(this.profileData);
+  }
+
+  populateForm(profile) {
+    // Header
+    const nameEl = document.getElementById('profile-name');
+    const emailHeaderEl = document.getElementById('profile-email');
+    const imageEl = document.getElementById('profile-image');
+    if (nameEl) nameEl.textContent = `${profile.firstName} ${profile.lastName}`.trim() || 'User';
+    if (emailHeaderEl) emailHeaderEl.textContent = profile.email || '';
+    if (imageEl && profile.imageUrl) imageEl.src = profile.imageUrl;
+
+    // Form inputs
+    const firstNameInput = document.getElementById('first-name');
+    const lastNameInput = document.getElementById('last-name');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const bioInput = document.getElementById('bio');
+
+    if (firstNameInput) firstNameInput.value = profile.firstName;
+    if (lastNameInput) lastNameInput.value = profile.lastName;
+    if (emailInput) {
+      emailInput.value = profile.email;
+      emailInput.readOnly = true;
+      emailInput.title = 'Email is managed through Clerk';
+      emailInput.style.opacity = '0.7';
+      emailInput.style.cursor = 'not-allowed';
+    }
+    if (phoneInput) phoneInput.value = profile.phone;
+    if (bioInput) bioInput.value = profile.bio;
+  }
+
+  /**
+   * Save profile using Clerk frontend SDK
+   */
+  async saveProfile() {
+    if (this.isSaving) return;
+    this.isSaving = true;
+
+    const saveBtn = document.getElementById('save-profile-btn');
+    const originalText = saveBtn?.innerHTML;
+    if (saveBtn) {
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      saveBtn.disabled = true;
+    }
+
+    try {
+      const firstName = document.getElementById('first-name')?.value?.trim() || '';
+      const lastName = document.getElementById('last-name')?.value?.trim() || '';
+      const phone = document.getElementById('phone')?.value?.trim() || '';
+      const bio = document.getElementById('bio')?.value?.trim() || '';
+
+      if (!firstName) {
+        this.showToast('First name is required', 'error');
+        return;
+      }
+
+      const user = window.Clerk?.user;
+      if (!user) {
+        this.showToast('Not signed in', 'error');
+        return;
+      }
+
+      // Update Clerk user: names + unsafeMetadata (phone, bio)
+      await user.update({
+        firstName,
+        lastName,
+        unsafeMetadata: {
+          ...(user.unsafeMetadata || {}),
+          phone,
+          bio
+        }
+      });
+
+      // Refresh local data
+      this.profileData = {
+        firstName,
+        lastName,
+        email: user.primaryEmailAddress?.emailAddress || '',
+        imageUrl: user.imageUrl || '',
+        phone,
+        bio
+      };
+      this.populateForm(this.profileData);
+
+      // Also try to sync to backend DB (non-blocking, best-effort)
+      this.syncToBackend(this.profileData).catch(() => {});
+
+      this.showToast('Profile updated successfully!', 'success');
+    } catch (error) {
+      console.error('Save profile error:', error);
+      this.showToast(error.message || 'Failed to save profile', 'error');
+    } finally {
+      this.isSaving = false;
+      if (saveBtn) {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+      }
+    }
+  }
+
+  /**
+   * Best-effort sync to backend DB
+   */
+  async syncToBackend(profile) {
+    try {
+      const token = await window.Clerk?.session?.getToken();
+      if (!token) return;
+      await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profile)
+      });
+    } catch { /* silent */ }
+  }
+
+  /**
+   * Upload avatar using Clerk frontend SDK
+   */
+  async uploadAvatar(file) {
+    if (this.isUploadingAvatar) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.showToast('Image must be less than 5MB', 'error');
+      return;
+    }
+
+    this.isUploadingAvatar = true;
+    const imageEl = document.getElementById('profile-image');
+    const avatarBtn = document.getElementById('change-avatar-btn');
+
+    if (avatarBtn) avatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    // Instant preview
+    if (imageEl) {
+      const reader = new FileReader();
+      reader.onload = (e) => { imageEl.src = e.target.result; };
+      reader.readAsDataURL(file);
+    }
+
+    try {
+      const user = window.Clerk?.user;
+      if (!user) throw new Error('Not signed in');
+
+      await user.setProfileImage({ file });
+      await user.reload();
+
+      if (imageEl && user.imageUrl) imageEl.src = user.imageUrl;
+      if (this.profileData) this.profileData.imageUrl = user.imageUrl;
+
+      this.showToast('Avatar updated successfully!', 'success');
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      this.showToast('Failed to update avatar', 'error');
+      if (imageEl && this.profileData?.imageUrl) imageEl.src = this.profileData.imageUrl;
+    } finally {
+      this.isUploadingAvatar = false;
+      if (avatarBtn) avatarBtn.innerHTML = '<i class="fas fa-camera"></i>';
+      const fileInput = document.getElementById('avatar-file-input');
+      if (fileInput) fileInput.value = '';
+    }
+  }
+
+  resetForm() {
+    if (this.profileData) {
+      this.populateForm(this.profileData);
+      this.showToast('Changes discarded', 'info');
+    } else {
+      this.loadProfile();
+    }
+  }
+
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+      position: fixed; bottom: 30px; right: 30px; z-index: 100000;
+      padding: 12px 24px; border-radius: 8px; color: #fff;
+      font-size: 0.95rem; opacity: 0; transition: opacity 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      background: ${type === 'success' ? '#1db954' : type === 'error' ? '#e74c3c' : '#3498db'};
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '1'; }, 10);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+}
+

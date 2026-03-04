@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Intelligence - ExpenseFlow</title>
+    <link rel="stylesheet" href="/expensetracker.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>🌍 Multi-Currency Intelligence</h1>
+                <p class="subtitle">Track your global assets and forex revaluations</p>
+            </div>
+            <div class="header-actions">
+                <select id="base-currency-selector" class="currency-selector">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="INR">INR</option>
+                    <option value="JPY">JPY</option>
+                </select>
+                <button id="refresh-rates-btn" class="btn-primary">🔄 Refresh Rates</button>
+                <a href="/" class="btn-secondary">← Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Quick Stats -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">💰</div>
+                <div class="metric-content">
+                    <h3>Total Value</h3>
+                    <div class="metric-value" id="total-value">$--</div>
+                    <div class="metric-label" id="total-value-label">In base currency</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📊</div>
+                <div class="metric-content">
+                    <h3>Unrealized P&L</h3>
+                    <div class="metric-value" id="unrealized-pl">$--</div>
+                    <div class="metric-label">Forex gains/losses</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">🌐</div>
+                <div class="metric-content">
+                    <h3>Currencies Held</h3>
+                    <div class="metric-value" id="currencies-count">-</div>
+                    <div class="metric-label">Active currencies</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">⚠️</div>
+                <div class="metric-content">
+                    <h3>Risk Level</h3>
+                    <div class="metric-value" id="risk-level">--</div>
+                    <div class="metric-label" id="risk-score-label">Risk score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Currency Exposure Chart -->
+            <div class="chart-card full-width">
+                <div class="card-header">
+                    <h2>💼 Currency Exposure</h2>
+                    <div class="chart-controls">
+                        <span class="badge" id="exposure-badge">Loading...</span>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="exposure-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Real-Time Rates -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>💱 Live Exchange Rates</h2>
+                    <button class="btn-sm" id="clear-cache-btn">Clear Cache</button>
+                </div>
+                <div class="card-body">
+                    <div id="rates-list" class="rates-list">
+                        <p class="loading-text">Loading rates...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P&L Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📈 Profit & Loss</h2>
+                </div>
+                <div class="card-body">
+                    <div id="pl-list" class="pl-list">
+                        <p class="loading-text">Loading P&L data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Assessment -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2>🎯 Currency Risk Assessment</h2>
+                </div>
+                <div class="card-body">
+                    <div id="risk-assessment" class="risk-assessment">
+                        <p class="loading-text">Analyzing risk...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revaluation Report -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2>📊 Historical Revaluation Impact</h2>
+                    <div class="date-range-selector">
+                        <input type="date" id="start-date" class="date-input">
+                        <span>to</span>
+                        <input type="date" id="end-date" class="date-input">
+                        <button class="btn-sm" id="generate-report-btn">Generate Report</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="revaluation-report" class="revaluation-report">
+                        <p class="empty-text">Select a date range and click "Generate Report"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Currency Converter -->
+        <div class="converter-widget">
+            <h3>⚡ Quick Converter</h3>
+            <div class="converter-form">
+                <input type="number" id="convert-amount" placeholder="Amount" step="0.01">
+                <select id="convert-from" class="currency-select">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="INR">INR</option>
+                </select>
+                <span class="convert-arrow">→</span>
+                <select id="convert-to" class="currency-select">
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                    <option value="GBP">GBP</option>
+                    <option value="INR">INR</option>
+                </select>
+                <button id="convert-btn" class="btn-primary">Convert</button>
+            </div>
+            <div id="conversion-result" class="conversion-result hidden"></div>
+        </div>
+    </div>
+
+    <script src="/js/currency-intelligence.js"></script>
+</body>
+
+</html>

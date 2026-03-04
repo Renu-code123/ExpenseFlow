@@ -7,6 +7,8 @@ const taxOptimizationService = require('../services/taxOptimizationService');
 const TaxProfile = require('../models/TaxProfile');
 const TaxDocument = require('../models/TaxDocument');
 const TaxRule = require('../models/TaxRule');
+const taxOptimizationEngine = require('../services/taxOptimizationEngine');
+const taxRepository = require('../repositories/taxRepository');
 
 // ==================== TAX PROFILE ====================
 
@@ -14,7 +16,7 @@ const TaxRule = require('../models/TaxRule');
 router.post('/profile', auth, validateTaxProfile, async (req, res) => {
     try {
         let profile = await TaxProfile.getUserProfile(req.user.id);
-        
+
         if (profile) {
             // Update existing profile
             Object.assign(profile, req.body);
@@ -27,7 +29,7 @@ router.post('/profile', auth, validateTaxProfile, async (req, res) => {
             });
             await profile.save();
         }
-        
+
         res.json({ success: true, data: profile });
     } catch (error) {
         console.error('Error creating/updating tax profile:', error);
@@ -39,14 +41,14 @@ router.post('/profile', auth, validateTaxProfile, async (req, res) => {
 router.get('/profile', auth, async (req, res) => {
     try {
         const profile = await TaxProfile.getUserProfile(req.user.id);
-        
+
         if (!profile) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Tax profile not found. Please create one first.' 
+            return res.status(404).json({
+                success: false,
+                message: 'Tax profile not found. Please create one first.'
             });
         }
-        
+
         res.json({ success: true, data: profile });
     } catch (error) {
         console.error('Error fetching tax profile:', error);
@@ -61,7 +63,7 @@ router.get('/calculate/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
         const calculation = await taxOptimizationService.calculateUserTax(req.user.id, year);
-        
+
         res.json({ success: true, data: calculation });
     } catch (error) {
         console.error('Error calculating tax:', error);
@@ -74,7 +76,7 @@ router.get('/optimize/bracket/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
         const optimization = await taxOptimizationService.optimizeTaxBracket(req.user.id, year);
-        
+
         res.json({ success: true, data: optimization });
     } catch (error) {
         console.error('Error optimizing tax bracket:', error);
@@ -89,11 +91,11 @@ router.get('/optimize/harvest/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
         const opportunities = await taxOptimizationService.identifyTaxLossHarvestingOpportunities(req.user.id, year);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             data: opportunities,
-            count: opportunities.length 
+            count: opportunities.length
         });
     } catch (error) {
         console.error('Error identifying harvesting opportunities:', error);
@@ -106,9 +108,9 @@ router.get('/wash-sales/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
         const washSales = await taxOptimizationService.detectWashSales(req.user.id, year);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             data: washSales,
             count: washSales.length,
             has_violations: washSales.length > 0
@@ -126,7 +128,7 @@ router.get('/capital-gains/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
         const categorized = await taxOptimizationService.categorizeCapitalGains(req.user.id, year);
-        
+
         res.json({ success: true, data: categorized });
     } catch (error) {
         console.error('Error categorizing capital gains:', error);
@@ -141,7 +143,7 @@ router.get('/estimated/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
         const estimated = await taxOptimizationService.calculateEstimatedTax(req.user.id, year);
-        
+
         res.json({ success: true, data: estimated });
     } catch (error) {
         console.error('Error calculating estimated tax:', error);
@@ -154,17 +156,17 @@ router.post('/estimated/payment', auth, validateEstimatedPayment, async (req, re
     try {
         const { quarter, confirmation_number } = req.body;
         const profile = await TaxProfile.getUserProfile(req.user.id);
-        
+
         if (!profile) {
             return res.status(404).json({ success: false, message: 'Tax profile not found' });
         }
-        
+
         await profile.markPaymentPaid(quarter, confirmation_number);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: `Q${quarter} estimated tax payment recorded`,
-            data: profile.estimated_tax_payments 
+            data: profile.estimated_tax_payments
         });
     } catch (error) {
         console.error('Error recording payment:', error);
@@ -183,7 +185,7 @@ router.post('/documents/generate', auth, validateTaxDocument, async (req, res) =
             document_type,
             tax_year
         );
-        
+
         res.status(201).json({ success: true, data: document });
     } catch (error) {
         console.error('Error generating tax document:', error);
@@ -196,7 +198,7 @@ router.get('/documents/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : null;
         const documents = await TaxDocument.getUserDocuments(req.user.id, year);
-        
+
         res.json({ success: true, data: documents, count: documents.length });
     } catch (error) {
         console.error('Error fetching tax documents:', error);
@@ -211,11 +213,11 @@ router.get('/documents/:documentId/view', auth, async (req, res) => {
             _id: req.params.documentId,
             user: req.user.id
         });
-        
+
         if (!document) {
             return res.status(404).json({ success: false, message: 'Document not found' });
         }
-        
+
         res.json({ success: true, data: document });
     } catch (error) {
         console.error('Error fetching document:', error);
@@ -227,22 +229,22 @@ router.get('/documents/:documentId/view', auth, async (req, res) => {
 router.put('/documents/:documentId/file', auth, async (req, res) => {
     try {
         const { confirmation_number, payment_amount, payment_method } = req.body;
-        
+
         const document = await TaxDocument.findOne({
             _id: req.params.documentId,
             user: req.user.id
         });
-        
+
         if (!document) {
             return res.status(404).json({ success: false, message: 'Document not found' });
         }
-        
+
         await document.markFiled(confirmation_number, payment_amount, payment_method);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: 'Document marked as filed',
-            data: document 
+            data: document
         });
     } catch (error) {
         console.error('Error marking document as filed:', error);
@@ -257,17 +259,17 @@ router.put('/documents/:documentId/suggestions/:suggestionId/implement', auth, a
             _id: req.params.documentId,
             user: req.user.id
         });
-        
+
         if (!document) {
             return res.status(404).json({ success: false, message: 'Document not found' });
         }
-        
+
         await document.markSuggestionImplemented(req.params.suggestionId);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: 'Suggestion marked as implemented',
-            data: document 
+            data: document
         });
     } catch (error) {
         console.error('Error implementing suggestion:', error);
@@ -282,9 +284,9 @@ router.get('/rules/:country/:year?', auth, async (req, res) => {
     try {
         const { country } = req.params;
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
-        
+
         const rules = await TaxRule.getCurrentRules(country.toUpperCase(), null);
-        
+
         res.json({ success: true, data: rules, count: rules.length });
     } catch (error) {
         console.error('Error fetching tax rules:', error);
@@ -297,16 +299,16 @@ router.get('/rules/:country/contribution-limits', auth, async (req, res) => {
     try {
         const { country } = req.params;
         const year = new Date().getFullYear();
-        
+
         const rule = await TaxRule.getRulesByType(country.toUpperCase(), 'contribution_limit', year);
-        
+
         if (!rule) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Contribution limits not found for this jurisdiction' 
+            return res.status(404).json({
+                success: false,
+                message: 'Contribution limits not found for this jurisdiction'
             });
         }
-        
+
         res.json({ success: true, data: rule.contribution_limits });
     } catch (error) {
         console.error('Error fetching contribution limits:', error);
@@ -321,18 +323,18 @@ router.get('/year-end/:year?', auth, async (req, res) => {
     try {
         const year = req.params.year ? parseInt(req.params.year) : new Date().getFullYear();
         const profile = await TaxProfile.getUserProfile(req.user.id);
-        
+
         if (!profile) {
             return res.status(404).json({ success: false, message: 'Tax profile not found' });
         }
-        
+
         // Get all optimization opportunities
         const [bracket, harvest, capitalGains] = await Promise.all([
             taxOptimizationService.optimizeTaxBracket(req.user.id, year),
             taxOptimizationService.identifyTaxLossHarvestingOpportunities(req.user.id, year),
             taxOptimizationService.categorizeCapitalGains(req.user.id, year)
         ]);
-        
+
         const checklist = {
             retirement_contributions: {
                 total_contributed: profile.total_tax_advantaged_contributions,
@@ -361,11 +363,69 @@ router.get('/year-end/:year?', auth, async (req, res) => {
                 deadline: new Date(year, 11, 31)
             }
         };
-        
+
         res.json({ success: true, data: checklist });
     } catch (error) {
         console.error('Error generating year-end checklist:', error);
         res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ==================== AUTONOMOUS OPTIMIZATION (Issue #843) ====================
+
+/**
+ * GET /api/tax/autonomous/strategic-advice/:workspaceId
+ * Get AI-driven strategic spend advice based on current deductions.
+ */
+router.get('/autonomous/strategic-advice/:workspaceId', auth, async (req, res) => {
+    try {
+        const { workspaceId } = req.params;
+        const { currentDeductions, targetedDeductions } = req.query;
+
+        const advice = await taxOptimizationEngine.getStrategicSpendAdvice(
+            workspaceId,
+            parseFloat(currentDeductions || 0),
+            parseFloat(targetedDeductions || 100000)
+        );
+
+        res.json({ success: true, data: advice });
+    } catch (error) {
+        console.error('Error fetching strategic spend advice:', error);
+        res.status(500).json({ success: false, message: 'Failed to generate tax advice' });
+    }
+});
+
+/**
+ * POST /api/tax/autonomous/evaluate-deduction
+ * Manually trigger high-confidence tax deduction evaluation for a hypothetical expense.
+ */
+router.post('/autonomous/evaluate-deduction', auth, async (req, res) => {
+    try {
+        const { expenseData, region } = req.body;
+        const workspaceId = req.headers['x-tenant-id'];
+
+        const evaluation = await taxOptimizationEngine.evaluateDeduction(workspaceId, expenseData, region);
+        res.json({ success: true, data: evaluation });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Evaluation failed' });
+    }
+});
+
+/**
+ * POST /api/tax/nodes
+ * Admin endpoint to update regional tax nodes and rules.
+ */
+router.post('/nodes', auth, async (req, res) => {
+    // Basic role check simulation
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    try {
+        const node = await taxRepository.upsertTaxNode(req.body);
+        res.json({ success: true, data: node });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
     }
 });
 

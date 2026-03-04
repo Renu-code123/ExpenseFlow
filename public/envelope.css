@@ -1,0 +1,370 @@
+/* Budget Envelope System Styles */
+/* This file contains additional styles for the envelope system */
+
+/* Base variables */
+:root {
+    --envelope-bg: #16213e;
+    --envelope-border: rgba(100, 255, 218, 0.1);
+    --envelope-hover: rgba(100, 255, 218, 0.05);
+    --envelope-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    
+    /* Category colors */
+    --food-color: #ff6b6b;
+    --transport-color: #4ecdc4;
+    --entertainment-color: #a55eea;
+    --shopping-color: #fed330;
+    --utilities-color: #26de81;
+    --healthcare-color: #fc5c65;
+    --education-color: #45aaf2;
+    --travel-color: #eb3b5a;
+    --other-color: #95a5a6;
+    --general-color: #64ffda;
+}
+
+/* Envelope card enhancements */
+.envelope-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.envelope-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.envelope-card:hover::before {
+    opacity: 1;
+}
+
+/* Envelope icon animation */
+.envelope-icon {
+    transition: transform 0.3s ease;
+}
+
+.envelope-card:hover .envelope-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Progress bar animation */
+.progress-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Status badge pulse */
+.status-badge {
+    position: relative;
+}
+
+.status-badge.warning,
+.status-badge.danger {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Quick action buttons */
+.quick-action-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(100, 255, 218, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.quick-action-btn:hover::before {
+    width: 200px;
+    height: 200px;
+}
+
+/* Summary card glow effect */
+.summary-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle,
+        rgba(100, 255, 218, 0.1) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.summary-card:hover::after {
+    opacity: 1;
+}
+
+/* Modal backdrop blur */
+.modal {
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Form input focus states */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+}
+
+/* Button hover effects */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.btn:hover::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* Filter select custom styling */
+.filter-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364ffda' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 35px;
+}
+
+/* Chart container styling */
+.chart-section {
+    position: relative;
+}
+
+.chart-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(100, 255, 218, 0.02) 0%,
+        transparent 50%
+    );
+    pointer-events: none;
+    border-radius: 12px;
+}
+
+/* Color picker styling */
+.form-group input[type="color"] {
+    height: 45px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .envelope-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .envelope-actions-bar {
+        flex-wrap: wrap;
+    }
+    
+    .quick-action-btn {
+        min-width: calc(50% - 4px);
+    }
+}
+
+/* Print styles */
+@media print {
+    .header-actions,
+    .filters,
+    .envelope-actions,
+    .envelope-actions-bar,
+    .modal {
+        display: none !important;
+    }
+    
+    .envelope-card {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+    }
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --envelope-bg: #1a1a3e;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .envelope-card {
+        border-width: 2px;
+    }
+    
+    .progress-bar {
+        border: 1px solid var(--text-secondary);
+    }
+    
+    .status-badge {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
+/* Selection styling */
+::selection {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Tooltip styles */
+[title] {
+    position: relative;
+}
+
+/* Loading state */
+.envelope-card.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.envelope-card.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

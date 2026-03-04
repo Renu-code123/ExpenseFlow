@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reimbursement Tracker - ExpenseFlow</title>
+  <link rel="stylesheet" href="expensetracker.css">
+  <link rel="stylesheet" href="reimbursement.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h2><i class="fas fa-wallet"></i> ExpenseFlow</h2>
+      </div>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+        <li><a href="envelope.html"><i class="fas fa-envelope"></i> Envelopes</a></li>
+        <li><a href="budget.html"><i class="fas fa-chart-pie"></i> Budgets</a></li>
+        <li><a href="goals.html"><i class="fas fa-bullseye"></i> Goals</a></li>
+        <li class="active"><a href="reimbursement.html"><i class="fas fa-receipt"></i> Reimbursements</a></li>
+        <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Analytics</a></li>
+        <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="page-header">
+        <h1><i class="fas fa-receipt"></i> Reimbursement Tracker</h1>
+        <div class="header-actions">
+          <button id="new-claim-btn" class="btn-primary">
+            <i class="fas fa-plus"></i> New Claim
+          </button>
+          <button id="refresh-btn" class="btn-secondary">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </header>
+
+      <!-- Summary Cards -->
+      <section class="summary-section">
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-icon pending">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="card-content">
+              <h3 id="pending-count">0</h3>
+              <p>Pending Claims</p>
+              <span id="pending-amount" class="amount">₹0.00</span>
+            </div>
+          </div>
+          
+          <div class="summary-card">
+            <div class="card-icon approved">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3 id="approved-count">0</h3>
+              <p>Approved</p>
+              <span id="approved-amount" class="amount">₹0.00</span>
+            </div>
+          </div>
+          
+          <div class="summary-card">
+            <div class="card-icon paid">
+              <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="card-content">
+              <h3 id="paid-count">0</h3>
+              <p>Paid</p>
+              <span id="paid-amount" class="amount">₹0.00</span>
+            </div>
+          </div>
+          
+          <div class="summary-card">
+            <div class="card-icon total">
+              <i class="fas fa-calculator"></i>
+            </div>
+            <div class="card-content">
+              <h3 id="total-count">0</h3>
+              <p>Total Claims</p>
+              <span id="total-amount" class="amount">₹0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Attention Needed Section -->
+      <section id="attention-section" class="attention-section hidden">
+        <h2><i class="fas fa-exclamation-triangle"></i> Attention Needed</h2>
+        <div id="attention-list" class="attention-list"></div>
+      </section>
+
+      <!-- Filters and Search -->
+      <section class="filters-section">
+        <div class="filters-row">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="Search claims...">
+          </div>
+          
+          <div class="filter-group">
+            <select id="status-filter" class="filter-select">
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="under_review">Under Review</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="paid">Paid</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            
+            <select id="category-filter" class="filter-select">
+              <option value="all">All Categories</option>
+              <option value="travel">Travel</option>
+              <option value="meals">Meals</option>
+              <option value="office_supplies">Office Supplies</option>
+              <option value="equipment">Equipment</option>
+              <option value="training">Training</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="transportation">Transportation</option>
+              <option value="accommodation">Accommodation</option>
+              <option value="medical">Medical</option>
+              <option value="other">Other</option>
+            </select>
+            
+            <select id="priority-filter" class="filter-select">
+              <option value="all">All Priorities</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          
+          <div class="date-filters">
+            <input type="date" id="start-date" class="date-input" placeholder="From">
+            <input type="date" id="end-date" class="date-input" placeholder="To">
+          </div>
+          
+          <button id="clear-filters" class="btn-text">
+            <i class="fas fa-times"></i> Clear
+          </button>
+        </div>
+      </section>
+
+      <!-- Claims List -->
+      <section class="claims-section">
+        <div class="section-header">
+          <h2>Reimbursement Claims</h2>
+          <div class="view-options">
+            <button id="view-list" class="view-btn active"><i class="fas fa-list"></i></button>
+            <button id="view-grid" class="view-btn"><i class="fas fa-th-large"></i></button>
+          </div>
+        </div>
+        
+        <div id="claims-container" class="claims-container list-view">
+          <!-- Claims will be rendered here -->
+          <div class="empty-state">
+            <i class="fas fa-receipt"></i>
+            <p>No reimbursement claims found</p>
+            <button id="empty-new-claim" class="btn-primary">Create Your First Claim</button>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div id="pagination" class="pagination hidden">
+          <button id="prev-page" class="btn-page" disabled><i class="fas fa-chevron-left"></i></button>
+          <span id="page-info">Page 1 of 1</span>
+          <button id="next-page" class="btn-page" disabled><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </section>
+
+      <!-- Category Breakdown -->
+      <section class="category-section">
+        <h2>Spending by Category</h2>
+        <div id="category-breakdown" class="category-breakdown">
+          <!-- Category stats will be rendered here -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- New/Edit Claim Modal -->
+  <div id="claim-modal" class="modal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2 id="modal-title">New Reimbursement Claim</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <form id="claim-form" class="claim-form">
+        <input type="hidden" id="claim-id">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="claim-title">Title *</label>
+            <input type="text" id="claim-title" required maxlength="100" placeholder="e.g., Business Trip to Mumbai">
+          </div>
+          
+          <div class="form-group">
+            <label for="claim-category">Category *</label>
+            <select id="claim-category" required>
+              <option value="">Select Category</option>
+              <option value="travel">Travel</option>
+              <option value="meals">Meals</option>
+              <option value="office_supplies">Office Supplies</option>
+              <option value="equipment">Equipment</option>
+              <option value="training">Training</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="transportation">Transportation</option>
+              <option value="accommodation">Accommodation</option>
+              <option value="medical">Medical</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="claim-amount">Amount (₹) *</label>
+            <input type="number" id="claim-amount" required min="0.01" step="0.01" placeholder="0.00">
+          </div>
+          
+          <div class="form-group">
+            <label for="claim-expense-date">Expense Date *</label>
+            <input type="date" id="claim-expense-date" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="payee-name">Payee Name *</label>
+            <input type="text" id="payee-name" required maxlength="100" placeholder="Employee name">
+          </div>
+          
+          <div class="form-group">
+            <label for="payee-email">Payee Email</label>
+            <input type="email" id="payee-email" maxlength="100" placeholder="email@company.com">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="payee-employee-id">Employee ID</label>
+            <input type="text" id="payee-employee-id" maxlength="50" placeholder="EMP001">
+          </div>
+          
+          <div class="form-group">
+            <label for="payee-department">Department</label>
+            <input type="text" id="payee-department" maxlength="50" placeholder="e.g., Sales">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="claim-priority">Priority</label>
+            <select id="claim-priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="claim-due-date">Due Date</label>
+            <input type="date" id="claim-due-date">
+          </div>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="claim-description">Description</label>
+          <textarea id="claim-description" rows="3" maxlength="1000" placeholder="Provide details about the expense..."></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="project-code">Project Code</label>
+            <input type="text" id="project-code" maxlength="50" placeholder="PROJ-001">
+          </div>
+          
+          <div class="form-group">
+            <label for="client-name">Client Name</label>
+            <input type="text" id="client-name" maxlength="100" placeholder="Client name if billable">
+          </div>
+        </div>
+        
+        <div class="form-checkboxes">
+          <label class="checkbox-label">
+            <input type="checkbox" id="claim-billable">
+            <span>Billable to Client</span>
+          </label>
+        </div>
+        
+        <div class="form-group full-width">
+          <label>Receipts</label>
+          <div id="receipt-upload" class="receipt-upload">
+            <div class="upload-area">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>Drag & drop receipts here or click to browse</p>
+              <input type="file" id="receipt-files" multiple accept="image/*,.pdf">
+            </div>
+            <div id="receipt-list" class="receipt-list"></div>
+          </div>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="claim-notes">Internal Notes</label>
+          <textarea id="claim-notes" rows="2" maxlength="1000" placeholder="Internal notes (not visible to payee)..."></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" id="save-draft" class="btn-secondary">Save as Draft</button>
+          <button type="submit" class="btn-primary">Submit Claim</button>
+          <button type="button" class="btn-cancel modal-close-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Claim Details Modal -->
+  <div id="details-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Claim Details</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <div id="claim-details-content" class="claim-details-content">
+        <!-- Details will be rendered here -->
+      </div>
+      
+      <div class="modal-actions" id="details-actions">
+        <!-- Action buttons will be rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="payment-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Process Payment</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <form id="payment-form" class="payment-form">
+        <input type="hidden" id="payment-claim-id">
+        
+        <div class="payment-summary">
+          <p><strong>Claim:</strong> <span id="payment-claim-title"></span></p>
+          <p><strong>Amount:</strong> <span id="payment-claim-amount"></span></p>
+          <p><strong>Payee:</strong> <span id="payment-payee-name"></span></p>
+        </div>
+        
+        <div class="form-group">
+          <label for="payment-amount">Payment Amount (₹) *</label>
+          <input type="number" id="payment-amount" required min="0.01" step="0.01">
+        </div>
+        
+        <div class="form-group">
+          <label for="payment-method">Payment Method *</label>
+          <select id="payment-method" required>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="cash">Cash</option>
+            <option value="check">Check</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="debit_card">Debit Card</option>
+            <option value="digital_wallet">Digital Wallet</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="payment-transaction-id">Transaction ID</label>
+          <input type="text" id="payment-transaction-id" maxlength="100" placeholder="Transaction reference">
+        </div>
+        
+        <div class="form-group">
+          <label for="payment-notes">Payment Notes</label>
+          <textarea id="payment-notes" rows="2" maxlength="500" placeholder="Optional notes..."></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Process Payment</button>
+          <button type="button" class="btn-cancel modal-close-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Rejection Modal -->
+  <div id="rejection-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Reject Claim</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <form id="rejection-form" class="rejection-form">
+        <input type="hidden" id="rejection-claim-id">
+        
+        <div class="form-group">
+          <label for="rejection-reason">Rejection Reason *</label>
+          <textarea id="rejection-reason" rows="4" maxlength="500" required placeholder="Provide a reason for rejection..."></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-danger">Reject Claim</button>
+          <button type="button" class="btn-cancel modal-close-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="reimbursement-tracker.js"></script>
+</body>
+</html>

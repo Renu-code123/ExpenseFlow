@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#64ffda">
+    <meta name="description" content="Find answers to common questions about ExpenseFlow - Your smart money management tool">
+    <meta name="keywords" content="FAQ, help, expense tracker, budget, support">
+    <meta name="author" content="ExpenseFlow">
+
+    <title>FAQ - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="faq.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="fas fa-wallet"></i> ExpenseFlow
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="faq.html" class="nav-link active">FAQ</a>
+                <a href="login-signup.html" class="nav-link">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="faq-header">
+        <div class="faq-header-content">
+            <h1 class="faq-title">Frequently Asked Questions</h1>
+            <p class="faq-subtitle">Find answers to common questions about ExpenseFlow</p>
+            
+            <!-- Search Box -->
+            <div class="faq-search-container">
+                <input 
+                    type="text" 
+                    id="faqSearch" 
+                    class="faq-search-input" 
+                    placeholder="Search FAQs..."
+                    aria-label="Search frequently asked questions"
+                >
+                <i class="fas fa-search faq-search-icon"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Content -->
+    <main class="faq-main">
+        <div class="faq-container">
+            <!-- Category Navigation -->
+            <div class="faq-categories">
+                <button class="category-btn active" data-category="general">
+                    <i class="fas fa-circle-question"></i> General
+                </button>
+                <button class="category-btn" data-category="account">
+                    <i class="fas fa-user"></i> Account
+                </button>
+                <button class="category-btn" data-category="features">
+                    <i class="fas fa-sparkles"></i> Features
+                </button>
+                <button class="category-btn" data-category="security">
+                    <i class="fas fa-lock"></i> Security
+                </button>
+                <button class="category-btn" data-category="billing">
+                    <i class="fas fa-credit-card"></i> Billing
+                </button>
+                <button class="category-btn" data-category="technical">
+                    <i class="fas fa-cog"></i> Technical
+                </button>
+            </div>
+
+            <!-- FAQ Items -->
+            <div class="faq-items">
+                
+                <!-- GENERAL CATEGORY -->
+                <div class="category-group" data-category="general">
+                    <h2 class="category-title">General</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What is ExpenseFlow?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            ExpenseFlow is a smart money management tool designed to help you track your expenses, manage budgets, set financial goals, and get insights into your spending habits. It's a Progressive Web App (PWA) available on all devices.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Is ExpenseFlow free to use?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! ExpenseFlow offers a free tier with all essential features for personal expense tracking. Premium features like advanced analytics, unlimited workspace members, and priority support are available with our paid plans.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Can I use ExpenseFlow offline?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Absolutely! ExpenseFlow is a Progressive Web App (PWA) that works offline. All your data is synced locally, and any changes you make offline will automatically sync to our servers when you reconnect to the internet.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What devices does ExpenseFlow support?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            ExpenseFlow works on all devices including desktop computers, tablets, and smartphones. Simply access it through your web browser. You can also install it as an app on mobile devices and access it offline.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Is there a mobile app?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            ExpenseFlow is a Progressive Web App (PWA), which means you can install it directly from your browser on both Android and iOS devices. It works just like a native app with offline capabilities and push notifications.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ACCOUNT CATEGORY -->
+                <div class="category-group" data-category="account" style="display: none;">
+                    <h2 class="category-title">Account</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I create an account?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Click on the "Sign Up" button on the login page. Enter your email address, create a strong password, and verify your email. You can also sign up using your Google or GitHub account for quick registration.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I reset my password?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Click "Forgot Password" on the login page. Enter your email address, and we'll send you a password reset link. Click the link in the email and create a new password. The link expires in 24 hours for security.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Can I change my email address?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, you can change your email in your account settings. Go to Settings > Account > Email, enter your new email address, and verify it. A confirmation link will be sent to your new email.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I delete my account?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            You can delete your account from Settings > Account > Delete Account. Be aware that this action is permanent and all your data will be deleted. We recommend exporting your data first.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What is Two-Factor Authentication (2FA)?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Two-Factor Authentication adds an extra layer of security to your account. After entering your password, you'll need to verify a code from an authenticator app or email. This prevents unauthorized access even if someone has your password.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I enable 2FA?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Go to Settings > Security > Two-Factor Authentication. Choose your preferred method (Authenticator App or Email), follow the setup instructions, and save your backup codes in a safe place. If you lose access to your 2FA device, you'll need these codes.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FEATURES CATEGORY -->
+                <div class="category-group" data-category="features" style="display: none;">
+                    <h2 class="category-title">Features</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I add an expense?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Click the "Add Expense" button or the plus icon in the main dashboard. Fill in the amount, select a category, add a description, and choose the date. You can also attach a receipt photo. Click "Save" to record the expense.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What categories are available?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            ExpenseFlow comes with default categories like Food, Transportation, Utilities, Entertainment, Healthcare, Shopping, and more. You can also create custom categories that match your spending habits.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Can I edit or delete expenses?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! Click on any expense to view details, then click the edit icon to modify it or the delete icon to remove it. Deleted expenses go to a trash folder for 30 days before permanent deletion.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I set a budget?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Go to Budget Goals and click "Create Budget". Set the category, budget amount, and time period (monthly, yearly, etc.). The app will track your spending and alert you when you approach the limit.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What are recurring expenses?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Recurring expenses are regular payments like rent, subscriptions, or utilities. You can set them up to automatically create expense entries at your specified frequency (daily, weekly, monthly, yearly).
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I upload receipts?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            When adding or editing an expense, click the camera icon to take a photo or the upload icon to select an image from your device. Our smart processing extracts expense details from the receipt automatically using OCR technology.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Can I work with groups or workspaces?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! Create workspaces to collaborate with others. Share expenses, budgets, and insights with your team or family. Invite members via email and set different permission levels for each user.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What analytics does ExpenseFlow provide?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Access detailed analytics showing spending trends, category breakdowns, monthly comparisons, and forecasts. View interactive charts, export reports, and get AI-powered insights on your spending patterns.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SECURITY CATEGORY -->
+                <div class="category-group" data-category="security" style="display: none;">
+                    <h2 class="category-title">Security</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Is my financial data secure?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! We use end-to-end encryption to protect your data. All sensitive information is encrypted both in transit (HTTPS/TLS) and at rest. We comply with industry standards and regularly conduct security audits.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What encryption standard does ExpenseFlow use?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            We use AES-256 encryption for sensitive data and TLS 1.3 for data in transit. All communication with our servers is encrypted using industry-standard protocols.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Do you sell my data to third parties?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Absolutely not! We never sell, trade, or share your personal financial data with third parties. Your data is yours and remains confidential. Check our Privacy Policy for complete details.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Can I export and backup my data?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! Go to Settings > Data > Export Data to download your expenses in CSV or JSON format. You can also enable automatic daily backups in Settings > Backup Settings for added peace of mind.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What should I do if I suspect a security breach?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Immediately change your password and enable 2FA if not already active. Contact our security team at security@expenseflow.com with details. We take security seriously and will investigate promptly.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How often do you update security measures?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            We continuously monitor threats and update our security measures. We perform regular security audits, penetration testing, and stay updated with the latest security standards and best practices.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- BILLING CATEGORY -->
+                <div class="category-group" data-category="billing" style="display: none;">
+                    <h2 class="category-title">Billing</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What payment methods do you accept?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and digital wallets. All payments are processed securely through Stripe.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Can I cancel my subscription anytime?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! You can cancel your subscription at any time from Settings > Billing > Subscription. Your service will remain active until the end of your current billing period.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Do you offer a free trial?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! All premium features come with a 14-day free trial. No credit card required. After the trial period, you can continue with the free plan or upgrade to a paid plan.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Can I get a refund?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            We offer a 30-day money-back guarantee for annual subscriptions. For monthly subscriptions, contact support within 7 days of purchase. Refunds are issued to the original payment method.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What's included in the premium plan?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Premium includes advanced analytics, unlimited workspace members, priority support, custom categories, API access, data export in multiple formats, and early access to new features.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Do prices vary by country?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, we offer localized pricing in different currencies. When you visit our pricing page, you'll see prices adjusted for your location based on purchasing power parity principles.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- TECHNICAL CATEGORY -->
+                <div class="category-group" data-category="technical" style="display: none;">
+                    <h2 class="category-title">Technical</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What browsers does ExpenseFlow support?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            ExpenseFlow works on all modern browsers: Chrome, Firefox, Safari, Edge, and Opera. For the best experience, use the latest version of your browser. We require JavaScript to be enabled.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What's the minimum internet speed required?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            ExpenseFlow works with any internet connection. Even on slow connections, the app remains responsive. Since it's a PWA, you can work offline and sync when you reconnect.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How do I install ExpenseFlow as an app?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            On Android: Open ExpenseFlow in Chrome, tap the menu, and select "Install app". On iOS: Open in Safari, tap the Share button, and select "Add to Home Screen". The app works offline and can send notifications.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">How much storage space does the app need?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            ExpenseFlow uses minimal storage. The PWA installation requires about 5-10 MB initially. Local data storage depends on your number of transactions but typically uses less than 50 MB for several years of data.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Is there an API for developers?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes! Premium users get access to our REST API. You can programmatically create, read, and update expenses, budgets, and analytics. Documentation is available at api.expenseflow.com.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">Why am I experiencing sync issues?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Check your internet connection and ensure you're logged in. Clear your browser cache (Settings > Clear Data). If issues persist, disable and re-enable sync in Settings > Advanced. Contact support if the problem continues.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span class="question-text">What should I do if the app is slow?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Try refreshing the page, clearing browser cache, or reinstalling the app. Disable browser extensions that might interfere. If you have thousands of transactions, this may naturally take longer. Premium users get optimized performance.
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Contact Section -->
+    <section class="faq-contact-section">
+        <div class="contact-content">
+            <h2>Didn't find your answer?</h2>
+            <p>We're here to help! Reach out to our support team</p>
+            <div class="contact-buttons">
+                <a href="mailto:support@expenseflow.com" class="contact-btn btn-email">
+                    <i class="fas fa-envelope"></i> Email Support
+                </a>
+                <a href="#" class="contact-btn btn-chat">
+                    <i class="fas fa-comments"></i> Live Chat
+                </a>
+                <a href="#" class="contact-btn btn-docs">
+                    <i class="fas fa-book"></i> Documentation
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Roadmap</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Help & Support</h4>
+                <ul>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Documentation</a></li>
+                    <li><a href="#">Contact Support</a></li>
+                    <li><a href="#">Tutorials</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <ul class="social-links">
+                    <li><a href="#"><i class="fab fa-twitter"></i></a></li>
+                    <li><a href="#"><i class="fab fa-facebook"></i></a></li>
+                    <li><a href="#"><i class="fab fa-instagram"></i></a></li>
+                    <li><a href="#"><i class="fab fa-linkedin"></i></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="theme.js"></script>
+    <script src="faq.js"></script>
+</body>
+</html>

@@ -846,4 +846,385 @@ router.delete('/trusted-devices/:deviceId', auth, async (req, res) => {
   }
 });
 
+/**
+ * GET /2fa/adaptive/status
+ * Get adaptive MFA status and settings
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.get('/adaptive/status', auth, async (req, res) => {
+  try {
+    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+
+    if (!twoFAAuth) {
+      return res.json({
+        enabled: false,
+        adaptiveEnabled: false,
+        availableMethods: [],
+        settings: {}
+      });
+    }
+
+    const availableMethods = [];
+    if (twoFAAuth.totpSecret) availableMethods.push('totp');
+    if (twoFAAuth.webauthnCredentials?.length > 0) availableMethods.push('webauthn');
+    if (twoFAAuth.pushEnabled) availableMethods.push('push');
+    if (twoFAAuth.knowledgeQuestions?.length > 0) availableMethods.push('knowledge');
+    if (twoFAAuth.biometricEnabled) availableMethods.push('biometric');
+
+    res.json({
+      enabled: twoFAAuth.enabled,
+      adaptiveEnabled: twoFAAuth.adaptiveEnabled !== false,
+      availableMethods,
+      settings: {
+        confidenceThresholds: twoFAAuth.confidenceThresholds,
+        riskCooldownTimers: twoFAAuth.riskCooldownTimers
+      }
+    });
+  } catch (error) {
+    console.error('Error getting adaptive MFA status:', error);
+    res.status(500).json({ error: 'Failed to get adaptive MFA status' });
+  }
+});
+
+/**
+ * POST /2fa/adaptive/settings
+ * Update adaptive MFA settings
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.post('/adaptive/settings', auth, async (req, res) => {
+  try {
+    const { adaptiveEnabled, confidenceThresholds, riskCooldownTimers } = req.body;
+
+    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+    if (!twoFAAuth) {
+      return res.status(400).json({ error: '2FA not configured' });
+    }
+
+    if (adaptiveEnabled !== undefined) {
+      twoFAAuth.adaptiveEnabled = adaptiveEnabled;
+    }
+
+    if (confidenceThresholds) {
+      twoFAAuth.confidenceThresholds = {
+        ...twoFAAuth.confidenceThresholds,
+        ...confidenceThresholds
+      };
+    }
+
+    if (riskCooldownTimers) {
+      twoFAAuth.riskCooldownTimers = {
+        ...twoFAAuth.riskCooldownTimers,
+        ...riskCooldownTimers
+      };
+    }
+
+    await twoFAAuth.save();
+
+    await AuditLog.create({
+      userId: req.user.id,
+      action: 'ADAPTIVE_MFA_SETTINGS_UPDATED',
+      actionType: 'security',
+      resourceType: 'AdaptiveMFA',
+      details: {
+        adaptiveEnabled: twoFAAuth.adaptiveEnabled,
+        confidenceThresholds: twoFAAuth.confidenceThresholds,
+        riskCooldownTimers: twoFAAuth.riskCooldownTimers
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Adaptive MFA settings updated',
+      settings: {
+        adaptiveEnabled: twoFAAuth.adaptiveEnabled,
+        confidenceThresholds: twoFAAuth.confidenceThresholds,
+        riskCooldownTimers: twoFAAuth.riskCooldownTimers
+      }
+    });
+  } catch (error) {
+    console.error('Error updating adaptive MFA settings:', error);
+    res.status(500).json({ error: 'Failed to update adaptive MFA settings' });
+  }
+});
+
+/**
+ * GET /2fa/adaptive/audit-log
+ * Get adaptive MFA audit log with reasoning
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.get('/adaptive/audit-log', auth, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = parseInt(req.query.skip) || 0;
+
+    const logs = await AuditLog.find({
+      userId: req.user.id,
+      resourceType: { $in: ['AdaptiveMFA', 'TwoFactorAuth'] },
+      action: { $regex: /MFA/ }
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      success: true,
+      logs: logs.map(log => ({
+        id: log._id,
+        action: log.action,
+        timestamp: log.createdAt,
+        details: log.details,
+        reasoning: log.details?.reasoning || []
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting adaptive MFA audit log:', error);
+    res.status(500).json({ error: 'Failed to get adaptive MFA audit log' });
+  }
+});
+
+/**
+ * POST /2fa/adaptive/test-confidence
+ * Test confidence scoring for current session
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.post('/adaptive/test-confidence', auth, async (req, res) => {
+  try {
+    const context = {
+      deviceFingerprint: req.headers['x-device-fingerprint'] || '',
+      location: req.body.location || {},
+      timestamp: new Date(),
+      userAgent: req.get('User-Agent'),
+      sessionId: req.sessionID
+    };
+
+    const confidence = await adaptiveMFAOrchestrator.calculateConfidenceScore(
+      req.user.id,
+      context
+    );
+
+    const decision = await adaptiveMFAOrchestrator.determineMFARequirement(
+      req.user.id,
+      context
+    );
+
+    res.json({
+      success: true,
+      confidence,
+      decision: {
+        required: decision.required,
+        reasoning: decision.reasoning
+      }
+    });
+  } catch (error) {
+    console.error('Error testing confidence scoring:', error);
+    res.status(500).json({ error: 'Failed to test confidence scoring' });
+  }
+});
+
+/**
+ * POST /2fa/webauthn/register
+ * Register WebAuthn credential
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.post('/webauthn/register', auth, async (req, res) => {
+  try {
+    const { credential, name } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ error: 'WebAuthn credential is required' });
+    }
+
+    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+    if (!twoFAAuth) {
+      return res.status(400).json({ error: '2FA not configured' });
+    }
+
+    // Add WebAuthn credential (simplified - in production would validate properly)
+    const webauthnCredential = {
+      credentialId: credential.id,
+      publicKey: credential.publicKey,
+      name: name || 'WebAuthn Device',
+      createdAt: new Date()
+    };
+
+    if (!twoFAAuth.webauthnCredentials) {
+      twoFAAuth.webauthnCredentials = [];
+    }
+
+    twoFAAuth.webauthnCredentials.push(webauthnCredential);
+    await twoFAAuth.save();
+
+    await AuditLog.create({
+      userId: req.user.id,
+      action: 'WEBAUTHN_CREDENTIAL_ADDED',
+      actionType: 'security',
+      resourceType: 'AdaptiveMFA',
+      details: {
+        credentialName: webauthnCredential.name
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'WebAuthn credential registered successfully'
+    });
+  } catch (error) {
+    console.error('Error registering WebAuthn credential:', error);
+    res.status(500).json({ error: 'Failed to register WebAuthn credential' });
+  }
+});
+
+/**
+ * POST /2fa/push/enable
+ * Enable push notifications
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.post('/push/enable', auth, async (req, res) => {
+  try {
+    const { deviceToken, platform } = req.body;
+
+    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+    if (!twoFAAuth) {
+      return res.status(400).json({ error: '2FA not configured' });
+    }
+
+    // Add push device token
+    const pushToken = {
+      token: deviceToken,
+      platform: platform || 'web',
+      isActive: true,
+      lastUsed: new Date()
+    };
+
+    if (!twoFAAuth.pushDeviceTokens) {
+      twoFAAuth.pushDeviceTokens = [];
+    }
+
+    // Remove existing token for this device if it exists
+    twoFAAuth.pushDeviceTokens = twoFAAuth.pushDeviceTokens.filter(
+      t => t.token !== deviceToken
+    );
+
+    twoFAAuth.pushDeviceTokens.push(pushToken);
+    twoFAAuth.pushEnabled = true;
+    await twoFAAuth.save();
+
+    await AuditLog.create({
+      userId: req.user.id,
+      action: 'PUSH_NOTIFICATIONS_ENABLED',
+      actionType: 'security',
+      resourceType: 'AdaptiveMFA',
+      details: {
+        platform: pushToken.platform
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Push notifications enabled successfully'
+    });
+  } catch (error) {
+    console.error('Error enabling push notifications:', error);
+    res.status(500).json({ error: 'Failed to enable push notifications' });
+  }
+});
+
+/**
+ * POST /2fa/knowledge/setup
+ * Setup knowledge-based authentication
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.post('/knowledge/setup', auth, async (req, res) => {
+  try {
+    const { questions } = req.body;
+
+    if (!questions || !Array.isArray(questions) || questions.length < 3) {
+      return res.status(400).json({ error: 'At least 3 knowledge questions are required' });
+    }
+
+    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+    if (!twoFAAuth) {
+      return res.status(400).json({ error: '2FA not configured' });
+    }
+
+    // Store knowledge questions (hashed for security)
+    const crypto = require('crypto');
+    twoFAAuth.knowledgeQuestions = questions.map(q => ({
+      question: q.question,
+      answer: crypto.createHash('sha256').update(q.answer.toLowerCase().trim()).digest('hex'),
+      createdAt: new Date()
+    }));
+
+    await twoFAAuth.save();
+
+    await AuditLog.create({
+      userId: req.user.id,
+      action: 'KNOWLEDGE_AUTH_SETUP',
+      actionType: 'security',
+      resourceType: 'AdaptiveMFA',
+      details: {
+        questionCount: questions.length
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Knowledge-based authentication setup successfully'
+    });
+  } catch (error) {
+    console.error('Error setting up knowledge authentication:', error);
+    res.status(500).json({ error: 'Failed to setup knowledge authentication' });
+  }
+});
+
+/**
+ * POST /2fa/biometric/enable
+ * Enable biometric authentication
+ * Issue #871: Adaptive MFA Orchestrator
+ */
+router.post('/biometric/enable', auth, async (req, res) => {
+  try {
+    const { credential, biometricType } = req.body;
+
+    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+    if (!twoFAAuth) {
+      return res.status(400).json({ error: '2FA not configured' });
+    }
+
+    // Add biometric credential
+    const biometricCredential = {
+      credentialId: credential.id,
+      publicKey: credential.publicKey,
+      biometricType: biometricType || 'fingerprint',
+      enrolledAt: new Date()
+    };
+
+    if (!twoFAAuth.biometricCredentials) {
+      twoFAAuth.biometricCredentials = [];
+    }
+
+    twoFAAuth.biometricCredentials.push(biometricCredential);
+    twoFAAuth.biometricEnabled = true;
+    await twoFAAuth.save();
+
+    await AuditLog.create({
+      userId: req.user.id,
+      action: 'BIOMETRIC_AUTH_ENABLED',
+      actionType: 'security',
+      resourceType: 'AdaptiveMFA',
+      details: {
+        biometricType: biometricCredential.biometricType
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Biometric authentication enabled successfully'
+    });
+  } catch (error) {
+    console.error('Error enabling biometric authentication:', error);
+    res.status(500).json({ error: 'Failed to enable biometric authentication' });
+  }
+});
+
 module.exports = router;

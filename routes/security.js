@@ -1,100 +1,114 @@
 const express = require('express');
-const auth = require('../middleware/auth');
-const securityMonitor = require('../services/securityMonitor');
 const router = express.Router();
+const auth = require('../middleware/auth');
+const RiskProfile = require('../models/RiskProfile');
+const Transaction = require('../models/Transaction');
+const anomalyService = require('../services/anomalyService');
 
-// Admin middleware (simplified - in production, use proper role-based auth)
-const adminAuth = async (req, res, next) => {
-  if (!req.user || req.user.email !== process.env.ADMIN_EMAIL) {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
-
-// Get security statistics
-router.get('/stats', auth, adminAuth, async (req, res) => {
+/**
+ * @route   GET /api/security/risk-profile
+ * @desc    Get the current user's risk profile and baselines
+ */
+router.get('/risk-profile', auth, async (req, res) => {
   try {
-    const { timeframe = 24 } = req.query;
-    const stats = await securityMonitor.getSecurityStats(parseInt(timeframe));
-    
-    if (!stats) {
-      return res.status(500).json({ error: 'Failed to fetch security statistics' });
+    let profile = await RiskProfile.findOne({ user: req.user._id })
+      .populate('historicalFlags.transaction');
+
+    if (!profile) {
+      profile = await anomalyService.updateUserBaselines(req.user._id);
     }
-    
-    res.json(stats);
+
+    res.json({ success: true, data: profile });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Get recent security logs
-router.get('/logs', auth, adminAuth, async (req, res) => {
+/**
+ * @route   GET /api/security/anomalies
+ * @desc    Get all transactions flagged as anomalies
+ */
+router.get('/anomalies', auth, async (req, res) => {
   try {
-    const { limit = 50 } = req.query;
-    const logs = await securityMonitor.getRecentLogs(parseInt(limit));
-    res.json(logs);
+    const anomalies = await Transaction.find({
+      user: req.user._id,
+      isAnomaly: true
+    }).sort({ createdAt: -1 });
+
+    res.json({ success: true, count: anomalies.length, data: anomalies });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Get blocked IPs
-router.get('/blocked-ips', auth, adminAuth, (req, res) => {
+/**
+ * @route   POST /api/security/recalculate-baselines
+ * @desc    Force a recalculation of spending baselines
+ */
+router.post('/recalculate-baselines', auth, async (req, res) => {
   try {
-    const blockedIPs = Array.from(securityMonitor.blockedIPs);
-    res.json({ blockedIPs, count: blockedIPs.length });
+    const profile = await anomalyService.updateUserBaselines(req.user._id);
+    res.json({ success: true, data: profile });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Unblock IP
-router.post('/unblock-ip', auth, adminAuth, (req, res) => {
+// ============================================
+// RED-TEAM & THREAT SURFACE ROUTES (Issue #907)
+// ============================================
+
+/**
+ * @route   GET /api/security/attack-graph
+ * @desc    Get the current workspace's attack surface and vulnerabilities
+ */
+router.get('/attack-graph', auth, async (req, res) => {
   try {
-    const { ip } = req.body;
-    
-    if (!ip) {
-      return res.status(400).json({ error: 'IP address is required' });
-    }
-    
-    securityMonitor.unblockIP(ip);
-    
-    // Log the unblock action
-    securityMonitor.logSecurityEvent(req, 'admin_action', {
-      action: 'unblock_ip',
-      targetIP: ip,
-      adminUser: req.user.email
+    const workspaceId = req.headers['x-workspace-id'] || (req.user ? req.user.activeWorkspace : null);
+    const AttackGraph = require('../models/AttackGraph');
+    const graph = await AttackGraph.findOne({ workspaceId });
+
+    if (!graph) return res.status(404).json({ success: false, message: 'Attack graph not yet generated.' });
+
+    res.json({ success: true, data: graph });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route   GET /api/security/incidents
+ * @desc    Review detection failures and red-team findings
+ */
+router.get('/incidents', auth, async (req, res) => {
+  try {
+    const workspaceId = req.headers['x-workspace-id'] || (req.user ? req.user.activeWorkspace : null);
+    const incidentRepository = require('../repositories/incidentRepository');
+    const incidents = await incidentRepository.getUnresolvedIncidents(workspaceId);
+
+    res.json({ success: true, data: incidents });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route   POST /api/security/simulate-attack
+ * @desc    Manually trigger a red-team simulation run
+ */
+router.post('/simulate-attack', auth, async (req, res) => {
+  try {
+    const workspaceId = req.headers['x-workspace-id'] || (req.user ? req.user.activeWorkspace : null);
+    const adversarialSimulator = require('../services/adversarialSimulator');
+    const attacks = await adversarialSimulator.generateAdversarialBatch(workspaceId);
+
+    res.json({
+      success: true,
+      message: `Generated ${attacks.length} synthetic attack transactions for audit.`,
+      attacks
     });
-    
-    res.json({ message: `IP ${ip} has been unblocked` });
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Security health check
-router.get('/health', auth, adminAuth, (req, res) => {
-  try {
-    const health = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      security: {
-        rateLimitingActive: true,
-        inputSanitizationActive: true,
-        securityHeadersActive: true,
-        ipBlockingActive: true,
-        blockedIPsCount: securityMonitor.blockedIPs.size
-      },
-      server: {
-        uptime: process.uptime(),
-        memoryUsage: process.memoryUsage(),
-        nodeVersion: process.version
-      }
-    };
-    
-    res.json(health);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

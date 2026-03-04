@@ -3,6 +3,7 @@ const TrustedDevice = require('../models/TrustedDevice');
 const SecurityEvent = require('../models/SecurityEvent');
 const twoFactorAuthService = require('../services/twoFactorAuthService');
 const suspiciousLoginDetectionService = require('../services/suspiciousLoginDetectionService');
+const adaptiveMFAOrchestrator = require('../services/adaptiveMFAOrchestrator');
 const AuditLog = require('../models/AuditLog');
 
 /**
@@ -13,7 +14,8 @@ const AuditLog = require('../models/AuditLog');
  */
 
 /**
- * Check if 2FA is required for the user
+ * Check if 2FA is required for the user (Adaptive MFA)
+ * Issue #871: Adaptive MFA Orchestrator
  */
 const check2FARequired = async (req, res, next) => {
   try {
@@ -21,49 +23,68 @@ const check2FARequired = async (req, res, next) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+    // Gather login context for adaptive analysis
+    const loginContext = {
+      deviceFingerprint: req.headers['x-device-fingerprint'] || '',
+      location: {
+        ip: req.ip,
+        country: req.body.location?.country,
+        city: req.body.location?.city,
+        coordinates: req.body.location?.coordinates
+      },
+      timestamp: new Date(),
+      userAgent: req.get('User-Agent'),
+      sessionId: req.sessionID
+    };
 
-    if (twoFAAuth && twoFAAuth.enabled) {
-      // Check if device is trusted
-      const fingerprint = req.headers['x-device-fingerprint'] || '';
-      if (fingerprint) {
-        const shouldSkip = await twoFactorAuthService.shouldSkip2FA(
-          req.user.id,
-          fingerprint
-        );
+    // Use adaptive MFA orchestrator to determine requirement
+    const mfaDecision = await adaptiveMFAOrchestrator.determineMFARequirement(
+      req.user.id,
+      loginContext
+    );
 
-        if (shouldSkip) {
-          // Update trusted device usage
-          const device = await TrustedDevice.findOne({
-            userId: req.user.id,
-            fingerprint
-          });
-          if (device) {
-            device.updateLastUsed(req.ip);
-            await device.save();
-          }
-          return next();
+    if (!mfaDecision.required) {
+      // MFA bypassed - log the decision
+      await AuditLog.create({
+        userId: req.user.id,
+        action: 'MFA_BYPASSED',
+        actionType: 'security',
+        resourceType: 'AdaptiveMFA',
+        details: {
+          confidence: mfaDecision.confidence,
+          reasoning: mfaDecision.reasoning,
+          context: loginContext
         }
-      }
-
-      // 2FA verification required
-      req.session.require2FA = true;
-      return res.status(403).json({
-        error: '2FA verification required',
-        code: 'REQUIRE_2FA',
-        twoFactorId: req.sessionID
       });
+      return next();
     }
 
-    next();
+    // MFA required - store challenge info in session
+    req.session.require2FA = true;
+    req.session.mfaChallenge = mfaDecision.challenge;
+    req.session.mfaContext = loginContext;
+    req.session.mfaDecision = {
+      confidence: mfaDecision.confidence,
+      reasoning: mfaDecision.reasoning
+    };
+
+    return res.status(403).json({
+      error: 'Adaptive MFA verification required',
+      code: 'REQUIRE_ADAPTIVE_MFA',
+      challenge: mfaDecision.challenge,
+      confidence: mfaDecision.confidence.score,
+      reasoning: mfaDecision.reasoning,
+      twoFactorId: req.sessionID
+    });
   } catch (error) {
-    console.error('Error in 2FA check middleware:', error);
+    console.error('Error in adaptive 2FA check middleware:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
- * Verify 2FA code middleware
+ * Verify adaptive MFA challenge
+ * Issue #871: Adaptive MFA Orchestrator
  */
 const verify2FA = async (req, res, next) => {
   try {
@@ -71,68 +92,65 @@ const verify2FA = async (req, res, next) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { code, method } = req.body;
+    const { code, method, challengeData } = req.body;
 
-    if (!code) {
-      return res.status(400).json({ error: 'Missing 2FA code' });
+    // Get challenge context from session
+    const challenge = req.session.mfaChallenge;
+    const context = req.session.mfaContext;
+
+    if (!challenge || !context) {
+      return res.status(400).json({
+        error: 'No active MFA challenge',
+        code: 'NO_ACTIVE_CHALLENGE'
+      });
     }
 
-    const twoFAAuth = await TwoFactorAuth.findOne({ userId: req.user.id });
+    // Determine challenge type
+    const challengeType = method || challenge.type;
 
-    if (!twoFAAuth || !twoFAAuth.enabled) {
-      return res.status(400).json({ error: '2FA not enabled' });
+    // Prepare challenge data
+    const verificationData = challengeData || { code };
+
+    // Use adaptive MFA orchestrator to verify
+    const verificationResult = await adaptiveMFAOrchestrator.verifyChallenge(
+      req.user.id,
+      challengeType,
+      verificationData,
+      context
+    );
+
+    if (!verificationResult.success) {
+      // Handle failed verification
+      return res.status(400).json({
+        error: 'MFA verification failed',
+        code: 'MFA_VERIFICATION_FAILED',
+        reasoning: verificationResult.reasoning,
+        nextAction: verificationResult.nextAction
+      });
     }
 
-    try {
-      let verified = false;
+    // Successful verification
+    req.user.verified2FA = true;
+    req.session.verified2FA = true;
+    req.session.vaultGrant = true; // Issue #770: Session now trusted for vault access
 
-      // Log the 2FA attempt
-      const loginInfo = {
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
-        deviceFingerprint: req.headers['x-device-fingerprint'],
-        sessionId: req.sessionID
-      };
+    // Clear challenge data from session
+    delete req.session.require2FA;
+    delete req.session.mfaChallenge;
+    delete req.session.mfaContext;
+    delete req.session.mfaDecision;
 
-      await twoFactorAuthService.log2FASecurityEvent(req.user.id, 'ATTEMPT', loginInfo);
+    // Update last used info
+    await twoFactorAuthService.updateLastUsed(req.user.id, req.ip, req.get('User-Agent'));
 
-      // Verify based on method
-      if (twoFAAuth.method === 'totp' || method === 'totp') {
-        verified = await twoFactorAuthService.verifyTOTPCode(req.user.id, code);
-      } else if (twoFAAuth.method === 'backup-codes' || method === 'backup-codes') {
-        // Use the one-time use enforcement
-        verified = await twoFactorAuthService.verifyBackupCodeWithOneTimeUse(req.user.id, code);
-      } else if (twoFAAuth.method === 'email' || method === 'email') {
-        verified = await twoFactorAuthService.verify2FACodeEmail(req.user.id, code);
-      }
+    res.json({
+      success: true,
+      message: 'MFA verification successful',
+      reasoning: verificationResult.reasoning
+    });
 
-      if (!verified) {
-        await twoFactorAuthService.log2FASecurityEvent(req.user.id, 'FAILURE', {
-          ...loginInfo,
-          failureReason: 'Invalid code'
-        });
-        return res.status(400).json({ error: 'Invalid code' });
-      }
-
-      // Log successful verification
-      await twoFactorAuthService.log2FASecurityEvent(req.user.id, 'SUCCESS', loginInfo);
-
-      // Issue #504: Validate session after successful 2FA
-      await twoFactorAuthService.validateSessionAfter2FA(
-        req.user.id,
-        req.sessionID,
-        loginInfo
-      );
-
-      req.user.verified2FA = true;
-      req.session.verified2FA = true;
-
-      next();
-    } catch (error) {
-      return res.status(400).json({ error: error.message });
-    }
   } catch (error) {
-    console.error('Error verifying 2FA:', error);
+    console.error('Error in adaptive MFA verification middleware:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -1,0 +1,20 @@
+{"level":"error","message":"Decryption failed for payload","service":"expense-flow","tenantId":"test_tenant_xyz_123","timestamp":"2026-02-25T15:06:40.775Z"}
+{"level":"error","message":"Decryption failed for payload","service":"expense-flow","tenantId":"test_tenant_xyz_123","timestamp":"2026-02-25T15:07:04.407Z"}
+{"level":"error","message":"Decryption failed for payload","service":"expense-flow","tenantId":"test_tenant_xyz_123","timestamp":"2026-02-25T15:09:29.697Z"}
+{"level":"error","message":"Decryption failed for payload","service":"expense-flow","tenantId":"699f1322de9461dc76bab733","timestamp":"2026-02-25T15:20:02.611Z"}
+{"level":"warn","message":"[Compliance Circuit] Breaker Tripped! Policy: Anti-Luxury Spend Cap","service":"expense-flow","timestamp":"2026-02-26T21:59:00.386Z"}
+{"level":"warn","message":"[Compliance Circuit] Breaker Tripped! Policy: Anti-Luxury Spend Cap","service":"expense-flow","timestamp":"2026-02-26T22:08:28.560Z"}
+{"level":"warn","message":"Privacy budget exceeded for workspace mockId. Skipping anonymization.","service":"expense-flow","timestamp":"2026-03-01T12:54:21.347Z"}
+{"level":"warn","message":"[ConflictMerge] Concurrent update detected for e1","service":"expense-flow","timestamp":"2026-03-02T06:43:43.331Z"}
+{"level":"warn","message":"[ConflictMerge] Concurrent update detected for e1","service":"expense-flow","timestamp":"2026-03-02T06:43:43.333Z"}
+{"error":"AWS failed","level":"warn","message":"KMS provider aws-kms failed","service":"expense-flow","timestamp":"2026-03-02T23:46:24.401Z"}
+{"error":"AWS failed","level":"warn","message":"KMS provider aws-kms failed","service":"expense-flow","timestamp":"2026-03-02T23:46:24.414Z"}
+{"error":"Azure failed","level":"warn","message":"KMS provider azure-keyvault failed","service":"expense-flow","timestamp":"2026-03-02T23:46:24.415Z"}
+{"error":"GCP failed","level":"warn","message":"KMS provider gcp-kms failed","service":"expense-flow","timestamp":"2026-03-02T23:46:24.415Z"}
+{"error":"AWS failed","level":"warn","message":"KMS provider aws-kms failed","service":"expense-flow","timestamp":"2026-03-02T23:46:24.435Z"}
+{"error":"Test error","level":"warn","message":"KMS provider aws-kms failed","service":"expense-flow","timestamp":"2026-03-02T23:46:24.519Z"}
+{"error":"AWS region down","level":"warn","message":"KMS provider aws-kms failed","service":"expense-flow","timestamp":"2026-03-02T23:46:24.566Z"}
+{"error":"Missing credentials in config, if using AWS_CONFIG_FILE, set AWS_SDK_LOAD_CONFIG=1","level":"error","message":"AWS KMS health check failed","service":"expense-flow","timestamp":"2026-03-02T23:46:44.336Z"}
+{"error":"getaddrinfo ENOTFOUND test.vault.azure.net","level":"error","message":"Azure Key Vault health check failed","service":"expense-flow","timestamp":"2026-03-02T23:46:50.268Z"}
+{"error":"Missing credentials in config, if using AWS_CONFIG_FILE, set AWS_SDK_LOAD_CONFIG=1","level":"error","message":"AWS KMS health check failed","service":"expense-flow","timestamp":"2026-03-02T23:47:42.944Z"}
+{"error":"getaddrinfo ENOTFOUND test.vault.azure.net","level":"error","message":"Azure Key Vault health check failed","service":"expense-flow","timestamp":"2026-03-02T23:47:48.170Z"}

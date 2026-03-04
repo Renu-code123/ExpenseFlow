@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#64ffda">
+    <meta name="description" content="ExpenseFlow AI Financial Advisor - Get personalized financial insights and recommendations">
+    <meta name="keywords" content="AI advisor, financial advice, budget help, expense tips">
+    <meta name="author" content="ExpenseFlow">
+
+    <title>AI Financial Advisor - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="ai-advisor.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="fas fa-wallet"></i> ExpenseFlow
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="faq.html" class="nav-link">FAQ</a>
+                <a href="ai-advisor.html" class="nav-link active">AI Advisor</a>
+                <a href="login-signup.html" class="nav-link">Login</a>
+                <button id="theme-toggle-btn" class="theme-toggle-btn dark-mode" title="Switch to Light Mode">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="advisor-header">
+        <div class="advisor-header-content">
+            <div class="header-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h1 class="advisor-title">AI Financial Advisor</h1>
+            <p class="advisor-subtitle">Get personalized financial insights and recommendations powered by AI</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="advisor-main">
+        <div class="advisor-container">
+            
+            <!-- Info Panel -->
+            <div class="advisor-info-panel">
+                <div class="info-card">
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>Smart Insights</h3>
+                    <p>Get AI-powered analysis of your spending patterns and financial health</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-target"></i>
+                    <h3>Personalized Tips</h3>
+                    <p>Receive tailored recommendations to improve your financial goals</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Budget Optimization</h3>
+                    <p>Get advice on budgeting strategies and expense optimization</p>
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <p>Hello! I'm your AI Financial Advisor. I'm here to help you make smarter financial decisions based on your spending patterns and goals.</p>
+                            <p class="message-time">Ask me about:</p>
+                            <ul class="suggestions">
+                                <li>📊 Budget optimization strategies</li>
+                                <li>💡 Ways to reduce expenses</li>
+                                <li>🎯 Achieving your financial goals</li>
+                                <li>📈 Investment and savings advice</li>
+                                <li>🏦 Debt management strategies</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="chat-input-area">
+                    <form id="chatForm" class="chat-form">
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="userInput" 
+                                class="chat-input" 
+                                placeholder="Ask me about your finances, budgeting, or financial goals..."
+                                aria-label="Ask the AI advisor a question"
+                                autocomplete="off"
+                            >
+                            <button type="submit" class="send-btn" aria-label="Send message">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <p class="input-disclaimer">
+                        <i class="fas fa-info-circle"></i>
+                        AI responses are for educational purposes. Not financial advice. Always consult a professional for important decisions.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions-section">
+        <div class="quick-actions-container">
+            <h2>Common Questions</h2>
+            <div class="quick-action-buttons">
+                <button class="quick-action-btn" data-question="What are some tips to reduce my monthly expenses?">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>Reduce Expenses</span>
+                </button>
+                <button class="quick-action-btn" data-question="How can I create an effective budget?">
+                    <i class="fas fa-calculator"></i>
+                    <span>Create Budget</span>
+                </button>
+                <button class="quick-action-btn" data-question="What are the best saving strategies?">
+                    <i class="fas fa-piggy-bank"></i>
+                    <span>Saving Tips</span>
+                </button>
+                <button class="quick-action-btn" data-question="How do I manage my debt effectively?">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Debt Management</span>
+                </button>
+                <button class="quick-action-btn" data-question="How can I achieve my financial goals?">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Financial Goals</span>
+                </button>
+                <button class="quick-action-btn" data-question="What investment strategies should I consider?">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Investment Tips</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="ai-advisor.html">AI Advisor</a></li>
+                    <li><a href="#">Blog</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Help & Support</h4>
+                <ul>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Documentation</a></li>
+                    <li><a href="#">Contact Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <ul class="social-links">
+                    <li><a href="#"><i class="fab fa-x"></i></a></li>
+                    <li><a href="#"><i class="fab fa-facebook"></i></a></li>
+                    <li><a href="#"><i class="fab fa-instagram"></i></a></li>
+                    <li><a href="#"><i class="fab fa-linkedin"></i></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 ExpenseFlow. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="theme.js"></script>
+    <script src="ai-advisor.js"></script>
+</body>
+</html>

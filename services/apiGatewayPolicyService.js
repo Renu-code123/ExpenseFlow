@@ -23,6 +23,7 @@ class ApiGatewayPolicyService extends EventEmitter {
         authRequired: true,
         allowedAuth: ['jwt', 'oauth2'],
         requiredScopes: [],
+        sensitivityTag: 'medium',
         rateLimit: {
           windowMs: 60000,
           max: 120
@@ -35,6 +36,36 @@ class ApiGatewayPolicyService extends EventEmitter {
           enabled: true,
           blockOnDetection: true,
           sensitivity: 'medium'
+        },
+        adaptiveRisk: {
+          enabled: true,
+          overheadBudgetMs: 50,
+          sensitivityTag: 'medium',
+          thresholds: {
+            tier1: 25,
+            tier2: 50,
+            tier3: 72,
+            tier4: 90
+          },
+          dynamicRateLimit: {
+            enabled: true,
+            multipliers: {
+              tier0: 1,
+              tier1: 1,
+              tier2: 0.7,
+              tier3: 0.35,
+              tier4: 0.05
+            }
+          },
+          stepUpAuth: {
+            enabled: true,
+            tiers: [2, 3, 4]
+          },
+          geoVelocity: {
+            enabled: true,
+            suspiciousKmh: 500,
+            impossibleKmh: 900
+          }
         }
       },
       routePolicies: []
@@ -97,6 +128,8 @@ class ApiGatewayPolicyService extends EventEmitter {
       throw new Error('routePolicies must be an array');
     }
 
+    this.validateAdaptiveRiskPolicy(policies.defaultPolicy.adaptiveRisk, 'defaultPolicy');
+
     for (const routePolicy of policies.routePolicies) {
       if (!routePolicy.pattern || typeof routePolicy.pattern !== 'string') {
         throw new Error('Each route policy requires a string pattern');
@@ -104,6 +137,44 @@ class ApiGatewayPolicyService extends EventEmitter {
       if (routePolicy.methods && !Array.isArray(routePolicy.methods)) {
         throw new Error(`Invalid methods for pattern ${routePolicy.pattern}`);
       }
+
+      if (routePolicy.sensitivityTag) {
+        const allowedTags = ['low', 'medium', 'high', 'critical'];
+        if (!allowedTags.includes(String(routePolicy.sensitivityTag).toLowerCase())) {
+          throw new Error(`Invalid sensitivityTag for pattern ${routePolicy.pattern}`);
+        }
+      }
+
+      this.validateAdaptiveRiskPolicy(routePolicy.adaptiveRisk, `routePolicy:${routePolicy.pattern}`);
+    }
+  }
+
+  validateAdaptiveRiskPolicy(adaptiveRisk, context = 'policy') {
+    if (adaptiveRisk === undefined) {
+      return;
+    }
+
+    if (!adaptiveRisk || typeof adaptiveRisk !== 'object') {
+      throw new Error(`adaptiveRisk must be an object for ${context}`);
+    }
+
+    const thresholds = adaptiveRisk.thresholds;
+    if (thresholds !== undefined) {
+      const keys = ['tier1', 'tier2', 'tier3', 'tier4'];
+      for (const key of keys) {
+        if (thresholds[key] !== undefined && !Number.isFinite(Number(thresholds[key]))) {
+          throw new Error(`adaptiveRisk.thresholds.${key} must be numeric for ${context}`);
+        }
+      }
+    }
+
+    const dynamicRateLimit = adaptiveRisk.dynamicRateLimit;
+    if (dynamicRateLimit?.multipliers !== undefined && typeof dynamicRateLimit.multipliers !== 'object') {
+      throw new Error(`adaptiveRisk.dynamicRateLimit.multipliers must be an object for ${context}`);
+    }
+
+    if (adaptiveRisk.stepUpAuth?.tiers !== undefined && !Array.isArray(adaptiveRisk.stepUpAuth.tiers)) {
+      throw new Error(`adaptiveRisk.stepUpAuth.tiers must be an array for ${context}`);
     }
   }
 
@@ -129,6 +200,42 @@ class ApiGatewayPolicyService extends EventEmitter {
       threatDetection: {
         ...(defaultPolicy.threatDetection || {}),
         ...(routePolicy.threatDetection || {})
+      },
+      adaptiveRisk: {
+        ...(defaultPolicy.adaptiveRisk || {}),
+        ...(routePolicy.adaptiveRisk || {}),
+        thresholds: {
+          ...((defaultPolicy.adaptiveRisk || {}).thresholds || {}),
+          ...((routePolicy.adaptiveRisk || {}).thresholds || {})
+        },
+        dynamicRateLimit: {
+          ...((defaultPolicy.adaptiveRisk || {}).dynamicRateLimit || {}),
+          ...((routePolicy.adaptiveRisk || {}).dynamicRateLimit || {}),
+          multipliers: {
+            ...(((defaultPolicy.adaptiveRisk || {}).dynamicRateLimit || {}).multipliers || {}),
+            ...(((routePolicy.adaptiveRisk || {}).dynamicRateLimit || {}).multipliers || {})
+          }
+        },
+        stepUpAuth: {
+          ...((defaultPolicy.adaptiveRisk || {}).stepUpAuth || {}),
+          ...((routePolicy.adaptiveRisk || {}).stepUpAuth || {})
+        },
+        geoVelocity: {
+          ...((defaultPolicy.adaptiveRisk || {}).geoVelocity || {}),
+          ...((routePolicy.adaptiveRisk || {}).geoVelocity || {})
+        },
+        behavior: {
+          ...((defaultPolicy.adaptiveRisk || {}).behavior || {}),
+          ...((routePolicy.adaptiveRisk || {}).behavior || {})
+        },
+        weights: {
+          ...((defaultPolicy.adaptiveRisk || {}).weights || {}),
+          ...((routePolicy.adaptiveRisk || {}).weights || {})
+        },
+        enforcement: {
+          ...((defaultPolicy.adaptiveRisk || {}).enforcement || {}),
+          ...((routePolicy.adaptiveRisk || {}).enforcement || {})
+        }
       }
     };
 

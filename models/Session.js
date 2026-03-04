@@ -84,7 +84,19 @@ const sessionSchema = new mongoose.Schema({
       max: 100,
       default: 0
     },
-    flags: [String]
+    flags: [String],
+    // Privilege elevation tracking (Issue #872)
+    elevatedPrivileges: {
+      active: {
+        type: Boolean,
+        default: false
+      },
+      grantedAt: Date,
+      expiresAt: Date,
+      expiredAt: Date,
+      transitionType: String,
+      escalationLevel: Number
+    }
   },
   // User agent string
   userAgent: String,

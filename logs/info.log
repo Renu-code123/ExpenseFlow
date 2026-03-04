@@ -1,0 +1,2 @@
+{"timestamp":"2026-02-19T13:19:09.339Z","level":"INFO","message":"System startup","traceId":"system","userId":"anonymous","component":"test-suite","environment":"development","version":"1.0.0"}
+{"timestamp":"2026-02-19T13:19:09.342Z","level":"INFO","message":"User action performed","traceId":"test-trace-123","userId":"user-789","action":"click_login","environment":"development","version":"1.0.0"}

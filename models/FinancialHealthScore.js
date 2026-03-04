@@ -20,6 +20,46 @@ const financialHealthScoreSchema = new mongoose.Schema({
     max: 100,
     required: true
   },
+  // Issue #798: Monte Carlo simulation metrics
+  simulationMetrics: {
+    lastSimulationAt: Date,
+    simulationCount: { type: Number, default: 10000 },
+    runwayConfidence: {
+      p10: Number,  // 10th percentile (pessimistic)
+      p25: Number,
+      p50: Number,  // Median
+      p75: Number,
+      p90: Number   // 90th percentile (optimistic)
+    },
+    exhaustionProbability: {
+      thirtyDays: Number,  // P(balance <= 0 in 30 days)
+      sixtyDays: Number,
+      ninetyDays: Number
+    },
+    valueAtRisk: {
+      var95: Number,       // 95% VaR
+      cvar95: Number,      // Conditional VaR (Expected Shortfall)
+      maxDrawdown: Number
+    },
+    volatilityMetrics: {
+      incomeVolatility: Number,
+      expenseVolatility: Number,
+      netCashflowVolatility: Number,
+      correlationCoefficient: Number
+    },
+    stressTestResults: {
+      recession: { survivalDays: Number, minBalance: Number },
+      incomeLoss: { survivalDays: Number, minBalance: Number },
+      expenseSpike: { survivalDays: Number, minBalance: Number },
+      combinedShock: { survivalDays: Number, minBalance: Number }
+    },
+    simulationHealthAdjustment: {
+      type: Number,
+      default: 0,
+      min: -20,
+      max: 20
+    }
+  },
   scoreComponents: {
     cashFlowHealth: {
       score: { type: Number, min: 0, max: 100 },
