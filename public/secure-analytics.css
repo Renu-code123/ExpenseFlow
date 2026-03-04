@@ -1,0 +1,55 @@
+/* secure-analytics.css
+   Styles for privacy-preserving analytics dashboard
+*/
+.secure-header {
+  background: #2c3e50;
+  color: #fff;
+  padding: 16px 24px;
+  border-bottom: 2px solid #34495e;
+}
+#secure-analytics-results, #secure-raw-data {
+  margin: 20px 0;
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h3 {
+  margin-top: 0;
+  color: #2980b9;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+li:last-child {
+  border-bottom: none;
+}
+#secure-ingest-form {
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+}
+#secure-ingest-form input {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+#secure-ingest-form button {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+#secure-ingest-form button:hover {
+  background: #219150;
+}

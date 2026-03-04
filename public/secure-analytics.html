@@ -1,0 +1,20 @@
+/* secure-analytics.html
+   Main HTML for privacy-preserving analytics dashboard
+*/
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Privacy-Preserving Analytics Dashboard</title>
+  <link rel="stylesheet" href="secure-analytics.css">
+</head>
+<body>
+  <div id="secure-analytics-container"></div>
+  <script type="module" src="secure-analytics-dashboard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      new window.SecureAnalyticsDashboard('secure-analytics-container');
+    });
+  </script>
+</body>
+</html>
