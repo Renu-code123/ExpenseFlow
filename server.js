@@ -182,6 +182,8 @@ app.use(require('./middleware/liquidityAlertGuard')); // Issue #909: Predictive 
 app.use(require('./middleware/threatIntelGuard')); // Issue #907: Adversarial Fraud Prevention
 app.use(require('./middleware/jurisdictionGuard')); // Issue #961: Autonomous Tax-Jurisdiction Nexus Engine
 app.use(require('./middleware/quantumIntegrityGuard')); // Issue #960: PQC Forensic Integrity
+app.use(require('./middleware/liquidityProvisionGuard')); // Issue #959: JIT Liquidity Rebalancing
+
 
 
 
@@ -227,6 +229,9 @@ async function connectDatabase() {
         require('./jobs/redTeamSweep').start(); // Issue #907: Adversarial Fraud Simulation
         require('./jobs/nexusUpdateJob').start(); // Issue #961: Tax Nexus Global Sync
         require('./jobs/anchorGenerator').start(); // Issue #960: PQC Forensic Anchoring
+        require('./jobs/nightlyBalancer').start(); // Issue #959: Capital Efficiency sweep
+        require('./services/jitFundingOrchestrator').start(); // Issue #959: JIT Funding loop
+
 
         require('./services/jobOrchestrator').start();
 

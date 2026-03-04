@@ -69,6 +69,23 @@ class TemporalMath {
         // Simple ratio-to-moving-average logic (mocked)
         return 1.1; // 10% seasonal boost detected
     }
+
+    /**
+     * Issue #959: Sub-second precision for JIT execution windows.
+     */
+    static isWithinJitWindow(startTime, endTime, latencyMs = 0) {
+        const now = Date.now();
+        // Buffer for network/funding latency
+        return now >= (startTime.getTime() - latencyMs) && now <= endTime.getTime();
+    }
+
+    /**
+     * Generates a high-precision timestamp for forensic JIT verification.
+     */
+    static getSubSecondPrecision() {
+        const hrTime = process.hrtime();
+        return hrTime[0] * 1000 + hrTime[1] / 1000000;
+    }
 }
 
 module.exports = TemporalMath;

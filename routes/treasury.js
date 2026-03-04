@@ -110,4 +110,53 @@ router.get('/reconcile/corrections', auth, async (req, res) => {
     }
 });
 
+// ============================================
+// CAPITAL EFFICIENCY & JIT ROUTES (Issue #959)
+// ============================================
+
+/**
+ * @route   GET /api/treasury/jit/plans
+ * @desc    View pending and executed JIT rebalance plans
+ */
+router.get('/jit/plans', auth, async (req, res) => {
+    try {
+        const workspaceId = req.headers['x-workspace-id'] || req.user.activeWorkspace;
+        const RebalancePlan = require('../models/RebalancePlan');
+
+        const plans = await RebalancePlan.find({ workspaceId })
+            .sort({ createdAt: -1 })
+            .limit(50);
+
+        return ResponseFactory.success(res, plans);
+    } catch (error) {
+        return ResponseFactory.error(res, 500, error.message);
+    }
+});
+
+/**
+ * @route   GET /api/treasury/efficiency/stats
+ * @desc    Get yield gains and opportunity cost analysis
+ */
+router.get('/efficiency/stats', auth, async (req, res) => {
+    try {
+        const workspaceId = req.headers['x-workspace-id'] || req.user.activeWorkspace;
+        const RebalancePlan = require('../models/RebalancePlan');
+
+        const stats = await RebalancePlan.aggregate([
+            { $match: { workspaceId: new mongoose.Types.ObjectId(workspaceId), status: 'EXECUTED' } },
+            {
+                $group: {
+                    _id: null,
+                    totalYieldGained: { $sum: "$yieldGainProjection" },
+                    executedCount: { $sum: 1 }
+                }
+            }
+        ]);
+
+        return ResponseFactory.success(res, stats[0] || { totalYieldGained: 0, executedCount: 0 });
+    } catch (error) {
+        return ResponseFactory.error(res, 500, error.message);
+    }
+});
+
 module.exports = router;

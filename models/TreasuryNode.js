@@ -52,6 +52,15 @@ const treasuryNodeSchema = new mongoose.Schema({
         hash: String,
         reconciledAt: Date,
         driftDetected: { type: Number, default: 0 }
+    },
+    // Issue #959: JIT & Capital Efficiency
+    yieldProfile: {
+        annualRate: { type: Number, default: 0.01 }, // APY (e.g., 0.01 = 1%)
+        yieldType: { type: String, enum: ['FIXED', 'VARIABLE', 'STAKED'], default: 'FIXED' }
+    },
+    fundingLatency: {
+        ms: { type: Number, default: 500 }, // Time to pull funds into this node
+        reliability: { type: Number, default: 0.99 } // 0-1 score
     }
 }, {
     timestamps: true

@@ -54,17 +54,43 @@ class SimulationEngine {
     // 4. Identify Strategic Spend Windows
     const windows = this.identifySpendWindows(projections);
 
+    // 6. Identify JIT Rebalance Triggers
+    // Issue #959: Link simulation results to JIT capital allocation
+    const jitTriggers = this.identifyJitTriggers(projections, treasuryNodeId);
+
     // 5. Save the forecast
     const forecast = await LiquidityForecast.create({
       workspaceId,
       horizonDays: days,
       projections,
       strategicSpendWindows: windows,
+      rebalanceTriggers: jitTriggers, // New field for JIT linkage
       currentBurnRate: velocity.averageDailySpend,
       runwayDays: initialBalance / (velocity.averageDailySpend || 1)
     });
 
     return forecast;
+  }
+
+  /**
+   * Identifies windows where we should pull from RESERVE to prevent OPERATING depletion.
+   */
+  identifyJitTriggers(projections, nodeId) {
+    const triggers = [];
+    for (let i = 0; i < projections.length; i++) {
+      const p = projections[i];
+      if (p.insolvencyRisk > 0.15) { // 15% risk is the threshold for JIT pull
+        triggers.push({
+          targetNodeId: nodeId,
+          date: p.date,
+          requiredAmount: Math.abs(p.p10), // The deficit we need to cover at p10
+          priority: p.insolvencyRisk > 0.4 ? 'CRITICAL' : 'OPTIMIZATION'
+        });
+        // Skip next 3 days to avoid duplicate triggers for the same event
+        i += 3;
+      }
+    }
+    return triggers;
   }
 
   /**

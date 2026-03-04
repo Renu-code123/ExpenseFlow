@@ -62,6 +62,32 @@ class TreasuryRepository extends BaseRepository {
         const bucket = node.dnaRestrictedBuckets.find(b => b.sourceDna === sourceDna);
         return bucket ? bucket.amount : 0;
     }
+
+    /**
+     * Issue #959: Multi-node atomic transfer logic.
+     * Moves funds between two nodes in a single transaction-like operation.
+     */
+    async atomicTransfer(sourceNodeId, targetNodeId, amount, session = null) {
+        const queryOptions = session ? { session } : {};
+
+        // 1. Decrement source
+        const source = await this.model.findOneAndUpdate(
+            { _id: sourceNodeId, balance: { $gte: amount } },
+            { $inc: { balance: -amount } },
+            { new: true, ...queryOptions }
+        );
+
+        if (!source) throw new Error('Insufficient funds in source node for atomic transfer');
+
+        // 2. Increment target
+        const target = await this.model.findByIdAndUpdate(
+            targetNodeId,
+            { $inc: { balance: amount } },
+            { new: true, ...queryOptions }
+        );
+
+        return { source, target };
+    }
 }
 
 module.exports = new TreasuryRepository();
