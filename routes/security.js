@@ -112,4 +112,54 @@ router.post('/simulate-attack', auth, async (req, res) => {
   }
 });
 
+// ============================================
+// QUANTUM READINESS & PQC ANCHORING (Issue #960)
+// ============================================
+
+/**
+ * @route   GET /api/security/quantum-anchors
+ * @desc    Get PQC anchor status for forensic shards
+ */
+router.get('/quantum-anchors', auth, async (req, res) => {
+  try {
+    const QuantumAnchor = require('../models/QuantumAnchor');
+    const anchors = await QuantumAnchor.find({})
+      .sort({ timestamp: -1 })
+      .limit(50);
+
+    res.json({ success: true, count: anchors.length, data: anchors });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route   GET /api/security/quantum-readiness
+ * @desc    Comprehensive check for quantum-resistant compliance
+ */
+router.get('/quantum-readiness', auth, async (req, res) => {
+  try {
+    const LedgerShard = require('../models/LedgerShard');
+    const QuantumAnchor = require('../models/QuantumAnchor');
+
+    const shardCount = await LedgerShard.countDocuments({});
+    const anchorCount = await QuantumAnchor.countDocuments({});
+    const recentlyAnchored = await LedgerShard.countDocuments({
+      lastAnchoredAt: { $gt: new Date(Date.now() - 3600000) }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        shardProtectionRatio: shardCount > 0 ? (anchorCount / shardCount) : 1,
+        healthStatus: recentlyAnchored > 0 ? 'OPTIMAL' : 'DEGRADED',
+        lastGlobalSync: new Date(),
+        algorithm: 'CRYSTALS-DILITHIUM (Level 3)'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

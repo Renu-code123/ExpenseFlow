@@ -181,6 +181,7 @@ app.use(require('./middleware/integrityMonitor')); // Issue #910: Financial Inte
 app.use(require('./middleware/liquidityAlertGuard')); // Issue #909: Predictive Liquidity Prophet
 app.use(require('./middleware/threatIntelGuard')); // Issue #907: Adversarial Fraud Prevention
 app.use(require('./middleware/jurisdictionGuard')); // Issue #961: Autonomous Tax-Jurisdiction Nexus Engine
+app.use(require('./middleware/quantumIntegrityGuard')); // Issue #960: PQC Forensic Integrity
 
 
 
@@ -225,6 +226,7 @@ async function connectDatabase() {
         require('./jobs/weeklyProphet').start(); // Issue #909: Predictive Liquidity Prophet
         require('./jobs/redTeamSweep').start(); // Issue #907: Adversarial Fraud Simulation
         require('./jobs/nexusUpdateJob').start(); // Issue #961: Tax Nexus Global Sync
+        require('./jobs/anchorGenerator').start(); // Issue #960: PQC Forensic Anchoring
 
         require('./services/jobOrchestrator').start();
 

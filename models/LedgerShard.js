@@ -18,7 +18,10 @@ const ledgerShardSchema = new mongoose.Schema({
     },
     eventCount: { type: Number, default: 0 },
     storageSize: { type: Number, default: 0 }, // In bytes
-    lastCompactedAt: { type: Date }
+    lastCompactedAt: { type: Date },
+    // Issue #960: PQC Anchor Metadata
+    anchorRoot: { type: String }, // Latest Lattice-based state root
+    lastAnchoredAt: { type: Date }
 }, {
     timestamps: true
 });

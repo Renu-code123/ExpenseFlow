@@ -70,6 +70,30 @@ class SnarkMath {
 
         return true;
     }
+
+    /**
+     * Issue #960: Exploratory PQC-SNARK Proof.
+     * Combines ZK-privacy with Quantum-resistant signing.
+     */
+    static generatePqcSnarkProof(value, min, max, pqcKey) {
+        const zkProof = this.generateRangeProof(value, min, max);
+        const LatticeMath = require('./latticeMath');
+
+        // Anchor the SNARK proof with a Lattice-based identity
+        const publicSignalsHash = crypto.createHash('sha256')
+            .update(zkProof.publicSignals.join(','))
+            .digest('hex');
+
+        const pqcSignature = LatticeMath.sign(publicSignalsHash, pqcKey);
+
+        return {
+            ...zkProof,
+            quantumAnchor: {
+                signature: pqcSignature,
+                algorithm: 'CRYSTALS-DILITHIUM'
+            }
+        };
+    }
 }
 
 module.exports = SnarkMath;

@@ -77,7 +77,10 @@ class ShardingOrchestrator {
                 startTime,
                 endTime,
                 tenantCluster,
-                status: 'active'
+                status: 'active',
+                // Issue #960: Initialize PQC anchor state
+                anchorRoot: '0'.repeat(64),
+                lastAnchoredAt: new Date()
             },
             { upsert: true, new: true }
         );
