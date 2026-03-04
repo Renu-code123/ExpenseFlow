@@ -8,6 +8,17 @@ class Dashboard {
         this.setupEventListeners();
         this.initializeChart();
         this.displayFinancialHealthScore();
+        this.displayBudgetVsActual();
+        this.displayExpenseTrends();
+        this.displayCashFlowForecast();
+        this.displayBudgetAutomation();
+        this.displayCategoryDeepDive();
+        this.displayComparativeAnalysis();
+        this.displayGoalTracking();
+        this.displayScenarioPlanning();
+        this.displayCustomReportBuilder();
+        this.displayScheduledReports();
+        this.displayInteractiveDashboard();
     }
 
     loadMockData() {
@@ -282,6 +293,203 @@ class Dashboard {
                 <div style="margin-top:16px;">${result.score>80?'Excellent':result.score>60?'Good':'Needs Improvement'} Financial Health</div>
             `;
         }
+    }
+
+    // Budget vs Actual Analysis
+    displayBudgetVsActual() {
+        // Example: Compare actual expenses to budgeted limits
+        const budgets = [
+            { category: 'Food', spent: 285, limit: 400 },
+            { category: 'Transport', spent: 120, limit: 200 },
+            { category: 'Entertainment', spent: 95, limit: 150 }
+        ];
+        const container = document.getElementById('budget-actual-content');
+        if (!container) return;
+        container.innerHTML = budgets.map(b => {
+            const variance = b.spent - b.limit;
+            const percent = b.limit > 0 ? ((b.spent - b.limit) / b.limit) * 100 : 0;
+            const trend = percent > 0 ? '↑' : percent < 0 ? '↓' : '-';
+            return `
+                <div style="margin-bottom:18px;padding:12px 18px;border-radius:8px;background:#f7f7f7;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                    <strong>${b.category}</strong> <span style="float:right;">$${b.spent} / $${b.limit}</span><br>
+                    <span style="color:${percent>0?'#F44336':'#4CAF50'};font-weight:600;">${variance>0?'+':''}${variance} (${percent.toFixed(1)}%) ${trend}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Expense Trend Analysis
+    displayExpenseTrends() {
+        // Example: Year-over-year monthly expenses
+        const trends = [
+            { month: 'Jan', year: 2025, amount: 320 },
+            { month: 'Feb', year: 2025, amount: 340 },
+            { month: 'Mar', year: 2025, amount: 310 },
+            { month: 'Jan', year: 2026, amount: 350 },
+            { month: 'Feb', year: 2026, amount: 370 },
+            { month: 'Mar', year: 2026, amount: 330 }
+        ];
+        const container = document.getElementById('expense-trends-content');
+        if (!container) return;
+        // Group by month, compare years
+        const months = ['Jan','Feb','Mar'];
+        container.innerHTML = months.map(m => {
+            const lastYear = trends.find(t => t.month===m && t.year===2025)?.amount || 0;
+            const thisYear = trends.find(t => t.month===m && t.year===2026)?.amount || 0;
+            const diff = thisYear - lastYear;
+            const percent = lastYear > 0 ? ((thisYear - lastYear) / lastYear) * 100 : 0;
+            return `
+                <div style="margin-bottom:14px;padding:10px 16px;border-radius:6px;background:#e3f2fd;">
+                    <strong>${m}</strong>: <span style="color:${diff>0?'#F44336':'#4CAF50'};font-weight:600;">${diff>0?'+':''}${diff} (${percent.toFixed(1)}%)</span> vs last year
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Cash Flow Forecasting (12+ months)
+    displayCashFlowForecast() {
+        // Example: Simple linear forecast based on average monthly net
+        const months = ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
+        const history = [320,340,310,350,370,330,360,380,400,390,410,420]; // last 12 months
+        const avgNet = history.reduce((a,b)=>a+b,0)/history.length;
+        let forecast = [];
+        for(let i=0;i<12;i++){
+            forecast.push(Math.round(avgNet + (Math.random()-0.5)*40)); // add some noise
+        }
+        const container = document.getElementById('cash-flow-content');
+        if(!container) return;
+        container.innerHTML = months.map((m,i)=>{
+            return `<div style="margin-bottom:10px;padding:8px 14px;border-radius:6px;background:#e8f5e9;">
+                <strong>${m}</strong>: <span style="font-weight:600;">$${forecast[i]}</span> forecast</div>`;
+        }).join('');
+    }
+
+    // Budget Automation (ML stub)
+    displayBudgetAutomation() {
+        // Example: Auto-generate budgets based on history
+        const categories = ['Food','Transport','Entertainment','Utilities','Health'];
+        const history = {
+            Food: [285,300,295,310],
+            Transport: [120,130,125,140],
+            Entertainment: [95,110,105,120],
+            Utilities: [80,85,90,95],
+            Health: [60,65,70,75]
+        };
+        const autoBudgets = categories.map(cat=>{
+            const avg = history[cat].reduce((a,b)=>a+b,0)/history[cat].length;
+            return {category:cat,limit:Math.round(avg*1.1)}; // 10% buffer
+        });
+        const container = document.getElementById('budget-auto-content');
+        if(!container) return;
+        container.innerHTML = autoBudgets.map(b=>{
+            return `<div style="margin-bottom:10px;padding:8px 14px;border-radius:6px;background:#fffde7;">
+                <strong>${b.category}</strong>: <span style="font-weight:600;">$${b.limit}</span> auto-budget</div>`;
+        }).join('');
+    }
+
+    // Category Deep Dive
+    displayCategoryDeepDive() {
+        // Example: Drill-down with subcategories
+        const categories = {
+            Food: {Groceries:180, Dining:105},
+            Transport: {Fuel:70, Public:50},
+            Entertainment: {Streaming:55, Events:40}
+        };
+        const container = document.getElementById('category-dive-content');
+        if(!container) return;
+        container.innerHTML = Object.keys(categories).map(cat=>{
+            const subs = categories[cat];
+            return `<div style="margin-bottom:14px;padding:10px 16px;border-radius:6px;background:#f3e5f5;">
+                <strong>${cat}</strong><ul style="margin:8px 0 0 18px;">`+
+                Object.keys(subs).map(sub=>`<li>${sub}: $${subs[sub]}</li>`).join('')+
+                `</ul></div>`;
+        }).join('');
+    }
+
+    // Comparative Analysis
+    displayComparativeAnalysis() {
+        // Example: Compare user spending to industry averages
+        const user = {Food:285,Transport:120,Entertainment:95};
+        const industry = {Food:300,Transport:140,Entertainment:110};
+        const container = document.getElementById('comparative-content');
+        if(!container) return;
+        container.innerHTML = Object.keys(user).map(cat=>{
+            const diff = user[cat]-industry[cat];
+            const percent = industry[cat]>0?((user[cat]-industry[cat])/industry[cat])*100:0;
+            return `<div style="margin-bottom:10px;padding:8px 14px;border-radius:6px;background:#e1f5fe;">
+                <strong>${cat}</strong>: <span style="color:${diff>0?'#F44336':'#4CAF50'};font-weight:600;">${diff>0?'+':''}${diff} (${percent.toFixed(1)}%)</span> vs industry</div>`;
+        }).join('');
+    }
+
+    // Goal Tracking Dashboard
+    displayGoalTracking() {
+        // Example: Visual progress for savings goals
+        const goals = [
+            {name:'Emergency Fund',current:2500,target:5000},
+            {name:'Vacation',current:750,target:2000},
+            {name:'New Laptop',current:800,target:1200}
+        ];
+        const container = document.getElementById('goal-tracking-content');
+        if(!container) return;
+        container.innerHTML = goals.map(g=>{
+            const percent = g.target>0?(g.current/g.target)*100:0;
+            return `<div style="margin-bottom:14px;padding:10px 16px;border-radius:6px;background:#fff3e0;">
+                <strong>${g.name}</strong>: <span style="font-weight:600;">$${g.current} / $${g.target}</span>
+                <div style="margin-top:6px;width:100%;height:10px;background:#eee;border-radius:5px;">
+                    <div style="height:10px;background:#64ffda;border-radius:5px;width:${percent}%"></div>
+                </div>
+                <span style="font-size:0.9em;">${percent.toFixed(1)}% complete</span>
+            </div>`;
+        }).join('');
+    }
+
+    // Scenario Planning (What-if)
+    displayScenarioPlanning() {
+        // Example: What-if analysis for budget changes
+        const scenarios = [
+            {change:'Increase Food budget by 10%',impact:'Food limit: $440'},
+            {change:'Reduce Transport budget by 20%',impact:'Transport limit: $160'},
+            {change:'Increase Entertainment budget by 15%',impact:'Entertainment limit: $172'}
+        ];
+        const container = document.getElementById('scenario-content');
+        if(!container) return;
+        container.innerHTML = scenarios.map(s=>{
+            return `<div style="margin-bottom:10px;padding:8px 14px;border-radius:6px;background:#fce4ec;">
+                <strong>${s.change}</strong>: <span style="font-weight:600;">${s.impact}</span></div>`;
+        }).join('');
+    }
+
+    // Custom Report Builder (UI stub)
+    displayCustomReportBuilder() {
+        // Example: Drag-and-drop UI placeholder
+        const container = document.getElementById('custom-report-content');
+        if(!container) return;
+        container.innerHTML = `<div style="padding:18px;background:#f5f5f5;border-radius:10px;">
+            <strong>Custom Report Builder</strong><br>
+            <span style="font-size:0.95em;">Drag and drop metrics to build your own report (UI coming soon)</span>
+        </div>`;
+    }
+
+    // Scheduled Reports (UI stub)
+    displayScheduledReports() {
+        // Example: Scheduled report list
+        const container = document.getElementById('scheduled-reports-content');
+        if(!container) return;
+        container.innerHTML = `<div style="padding:18px;background:#e0f7fa;border-radius:10px;">
+            <strong>Scheduled Reports</strong><br>
+            <span style="font-size:0.95em;">No scheduled reports yet. Set up recurring emails in settings.</span>
+        </div>`;
+    }
+
+    // Interactive Dashboard (UI stub)
+    displayInteractiveDashboard() {
+        // Example: Real-time update placeholder
+        const container = document.getElementById('interactive-content');
+        if(!container) return;
+        container.innerHTML = `<div style="padding:18px;background:#f1f8e9;border-radius:10px;">
+            <strong>Interactive Dashboard</strong><br>
+            <span style="font-size:0.95em;">Real-time updates and drill-down coming soon.</span>
+        </div>`;
     }
 }
 
