@@ -1,3 +1,7 @@
+// Helper to get auth token
+function getAuthToken() {
+  return localStorage.getItem('token');
+}
 // Workspace and Settings Management
 let currentWorkspace = null;
 let currentUser = null;
@@ -23,11 +27,28 @@ function initializeWorkspaceFeatures() {
 
   // Profile functions
   window.updateProfile = updateProfile;
+
+  // Form handlers
+  setupWorkspaceFormHandlers();
+}
+
+function setupWorkspaceFormHandlers() {
+  // Create workspace form
+  const createForm = document.getElementById('create-workspace-form');
+  if (createForm) {
+    createForm.addEventListener('submit', handleCreateWorkspace);
+  }
+
+  // Invite member form
+  const inviteForm = document.getElementById('invite-form');
+  if (inviteForm) {
+    inviteForm.addEventListener('submit', handleInviteMember);
+  }
 }
 
 async function loadCurrentUser() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token) return;
 
     const response = await fetch('/api/auth/me', {
@@ -64,7 +85,7 @@ function updateUserDisplay() {
 
 async function loadWorkspaceData() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token) return;
 
     // Load current workspace
@@ -106,7 +127,7 @@ function updateWorkspaceDisplay() {
 
 async function loadMembers() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token || !currentWorkspace) return;
 
     const response = await fetch(`/api/workspaces/${currentWorkspace._id}/members`, {
@@ -183,7 +204,7 @@ function canManageMember(member) {
 
 async function changeMemberRole(memberId, newRole) {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token || !currentWorkspace) return;
 
     const response = await fetch(`/api/workspaces/${currentWorkspace._id}/members/${memberId}`, {
@@ -214,7 +235,7 @@ async function removeMember(memberId) {
   }
 
   try {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token || !currentWorkspace) return;
 
     const response = await fetch(`/api/workspaces/${currentWorkspace._id}/members/${memberId}`, {
@@ -254,18 +275,58 @@ function switchSettingsTab(tabName) {
   if (selectedTab) selectedTab.classList.add('active');
 }
 
-function switchWorkspace() {
-  const select = document.getElementById('workspace-select');
-  if (!select) return;
+async function switchWorkspace(workspaceId) {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
 
-  const workspaceId = select.value;
-  // TODO: Implement workspace switching
-  showNotification('Workspace switching not yet implemented', 'info');
+    // If workspaceId is null, switch to personal account
+    if (!workspaceId) {
+      localStorage.removeItem('activeWorkspaceId');
+      currentWorkspace = null;
+      updateWorkspaceDisplay();
+      showNotification('Switched to personal account', 'success');
+      // Reload dashboard data
+      if (typeof loadExpenses === 'function') loadExpenses();
+      if (typeof loadBudgets === 'function') loadBudgets();
+      return;
+    }
+
+    // Switch to workspace
+    const response = await fetch(`/api/workspaces/${workspaceId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      currentWorkspace = data.workspace;
+      localStorage.setItem('activeWorkspaceId', workspaceId);
+      updateWorkspaceDisplay();
+      loadMembers();
+      showNotification(`Switched to workspace: ${currentWorkspace.name}`, 'success');
+
+      // Reload dashboard data with workspace context
+      if (typeof loadExpenses === 'function') loadExpenses();
+      if (typeof loadBudgets === 'function') loadBudgets();
+      if (typeof loadGoals === 'function') loadGoals();
+    } else {
+      showNotification(data.message || 'Failed to switch workspace', 'error');
+    }
+  } catch (error) {
+    console.error('Error switching workspace:', error);
+    showNotification('Error switching workspace', 'error');
+  }
 }
 
 function openCreateWorkspaceModal() {
-  // TODO: Implement create workspace modal
-  showNotification('Create workspace feature not yet implemented', 'info');
+  const modal = document.getElementById('workspace-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.getElementById('create-workspace-form').reset();
+  }
 }
 
 function openInviteModal() {
@@ -276,7 +337,7 @@ function openInviteModal() {
 // Approval Settings Functions
 async function loadApprovalSettings() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token || !currentWorkspace) return;
 
     const response = await fetch(`/api/workspaces/${currentWorkspace._id}/settings`, {
@@ -299,7 +360,7 @@ async function loadApprovalSettings() {
 
 async function saveApprovalSettings() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token || !currentWorkspace) return;
 
     const approvalRequired = document.getElementById('approval-required');
@@ -332,7 +393,7 @@ async function saveApprovalSettings() {
 
 async function loadPendingApprovals() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) return;
 
     const response = await fetch('/api/approvals/pending', {
@@ -352,7 +413,7 @@ async function loadPendingApprovals() {
 
 async function loadApprovalHistory() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) return;
 
     const response = await fetch('/api/approvals/history', {
@@ -423,7 +484,7 @@ async function rejectExpense(approvalId) {
 
 async function processApproval(approvalId, status) {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) return;
 
     const response = await fetch(`/api/approvals/${approvalId}`, {
@@ -456,7 +517,7 @@ async function processApproval(approvalId, status) {
 // Profile Functions
 async function updateProfile() {
   try {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) return;
 
     const nameInput = document.getElementById('profile-name');
@@ -491,6 +552,109 @@ async function updateProfile() {
   }
 }
 
+// Form Handlers
+async function handleCreateWorkspace(e) {
+  e.preventDefault();
+
+  const name = document.getElementById('workspace-name-input').value.trim();
+  const description = document.getElementById('workspace-desc-input').value.trim();
+
+  if (!name) {
+    showNotification('Workspace name is required', 'error');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    const response = await fetch('/api/workspaces', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, description })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      showNotification('Workspace created successfully!', 'success');
+      closeWorkspaceModal();
+      // Reload workspaces and switch to the new one
+      if (typeof loadWorkspaces === 'function') {
+        loadWorkspaces();
+      }
+      switchWorkspace(data.workspace._id);
+    } else {
+      showNotification(data.message || 'Failed to create workspace', 'error');
+    }
+  } catch (error) {
+    console.error('Error creating workspace:', error);
+    showNotification('Error creating workspace', 'error');
+  }
+}
+
+async function handleInviteMember(e) {
+  e.preventDefault();
+
+  if (!currentWorkspace) {
+    showNotification('No workspace selected', 'error');
+    return;
+  }
+
+  const email = document.getElementById('invite-email-input').value.trim();
+  const role = document.getElementById('invite-role-select').value;
+
+  if (!email) {
+    showNotification('Email is required', 'error');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace._id}/invite`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, role })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      showNotification('Invitation sent successfully!', 'success');
+      closeInviteModal();
+      loadMembers(); // Refresh members list
+    } else {
+      showNotification(data.message || 'Failed to send invitation', 'error');
+    }
+  } catch (error) {
+    console.error('Error sending invitation:', error);
+    showNotification('Error sending invitation', 'error');
+  }
+}
+
+// Modal close functions
+function closeWorkspaceModal() {
+  const modal = document.getElementById('workspace-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+
+function closeInviteModal() {
+  const modal = document.getElementById('invite-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+
 // Utility function for notifications
 function showNotification(message, type = 'info') {
   // Create notification element
@@ -513,3 +677,415 @@ function showNotification(message, type = 'info') {
     setTimeout(() => document.body.removeChild(notification), 300);
   }, 3000);
 }
+
+// ============================================
+// Workspace Governance & Approvals
+// ============================================
+
+class WorkspaceGovernance {
+  constructor() {
+    this.init();
+  }
+
+  init() {
+    this.setupPolicyManagement();
+    this.setupApprovalUI();
+    this.setupBalanceMonitoring();
+  }
+
+  setupPolicyManagement() {
+    const policyButton = document.getElementById('manage-policies-btn');
+    if (policyButton) {
+      policyButton.addEventListener('click', () => this.openPolicyModal());
+    }
+  }
+
+  async openPolicyModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'policy-modal';
+    
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-shield-alt"></i> Spending Policies</h3>
+          <button class="close-modal" onclick="workspaceGov.closePolicyModal()">&times;</button>
+        </div>
+        
+        <div class="policy-tabs">
+          <button class="tab-button active" onclick="workspaceGov.switchPolicyTab('list')">
+            <i class="fas fa-list"></i> Policies
+          </button>
+          <button class="tab-button" onclick="workspaceGov.switchPolicyTab('create')">
+            <i class="fas fa-plus"></i> Create
+          </button>
+        </div>
+        
+        <div id="policy-list-tab" class="policy-tab active">
+          <div id="policies-list" class="policies-container">
+            <div class="loading"><p>Loading...</p></div>
+          </div>
+        </div>
+        
+        <div id="policy-create-tab" class="policy-tab">
+          <form id="policy-form" onsubmit="workspaceGov.createPolicy(event)">
+            <div class="form-group">
+              <label>Policy Name *</label>
+              <input type="text" name="name" required placeholder="e.g., Transport Over $100">
+            </div>
+            
+            <div class="form-group">
+              <label>Description</label>
+              <textarea name="description" placeholder="Policy details..."></textarea>
+            </div>
+            
+            <fieldset class="form-section">
+              <legend>Conditions</legend>
+              
+              <div class="form-group">
+                <label>Resource Type *</label>
+                <select name="resourceType" required>
+                  <option value="">Select...</option>
+                  <option value="expense">Expense</option>
+                  <option value="budget">Budget</option>
+                </select>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Min Amount</label>
+                  <input type="number" name="minAmount" min="0" step="0.01" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label>Max Amount *</label>
+                  <input type="number" name="maxAmount" required step="0.01" placeholder="100">
+                </div>
+              </div>
+            </fieldset>
+            
+            <fieldset class="form-section">
+              <legend>Approval</legend>
+              
+              <div class="form-group">
+                <label>Approver Role *</label>
+                <select name="approverRole" required>
+                  <option value="">Select...</option>
+                  <option value="manager">Manager</option>
+                  <option value="senior-manager">Senior Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>Risk Score (0-100)</label>
+                <input type="range" name="riskScore" min="0" max="100" value="50">
+              </div>
+            </fieldset>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Create Policy</button>
+              <button type="button" class="btn btn-secondary" onclick="workspaceGov.closePolicyModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    this.loadPolicies();
+  }
+
+  async loadPolicies() {
+    try {
+      const workspaceId = this.getCurrentWorkspaceId();
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`/api/workspaces/${workspaceId}/policies`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load policies');
+      
+      const data = await response.json();
+      this.renderPolicies(data.data || []);
+    } catch (error) {
+      console.error('Load policies error:', error);
+      document.getElementById('policies-list').innerHTML = `<p class="error">Failed to load</p>`;
+    }
+  }
+
+  renderPolicies(policies) {
+    const container = document.getElementById('policies-list');
+    
+    if (!policies || policies.length === 0) {
+      container.innerHTML = '<p>No policies created</p>';
+      return;
+    }
+    
+    const html = policies.map(p => `
+      <div class="policy-card">
+        <div class="policy-header">
+          <h5>${p.name}</h5>
+          <span class="badge ${p.isActive ? 'active' : 'inactive'}">${p.isActive ? 'Active' : 'Inactive'}</span>
+        </div>
+        <p class="policy-desc">${p.description || 'No description'}</p>
+        <div class="policy-meta">
+          <span>Amount: $${p.conditions.minAmount}-$${p.conditions.maxAmount}</span>
+          <span>Score: ${p.riskScore}</span>
+        </div>
+        <div class="policy-actions">
+          <button class="btn btn-small btn-danger" onclick="workspaceGov.deletePolicy('${p._id}')">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+    `).join('');
+    
+    container.innerHTML = html;
+  }
+
+  async createPolicy(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const workspaceId = this.getCurrentWorkspaceId();
+    const token = localStorage.getItem('token');
+    
+    const policyData = {
+      name: formData.get('name'),
+      description: formData.get('description'),
+      conditions: {
+        resourceType: formData.get('resourceType'),
+        minAmount: parseFloat(formData.get('minAmount')) || 0,
+        maxAmount: parseFloat(formData.get('maxAmount')),
+        categories: []
+      },
+      approvalChain: [{
+        stage: 1,
+        approverRole: formData.get('approverRole'),
+        approversCount: 1,
+        timeoutDays: 5
+      }],
+      actions: {
+        onViolation: ['hold_funds', 'notify_admin'],
+        holdFunds: true
+      },
+      riskScore: parseInt(formData.get('riskScore'))
+    };
+    
+    try {
+      const response = await fetch(`/api/workspaces/${workspaceId}/policies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(policyData)
+      });
+      
+      if (!response.ok) throw new Error('Failed to create policy');
+      
+      alert('Policy created successfully');
+      this.switchPolicyTab('list');
+      this.loadPolicies();
+      form.reset();
+    } catch (error) {
+      alert('Failed to create policy: ' + error.message);
+    }
+  }
+
+  async deletePolicy(policyId) {
+    if (!confirm('Delete this policy?')) return;
+    
+    try {
+      const workspaceId = this.getCurrentWorkspaceId();
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(
+        `/api/workspaces/${workspaceId}/policies/${policyId}`,
+        {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      
+      if (!response.ok) throw new Error('Failed to delete');
+      
+      alert('Policy deleted');
+      this.loadPolicies();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  setupApprovalUI() {
+    this.loadPendingApprovals();
+  }
+
+  async loadPendingApprovals() {
+    try {
+      const workspaceId = this.getCurrentWorkspaceId();
+      if (!workspaceId) return;
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/workspaces/${workspaceId}/approvals/pending`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      this.renderApprovalList(data.data || []);
+    } catch (error) {
+      console.error('Error loading approvals:', error);
+    }
+  }
+
+  renderApprovalList(expenses) {
+    const container = document.getElementById('pending-approvals');
+    if (!container) return;
+    
+    if (!expenses.length) {
+      container.innerHTML = '<p>No pending approvals</p>';
+      return;
+    }
+    
+    const html = expenses.map(e => `
+      <div class="approval-card">
+        <h5>${e.description}</h5>
+        <p><strong>Amount:</strong> $${e.amount}</p>
+        <p><strong>From:</strong> ${e.createdBy?.name || 'Unknown'}</p>
+        ${e.policyFlags ? `<p class="flags">${e.policyFlags.map(f => f.policyName).join(', ')}</p>` : ''}
+        <div class="card-actions">
+          <button class="btn btn-success btn-small" onclick="workspaceGov.approveExpense('${e._id}')">
+            Approve
+          </button>
+          <button class="btn btn-danger btn-small" onclick="workspaceGov.rejectExpenseUI('${e._id}')">
+            Reject
+          </button>
+        </div>
+      </div>
+    `).join('');
+    
+    container.innerHTML = html;
+  }
+
+  async approveExpense(expenseId) {
+    const notes = prompt('Approval notes:');
+    
+    try {
+      const workspaceId = this.getCurrentWorkspaceId();
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(
+        `/api/workspaces/${workspaceId}/expenses/${expenseId}/approve`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ notes: notes || '' })
+        }
+      );
+      
+      if (!response.ok) throw new Error('Failed');
+      
+      alert('Expense approved');
+      this.loadPendingApprovals();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  rejectExpenseUI(expenseId) {
+    const reason = prompt('Rejection reason:');
+    if (reason) this.rejectExpense(expenseId, reason);
+  }
+
+  async rejectExpense(expenseId, reason) {
+    try {
+      const workspaceId = this.getCurrentWorkspaceId();
+      const token = localStorage.getItem('token');
+      
+      await fetch(
+        `/api/workspaces/${workspaceId}/expenses/${expenseId}/reject`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ reason })
+        }
+      );
+      
+      alert('Expense rejected');
+      this.loadPendingApprovals();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  async setupBalanceMonitoring() {
+    this.updateBalanceDisplay();
+    setInterval(() => this.updateBalanceDisplay(), 30000);
+  }
+
+  async updateBalanceDisplay() {
+    try {
+      const workspaceId = this.getCurrentWorkspaceId();
+      if (!workspaceId) return;
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/workspaces/${workspaceId}/balance`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      const balance = data.data;
+      
+      const balanceElement = document.getElementById('workspace-balance');
+      if (balanceElement) {
+        balanceElement.innerHTML = `
+          <div class="balance-display">
+            <div>Total: $${balance.total}</div>
+            <div>Spent: $${balance.spent}</div>
+            <div>Pending: $${balance.pending}</div>
+            <div><strong>Available: $${balance.available}</strong></div>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error);
+    }
+  }
+
+  getCurrentWorkspaceId() {
+    const url = new URL(window.location);
+    return url.searchParams.get('workspace') || localStorage.getItem('activeWorkspace');
+  }
+
+  switchPolicyTab(tab) {
+    document.querySelectorAll('.policy-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    
+    const tabEl = document.getElementById('policy-' + tab + '-tab');
+    if (tabEl) {
+      tabEl.classList.add('active');
+      if (event && event.target) event.target.classList.add('active');
+    }
+  }
+
+  closePolicyModal() {
+    const modal = document.getElementById('policy-modal');
+    if (modal) modal.remove();
+  }
+}
+
+// Initialize governance features
+const workspaceGov = new WorkspaceGovernance();
+

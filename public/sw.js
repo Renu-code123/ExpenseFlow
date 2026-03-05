@@ -1,6 +1,5 @@
 const CACHE_NAME = 'expenseflow-v1.0.0';
 const urlsToCache = [
-  '/expensetracker.html',
   '/expensetracker.css',
   '/trackerscript.js',
   '/manifest.json',
@@ -47,48 +46,47 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // 🚫 Never cache API requests
+  if (url.pathname.startsWith('/api')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // 🚫 Never cache HTML documents (auth pages)
+  if (event.request.destination === 'document') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // ✅ Cache-first strategy for static assets only
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        if (response) {
-          console.log('Serving from cache:', event.request.url);
-          return response;
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(event.request).then((networkResponse) => {
+        if (
+          !networkResponse ||
+          networkResponse.status !== 200 ||
+          networkResponse.type !== 'basic'
+        ) {
+          return networkResponse;
         }
-        
-        // Clone the request because it's a stream that can only be consumed once
-        const fetchRequest = event.request.clone();
-        
-        return fetch(fetchRequest).then((response) => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          
-          // Clone the response because it's a stream that can only be consumed once
-          const responseToCache = response.clone();
-          
-          // Cache the fetched resource for future use
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          
-          return response;
-        }).catch((error) => {
-          console.error('Fetch failed:', error);
-          
-          // Return a custom offline page or response for HTML requests
-          if (event.request.destination === 'document') {
-            return caches.match('/expensetracker.html');
-          }
-          
-          // For other resources, you might want to return a default response
-          throw error;
+
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
         });
-      })
+
+        return networkResponse;
+      });
+    })
   );
 });
+
 
 // Background sync for offline data synchronization
 self.addEventListener('sync', (event) => {

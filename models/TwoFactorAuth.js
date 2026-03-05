@@ -22,7 +22,7 @@ const twoFactorAuthSchema = new mongoose.Schema({
   },
   method: {
     type: String,
-    enum: ['totp', 'sms', 'email', 'backup-codes'],
+    enum: ['totp', 'sms', 'email', 'backup-codes', 'webauthn', 'push', 'knowledge', 'biometric'],
     default: 'totp'
   },
   // TOTP-specific fields
@@ -35,7 +35,138 @@ const twoFactorAuthSchema = new mongoose.Schema({
     select: false
   },
   totpVerifiedAt: Date,
-  // SMS-specific fields
+  // WebAuthn-specific fields (Issue #871: Adaptive MFA Orchestrator)
+  webauthnCredentials: [{
+    credentialId: {
+      type: String,
+      required: true,
+      select: false
+    },
+    publicKey: {
+      type: String,
+      required: true,
+      select: false
+    },
+    counter: {
+      type: Number,
+      default: 0
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    lastUsed: Date,
+    name: String,
+    deviceType: String
+  }],
+  // Push notification fields
+  pushEnabled: {
+    type: Boolean,
+    default: false
+  },
+  pushDeviceTokens: [{
+    token: {
+      type: String,
+      required: true,
+      select: false
+    },
+    deviceId: String,
+    platform: {
+      type: String,
+      enum: ['ios', 'android', 'web']
+    },
+    lastUsed: Date,
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  }],
+  // Knowledge-based authentication fields
+  knowledgeQuestions: [{
+    question: {
+      type: String,
+      required: true,
+      select: false
+    },
+    answer: {
+      type: String,
+      required: true,
+      select: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  // Biometric authentication fields
+  biometricEnabled: {
+    type: Boolean,
+    default: false
+  },
+  biometricCredentials: [{
+    credentialId: {
+      type: String,
+      required: true,
+      select: false
+    },
+    publicKey: {
+      type: String,
+      required: true,
+      select: false
+    },
+    deviceId: String,
+    biometricType: {
+      type: String,
+      enum: ['fingerprint', 'face', 'voice', 'behavioral']
+    },
+    enrolledAt: {
+      type: Date,
+      default: Date.now
+    },
+    lastUsed: Date
+  }],
+  // Adaptive MFA settings
+  adaptiveEnabled: {
+    type: Boolean,
+    default: true
+  },
+  confidenceThresholds: {
+    high: {
+      type: Number,
+      default: 0.8,
+      min: 0,
+      max: 1
+    },
+    medium: {
+      type: Number,
+      default: 0.5,
+      min: 0,
+      max: 1
+    },
+    low: {
+      type: Number,
+      default: 0.2,
+      min: 0,
+      max: 1
+    }
+  },
+  riskCooldownTimers: {
+    lowRisk: {
+      type: Number,
+      default: 24 * 60 * 60 * 1000, // 24 hours
+      min: 0
+    },
+    mediumRisk: {
+      type: Number,
+      default: 60 * 60 * 1000, // 1 hour
+      min: 0
+    },
+    highRisk: {
+      type: Number,
+      default: 5 * 60 * 1000, // 5 minutes
+      min: 0
+    }
+  },
   phoneNumber: {
     type: String,
     select: false

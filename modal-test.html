@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExpenseFlow Modal Test</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background: #0f0f23;
+        color: white;
+        padding: 2rem;
+      }
+
+      .test-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin: 1rem;
+      }
+
+      .test-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      /* Modal Styles */
+      .login-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 15, 35, 0.8);
+        backdrop-filter: blur(12px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2500;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .login-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .login-modal {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(14px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 420px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        color: #ffffff;
+        position: relative;
+        border: 1px solid rgba(100, 255, 218, 0.1);
+        transform: scale(0.8) translateY(50px);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .login-modal-overlay.active .login-modal {
+        transform: scale(1) translateY(0);
+      }
+
+      .login-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        color: #cfd3ff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #cfd3ff;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
+
+      .login-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ExpenseFlow Modal Test</h1>
+    <p>
+      Testing modal functionality to debug why it's not showing in main app.
+    </p>
+
+    <button class="test-btn" onclick="testOpenModal()">Open Test Modal</button>
+    <button class="test-btn" onclick="checkElements()">Check Elements</button>
+    <button class="test-btn" onclick="forceShowModal()">
+      Force Show Modal
+    </button>
+
+    <div
+      id="debug-output"
+      style="
+        margin-top: 2rem;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+      "
+    >
+      <h3>Debug Output:</h3>
+      <div id="debug-text">Ready for testing...</div>
+    </div>
+
+    <!-- Test Modal -->
+    <div id="loginModal" class="login-modal-overlay">
+      <div class="login-modal">
+        <button class="login-modal-close" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="login-modal-content">
+          <h2>Test Login Modal</h2>
+          <form>
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input type="email" id="email" placeholder="test@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="password">Password:</label>
+              <input type="password" id="password" placeholder="password" />
+            </div>
+            <button type="button" class="login-btn" onclick="closeModal()">
+              Test Login
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function testOpenModal() {
+        console.log("Opening test modal...");
+        const modal = document.getElementById("loginModal");
+        if (modal) {
+          modal.classList.add("active");
+          updateDebug("Modal opened successfully!");
+        } else {
+          updateDebug("ERROR: Modal element not found!");
+        }
+      }
+
+      function closeModal() {
+        console.log("Closing modal...");
+        const modal = document.getElementById("loginModal");
+        if (modal) {
+          modal.classList.remove("active");
+          updateDebug("Modal closed successfully!");
+        }
+      }
+
+      function checkElements() {
+        const modal = document.getElementById("loginModal");
+        const computed = modal ? window.getComputedStyle(modal) : null;
+
+        updateDebug(`
+                Modal exists: ${!!modal}<br>
+                Modal classes: ${modal ? modal.className : "N/A"}<br>
+                Computed display: ${computed ? computed.display : "N/A"}<br>
+                Computed visibility: ${computed ? computed.visibility : "N/A"}<br>
+                Computed opacity: ${computed ? computed.opacity : "N/A"}<br>
+                Computed z-index: ${computed ? computed.zIndex : "N/A"}
+            `);
+      }
+
+      function forceShowModal() {
+        const modal = document.getElementById("loginModal");
+        if (modal) {
+          modal.style.display = "flex";
+          modal.style.opacity = "1";
+          modal.style.visibility = "visible";
+          modal.style.zIndex = "9999";
+          modal.classList.add("active");
+          updateDebug("Modal forced to show with inline styles!");
+        }
+      }
+
+      function updateDebug(text) {
+        document.getElementById("debug-text").innerHTML = text;
+      }
+
+      // Close modal on outside click
+      document.addEventListener("click", function (e) {
+        const modal = document.getElementById("loginModal");
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          closeModal();
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ let netWorthChart = null;
 // ============================================
 
 async function fetchAccounts() {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   if (!token) throw new Error('Not authenticated');
 
   const response = await fetch(ACCOUNTS_API, {
@@ -30,7 +30,7 @@ async function fetchAccounts() {
 }
 
 async function createAccount(accountData) {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(ACCOUNTS_API, {
     method: 'POST',
@@ -49,7 +49,7 @@ async function createAccount(accountData) {
 }
 
 async function updateAccount(accountId, updates) {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/${accountId}`, {
     method: 'PUT',
@@ -65,7 +65,7 @@ async function updateAccount(accountId, updates) {
 }
 
 async function deleteAccount(accountId) {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/${accountId}`, {
     method: 'DELETE',
@@ -77,7 +77,7 @@ async function deleteAccount(accountId) {
 }
 
 async function updateAccountBalance(accountId, balance, description = '') {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/${accountId}/balance`, {
     method: 'PATCH',
@@ -93,7 +93,7 @@ async function updateAccountBalance(accountId, balance, description = '') {
 }
 
 async function executeTransfer(transferData) {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/transfer`, {
     method: 'POST',
@@ -112,7 +112,7 @@ async function executeTransfer(transferData) {
 }
 
 async function fetchNetWorthSummary() {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/networth/summary`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -123,7 +123,7 @@ async function fetchNetWorthSummary() {
 }
 
 async function fetchNetWorthTrend(days = 30) {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/networth/trend?days=${days}`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -134,7 +134,7 @@ async function fetchNetWorthTrend(days = 30) {
 }
 
 async function fetchAccountHistory(accountId, days = 30) {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/${accountId}/history?days=${days}`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -145,7 +145,7 @@ async function fetchAccountHistory(accountId, days = 30) {
 }
 
 async function fetchTransferHistory(limit = 20) {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/transfers/history?limit=${limit}`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -156,7 +156,7 @@ async function fetchTransferHistory(limit = 20) {
 }
 
 async function fetchDashboardData() {
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('token');
   
   const response = await fetch(`${ACCOUNTS_API}/dashboard/summary`, {
     headers: { 'Authorization': `Bearer ${token}` }

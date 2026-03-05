@@ -388,6 +388,32 @@ class RecurringService {
 
         return await this.createExpenseFromRecurring(recurring);
     }
+
+    /**
+     * Get projection data for forecasting engine
+     * Returns simplified objects with dayOfMonth and amount
+     */
+    async getProjectionData(userId) {
+        const recurring = await RecurringExpense.find({
+            user: userId,
+            isActive: true,
+            isPaused: false
+        });
+
+        return recurring.map(r => {
+            // Simplified logic: assume mostly monthly for now standard projection
+            // If it's weekly, we might ignore or approximate.
+            //Ideally we should handle frequencies better but for MVP standardized to monthly day
+            const nextDate = new Date(r.nextDueDate);
+            return {
+                amount: r.amount,
+                type: r.type,
+                frequency: r.frequency,
+                dayOfMonth: nextDate.getDate(),
+                description: r.description
+            };
+        });
+    }
 }
 
 module.exports = new RecurringService();

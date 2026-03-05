@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Analytics - ExpenseFlow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Analytics Test Page</h1>
+        <p>This page helps you test the analytics functionality by adding sample data.</p>
+        
+        <div class="info">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>Click "Add Sample Data" to populate localStorage with test transactions</li>
+                <li>Click "Go to Analytics" to view the analytics dashboard</li>
+                <li>Use "Clear Data" to reset and start fresh</li>
+            </ol>
+        </div>
+
+        <button onclick="addSampleData()">Add Sample Data</button>
+        <button onclick="goToAnalytics()">Go to Analytics</button>
+        <button onclick="clearData()">Clear Data</button>
+        <button onclick="goToDashboard()">Go to Dashboard</button>
+
+        <div id="status"></div>
+        <div id="current-data"></div>
+    </div>
+
+    <script>
+        function addSampleData() {
+            const sampleTransactions = [
+                // Current month expenses
+                { id: 1, text: "Grocery Shopping", amount: -150, category: "food", type: "expense", date: new Date().toISOString() },
+                { id: 2, text: "Gas Station", amount: -60, category: "transport", type: "expense", date: new Date(Date.now() - 1*24*60*60*1000).toISOString() },
+                { id: 3, text: "Netflix Subscription", amount: -15, category: "entertainment", type: "expense", date: new Date(Date.now() - 2*24*60*60*1000).toISOString() },
+                { id: 4, text: "Electricity Bill", amount: -120, category: "bills", type: "expense", date: new Date(Date.now() - 3*24*60*60*1000).toISOString() },
+                { id: 5, text: "Restaurant Dinner", amount: -80, category: "food", type: "expense", date: new Date(Date.now() - 4*24*60*60*1000).toISOString() },
+                { id: 6, text: "Salary", amount: 3000, category: "salary", type: "income", date: new Date(Date.now() - 5*24*60*60*1000).toISOString() },
+                { id: 7, text: "Coffee Shop", amount: -12, category: "food", type: "expense", date: new Date(Date.now() - 6*24*60*60*1000).toISOString() },
+                { id: 8, text: "Uber Ride", amount: -25, category: "transport", type: "expense", date: new Date(Date.now() - 7*24*60*60*1000).toISOString() },
+                
+                // Previous month data
+                { id: 9, text: "Rent Payment", amount: -800, category: "bills", type: "expense", date: new Date(Date.now() - 35*24*60*60*1000).toISOString() },
+                { id: 10, text: "Freelance Work", amount: 500, category: "freelance", type: "income", date: new Date(Date.now() - 32*24*60*60*1000).toISOString() },
+                { id: 11, text: "Gym Membership", amount: -50, category: "healthcare", type: "expense", date: new Date(Date.now() - 30*24*60*60*1000).toISOString() },
+                { id: 12, text: "Online Shopping", amount: -200, category: "shopping", type: "expense", date: new Date(Date.now() - 28*24*60*60*1000).toISOString() },
+                
+                // Older data for trends
+                { id: 13, text: "Previous Salary", amount: 2800, category: "salary", type: "income", date: new Date(Date.now() - 65*24*60*60*1000).toISOString() },
+                { id: 14, text: "Old Grocery", amount: -180, category: "food", type: "expense", date: new Date(Date.now() - 60*24*60*60*1000).toISOString() },
+                { id: 15, text: "Old Transport", amount: -90, category: "transport", type: "expense", date: new Date(Date.now() - 58*24*60*60*1000).toISOString() }
+            ];
+
+            localStorage.setItem('transactions', JSON.stringify(sampleTransactions));
+            
+            document.getElementById('status').innerHTML = '<p class="success">✅ Sample data added successfully!</p>';
+            showCurrentData();
+        }
+
+        function clearData() {
+            localStorage.removeItem('transactions');
+            document.getElementById('status').innerHTML = '<p class="success">✅ Data cleared successfully!</p>';
+            showCurrentData();
+        }
+
+        function goToAnalytics() {
+            window.location.href = 'analytics.html';
+        }
+
+        function goToDashboard() {
+            window.location.href = 'index.html';
+        }
+
+        function showCurrentData() {
+            const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+            const totalTransactions = transactions.length;
+            const totalIncome = transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = Math.abs(transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0));
+            const balance = totalIncome - totalExpenses;
+
+            document.getElementById('current-data').innerHTML = `
+                <div class="info">
+                    <h3>Current Data Summary:</h3>
+                    <p><strong>Total Transactions:</strong> ${totalTransactions}</p>
+                    <p><strong>Total Income:</strong> ₹${totalIncome.toFixed(2)}</p>
+                    <p><strong>Total Expenses:</strong> ₹${totalExpenses.toFixed(2)}</p>
+                    <p><strong>Balance:</strong> ₹${balance.toFixed(2)}</p>
+                </div>
+            `;
+        }
+
+        // Show current data on page load
+        showCurrentData();
+    </script>
+</body>
+</html>

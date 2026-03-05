@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Modal Test</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: #0f0f23;
+        color: white;
+        margin: 0;
+        padding: 2rem;
+      }
+      .test-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .test-btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        background: #64ffda;
+        color: #0f0f23;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .test-btn:hover {
+        background: #4fd4b8;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Login Modal Test Page</h1>
+    <p>Test the login modal functionality:</p>
+
+    <div class="test-buttons">
+      <button class="test-btn" onclick="openLoginModal()">
+        <i class="fas fa-sign-in-alt"></i> Test Login Modal
+      </button>
+      <button class="test-btn" onclick="openSignupModal()">
+        <i class="fas fa-user-plus"></i> Test Signup Modal
+      </button>
+      <button class="test-btn" onclick="checkAuthState()">
+        <i class="fas fa-user-check"></i> Check Auth State
+      </button>
+    </div>
+
+    <div id="status">Status: Ready for testing</div>
+
+    <!-- Test Results -->
+    <div
+      id="testResults"
+      style="
+        margin-top: 2rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      "
+    >
+      <h3>Test Results:</h3>
+      <ul id="resultsList"></ul>
+    </div>
+
+    <script>
+      // Add test results
+      function addResult(message, success = true) {
+        const list = document.getElementById("resultsList");
+        const item = document.createElement("li");
+        item.style.color = success ? "#00e676" : "#ff5722";
+        item.innerHTML = `<i class="fas ${success ? "fa-check" : "fa-times"}"></i> ${message}`;
+        list.appendChild(item);
+      }
+
+      // Test if functions exist
+      document.addEventListener("DOMContentLoaded", function () {
+        addResult("Page loaded successfully");
+
+        // Test if modal functions are available (we'll load them from index.html)
+        if (typeof openLoginModal === "undefined") {
+          addResult(
+            "openLoginModal function not found - need to include from index.html",
+            false,
+          );
+        } else {
+          addResult("openLoginModal function found");
+        }
+      });
+
+      // Mock functions for testing if not included
+      function openLoginModal() {
+        addResult("openLoginModal called - would open login modal");
+        document.getElementById("status").textContent =
+          "Status: Login modal would be opened";
+      }
+
+      function openSignupModal() {
+        addResult("openSignupModal called - would open signup modal");
+        document.getElementById("status").textContent =
+          "Status: Signup modal would be opened";
+      }
+
+      function checkAuthState() {
+        addResult("checkAuthState called - checking localStorage");
+        const token = localStorage.getItem("authToken");
+        const userInfo = localStorage.getItem("userInfo");
+
+        if (token && userInfo) {
+          addResult(
+            `User logged in: ${JSON.parse(userInfo).email || "Unknown"}`,
+          );
+          document.getElementById("status").textContent =
+            "Status: User is logged in";
+        } else {
+          addResult("No user session found");
+          document.getElementById("status").textContent =
+            "Status: User not logged in";
+        }
+      }
+    </script>
+  </body>
+</html>

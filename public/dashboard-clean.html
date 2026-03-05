@@ -365,6 +365,53 @@
                     </button>
                 </div>
             </div>
+            <!-- Add Transaction Modal -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Transaction</h3>
+                <button class="modal-close" id="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="transaction-form" class="transaction-form">
+                <div class="form-group">
+                    <label for="transaction-type">Type</label>
+                    <select id="transaction-type" required>
+                        <option value="">Select Type</option>
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-description">Description</label>
+                    <input type="text" id="transaction-description" placeholder="Enter description" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-amount">Amount</label>
+                    <input type="number" id="transaction-amount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-category">Category</label>
+                    <select id="transaction-category" required>
+                        <option value="">Select Category</option>
+                        <option value="food">Food & Dining</option>
+                        <option value="transport">Transportation</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="utilities">Bills & Utilities</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Save Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
         </main>
     </div>
 
@@ -416,7 +463,7 @@
             </form>
         </div>
     </div>
-
+<script src="protect.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="dashboard.js"></script>
 </body>

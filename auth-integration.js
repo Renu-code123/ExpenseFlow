@@ -4,7 +4,7 @@
  */
 
 var API_BASE_URL = '/api';
-var authToken = localStorage.getItem('authToken');
+var authToken = localStorage.getItem('token');
 var currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 var currentSessionId = localStorage.getItem('sessionId');
 
@@ -30,7 +30,7 @@ async function register(userData) {
     currentUser = data.user;
     currentSessionId = data.sessionId;
 
-    localStorage.setItem('authToken', authToken);
+    localStorage.setItem('token ', authToken);
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     localStorage.setItem('sessionId', currentSessionId);
 
@@ -67,7 +67,7 @@ async function login(credentials) {
     currentUser = data.user;
     currentSessionId = data.sessionId;
 
-    localStorage.setItem('authToken', authToken);
+    localStorage.setItem('token', authToken);
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     localStorage.setItem('sessionId', currentSessionId);
 
@@ -95,7 +95,7 @@ async function verify2FA(userId, totpToken, rememberMe = false) {
     currentUser = data.user;
     currentSessionId = data.sessionId;
 
-    localStorage.setItem('authToken', authToken);
+    localStorage.setItem('token', authToken);
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     localStorage.setItem('sessionId', currentSessionId);
 
@@ -119,7 +119,7 @@ async function logout() {
     authToken = null;
     currentUser = null;
     currentSessionId = null;
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
     localStorage.removeItem('sessionId');
     localStorage.removeItem('transactions');

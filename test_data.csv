@@ -1,0 +1,5 @@
+date,description,amount,category,type,merchant
+2023-10-25,Grocery Shopping,1500,food,expense,SuperMart
+2023-10-26,Uber Ride,350,transport,expense,Uber
+2023-10-27,Salary,50000,salary,income,Employer
+2023-10-28,Movie Night,800,entertainment,expense,Cinema

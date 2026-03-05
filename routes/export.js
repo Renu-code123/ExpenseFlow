@@ -11,14 +11,17 @@ const exportService = require('../services/exportService');
  */
 router.get('/csv', auth, exportRateLimiter, async (req, res) => {
     try {
-        const { startDate, endDate, category, type } = req.query;
+        const { startDate, endDate, category, type, minAmount, maxAmount } = req.query;
 
         const expenses = await exportService.getExpensesForExport(req.user._id, {
-            startDate,
-            endDate,
-            category,
-            type
-        });
+              startDate,
+              endDate,
+              category,
+              type,
+              minAmount,
+              maxAmount
+       });
+
 
         if (expenses.length === 0) {
             return res.status(404).json({
@@ -26,7 +29,7 @@ router.get('/csv', auth, exportRateLimiter, async (req, res) => {
             });
         }
 
-        const csvContent = exportService.generateCSV(expenses, {
+        const csvContent = exportService.exportToCSV(expenses, {
             includeHeaders: true,
             dateFormat: req.query.dateFormat || req.user?.locale || 'en-US'
         });
