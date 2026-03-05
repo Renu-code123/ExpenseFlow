@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Compliance Reporting Dashboard</title>
+  <link rel="stylesheet" href="compliance.css">
+</head>
+<body>
+  <h1>Automated Compliance Reporting</h1>
+  <div id="report-controls">
+    <button onclick="generateReport('GDPR')">Generate GDPR Report</button>
+    <button onclick="generateReport('PCI DSS')">Generate PCI DSS Report</button>
+    <button onclick="generateReport('SOX')">Generate SOX Report</button>
+  </div>
+  <div id="report-results"></div>
+  <script src="compliance.js"></script>
+</body>
+</html>
