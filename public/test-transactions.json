@@ -1,0 +1,5 @@
+[
+    {"id":1,"amount":1200,"currency":"USD","userId":"user101","timestamp":1678901234567,"location":"US","device":"mobile","type":"payment"},
+    {"id":2,"amount":9500,"currency":"INR","userId":"user202","timestamp":1678901235567,"location":"IN","device":"web","type":"payment"},
+    {"id":3,"amount":50,"currency":"EUR","userId":"user303","timestamp":1678901236567,"location":"UK","device":"tablet","type":"refund"}
+]
