@@ -217,3 +217,24 @@ document.addEventListener('click', (e) => {
         trackFAQInteraction('category_switch', category);
     }
 });
+const toggle = document.getElementById("themeToggle");
+
+toggle.addEventListener("click", () => {
+
+let currentTheme = document.documentElement.getAttribute("data-theme");
+
+if(currentTheme === "light"){
+document.documentElement.setAttribute("data-theme","dark");
+localStorage.setItem("theme","dark");
+}else{
+document.documentElement.setAttribute("data-theme","light");
+localStorage.setItem("theme","light");
+}
+
+});
+
+const savedTheme = localStorage.getItem("theme");
+
+if(savedTheme){
+document.documentElement.setAttribute("data-theme",savedTheme);
+}

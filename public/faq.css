@@ -624,3 +624,61 @@ html[data-theme="dark"] {
     --bg-secondary: #1e293b;
     --text-primary: #f1f5f9;
 }
+.theme-toggle{
+  background:none;
+  border:none;
+  font-size:18px;
+  cursor:pointer;
+  margin-left:15px;
+  color:inherit;
+}
+
+.theme-toggle:hover{
+  transform:scale(1.1);
+}/* ============================= */
+/* LIGHT MODE GLOBAL FIX */
+/* ============================= */
+
+html[data-theme="light"] body{
+    background:#ffffff;
+    color:#111111;
+}
+
+/* Navbar */
+html[data-theme="light"] .navbar{
+    background:#ffffff;
+    border-bottom:1px solid rgba(0,0,0,0.1);
+}
+
+/* Footer */
+html[data-theme="light"] .footer{
+    background:#f5f5f5;
+    border-top:1px solid rgba(0,0,0,0.1);
+}
+
+/* Links */
+html[data-theme="light"] .nav-link{
+    color:#374151;
+}
+
+html[data-theme="light"] .nav-link:hover,
+html[data-theme="light"] .nav-link.active{
+    color:#2563eb;
+}
+
+/* Categories */
+html[data-theme="light"] .category-btn{
+    background:#ffffff;
+    border:1px solid rgba(37,99,235,0.2);
+    color:#374151;
+}
+
+html[data-theme="light"] .category-btn:hover{
+    background:rgba(37,99,235,0.08);
+    color:#2563eb;
+}
+
+/* FAQ hover */
+html[data-theme="light"] .faq-item:hover{
+    background:#f9fafb;
+}
