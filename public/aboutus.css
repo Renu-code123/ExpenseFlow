@@ -3,6 +3,10 @@
    HELP CENTER – SAFE UI ENHANCEMENTS
    (NO PARENT LAYOUT CHANGES)
 ========================= */
+body.dark-mode .feedback-form button{
+  background:#2563eb;
+  color:white;
+}
 html{
   scroll-behavior: smooth;
 }
@@ -653,4 +657,181 @@ html{
     width: 45px;
     height: 45px;
   }
+}/* Toggle Button */
+.theme-toggle{
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+  margin-left: 15px;
+}
+
+/* Dark Mode Base */
+body.dark-mode{
+  background:#0f172a;
+  color:#e5e7eb;
+}
+
+/* Cards */
+body.dark-mode .balance-card{
+  background:#1e293b;
+  color:#e5e7eb;
+}
+
+/* Navbar */
+body.dark-mode .navbar{
+  background:#020617;
+}
+
+/* Footer */
+body.dark-mode .footer{
+  background:#020617;
+}
+
+/* Links */
+body.dark-mode a{
+  color:#38bdf8;
+}
+
+/* Inputs */
+body.dark-mode input,
+body.dark-mode textarea{
+  background:#1e293b;
+  color:white;
+  border:1px solid #334155;
+}
+
+/* Button */
+body.dark-mode button{
+  background:#2563eb;
+  color:white;
+}/* ============================= */
+/* GLOBAL LIGHT MODE (DEFAULT) */
+/* ============================= */
+
+body{
+  background:#ffffff;
+  color:#111827;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Links */
+a{
+  color:#2563eb;
+}
+
+/* Navbar */
+.navbar{
+  background:#ffffff;
+  color:#111827;
+}
+
+/* Footer */
+.footer{
+  background:#f3f4f6;
+  color:#111827;
+}
+
+/* Cards */
+.balance-card{
+  background:#ffffff;
+  color:#111827;
+  border:1px solid #e5e7eb;
+}
+
+/* Inputs */
+input,
+textarea{
+  background:#ffffff;
+  color:#111827;
+  border:1px solid #d1d5db;
+}
+
+/* Buttons */
+button{
+  background:#6366f1;
+  color:white;
+}
+
+
+/* ============================= */
+/* DARK MODE */
+/* ============================= */
+
+body.dark-mode{
+  background:#0f172a;
+  color:#e5e7eb;
+}
+
+/* Navbar */
+body.dark-mode .navbar{
+  background:#020617;
+  color:#e5e7eb;
+}
+
+/* Footer */
+body.dark-mode .footer{
+  background:#020617;
+  color:#e5e7eb;
+}
+
+/* Cards */
+body.dark-mode .balance-card{
+  background:#1e293b;
+  color:#e5e7eb;
+  border:1px solid #334155;
+}
+
+/* Links */
+body.dark-mode a{
+  color:#38bdf8;
+}
+
+/* Inputs */
+body.dark-mode input,
+body.dark-mode textarea{
+  background:#1e293b;
+  color:#ffffff;
+  border:1px solid #334155;
+}
+
+/* Feedback button only */
+body.dark-mode .feedback-form button{
+  background:#2563eb;
+  color:white;
+}
+
+
+/* ============================= */
+/* THEME TOGGLE BUTTON */
+/* ============================= */
+
+.theme-toggle{
+  background:none;
+  border:none;
+  font-size:20px;
+  cursor:pointer;
+  color:inherit;
+  margin-left:15px;
+  transition:transform 0.2s ease;
+}
+
+.theme-toggle:hover{
+  transform:scale(1.15);
+}
+
+
+/* ============================= */
+/* SMOOTH TRANSITIONS */
+/* ============================= */
+
+body,
+.navbar,
+.footer,
+.balance-card,
+input,
+textarea,
+button{
+  transition: all 0.3s ease;
 }
