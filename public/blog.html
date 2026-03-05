@@ -371,6 +371,95 @@ body{
     color:#64748b;
     font-size:0.9rem;
 }
+/* ===============================
+   LIGHT MODE SUPPORT
+================================*/
+
+html[data-theme="light"] body{
+    background:#f8fafc;
+    color:#0f172a;
+}
+
+/* Header */
+html[data-theme="light"] .blog-header{
+    background: radial-gradient(circle at top,#ffffff 0%,#e2e8f0 70%);
+}
+
+html[data-theme="light"] .blog-subtitle{
+    color:#475569;
+}
+
+/* Search */
+html[data-theme="light"] .blog-search-input{
+    background:#ffffff;
+    border:1px solid #cbd5e1;
+    color:#0f172a;
+}
+
+html[data-theme="light"] .blog-search-icon{
+    color:#2563eb;
+}
+
+/* Cards */
+html[data-theme="light"] .blog-card{
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .blog-card h3{
+    color:#0f172a;
+}
+
+html[data-theme="light"] .blog-card p{
+    color:#475569;
+}
+
+/* Modal */
+html[data-theme="light"] .blog-modal-content{
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+}
+
+/* Footer */
+html[data-theme="light"] .footer{
+    background:#ffffff;
+    border-top:1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .footer-section h4{
+    color:#0f172a;
+}
+
+html[data-theme="light"] .footer-section a{
+    color:#475569;
+}
+
+html[data-theme="light"] .footer-section a:hover{
+    color:#2563eb;
+}
+
+html[data-theme="light"] .social-links a{
+    background:#e2e8f0;
+    color:#2563eb;
+}/* Theme Toggle Button */
+.theme-toggle{
+    background:none;
+    border:none;
+    font-size:18px;
+    cursor:pointer;
+    margin-left:15px;
+    color:#64ffda;
+    transition:0.3s;
+}
+
+.theme-toggle:hover{
+    transform:scale(1.15);
+}
+
+/* Light mode button color */
+html[data-theme="light"] .theme-toggle{
+    color:#2563eb;
+}
 </style>
 <body>
 
@@ -381,11 +470,16 @@ body{
             <i class="fas fa-wallet"></i> ExpenseFlow
         </a>
         <div class="nav-links">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="faq.html" class="nav-link">FAQ</a>
-            <a href="blog.html" class="nav-link active">Blog</a>
-            <a href="login.html" class="nav-link">Login</a>
-        </div>
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="faq.html" class="nav-link">FAQ</a>
+    <a href="blog.html" class="nav-link active">Blog</a>
+    <a href="login.html" class="nav-link">Login</a>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+</div>
     </div>
 </nav>
 
@@ -528,6 +622,19 @@ document.getElementById("blogSearch").addEventListener("input",function(){
     document.querySelectorAll(".blog-card").forEach(card=>{
         card.style.display = card.innerText.toLowerCase().includes(value) ? "block":"none";
     });
+});
+const toggle = document.querySelector(".theme-toggle");
+
+toggle.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+
+    if(current === "light"){
+        document.documentElement.setAttribute("data-theme","dark");
+        localStorage.setItem("theme","dark");
+    } else {
+        document.documentElement.setAttribute("data-theme","light");
+        localStorage.setItem("theme","light");
+    }
 });
 </script>
 <script src="blog.js"></script>
