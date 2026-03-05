@@ -5,12 +5,14 @@ const PaymentService = require('../services/paymentService');
 const PDFService = require('../services/pdfService');
 const { authenticateToken } = require('../middleware/auth');
 const { requireSensitive2FA } = require('../middleware/twoFactorAuthMiddleware');
+const zeroTrustAuth = require('../middleware/zeroTrustAuth');
+const zeroTrustPolicy = require('../middleware/zeroTrustPolicy');
 const { PaymentSchemas, validateRequest, validateQuery, validateParams } = require('../middleware/inputValidator');
 const { paymentLimiter, invoicePaymentLimiter } = require('../middleware/rateLimiter');
 const { body, param, query, validationResult } = require('express-validator');
 
 // GET /api/payments - Get all payments for user
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
     try {
         const { client, invoice, status, payment_method, start_date, end_date, page = 1, limit = 50 } = req.query;
         
@@ -46,7 +48,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET /api/payments/unreconciled - Get unreconciled payments
-router.get('/unreconciled', authenticateToken, async (req, res) => {
+router.get('/unreconciled', authenticateToken, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
     try {
         const payments = await PaymentService.getUnreconciledPayments(req.user.userId);
         
@@ -64,7 +66,7 @@ router.get('/unreconciled', authenticateToken, async (req, res) => {
 });
 
 // GET /api/payments/stats - Get payment statistics
-router.get('/stats', authenticateToken, async (req, res) => {
+router.get('/stats', authenticateToken, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
     try {
         const { start_date, end_date } = req.query;
         
@@ -87,7 +89,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
 });
 
 // GET /api/payments/revenue/monthly - Get monthly revenue
-router.get('/revenue/monthly', authenticateToken, async (req, res) => {
+router.get('/revenue/monthly', authenticateToken, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
     try {
         const year = parseInt(req.query.year) || new Date().getFullYear();
         
@@ -107,7 +109,7 @@ router.get('/revenue/monthly', authenticateToken, async (req, res) => {
 });
 
 // GET /api/payments/forecast - Get payment forecast
-router.get('/forecast', authenticateToken, async (req, res) => {
+router.get('/forecast', authenticateToken, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
     try {
         const forecast = await PaymentService.getPaymentForecast(req.user.userId);
         
@@ -124,7 +126,7 @@ router.get('/forecast', authenticateToken, async (req, res) => {
 });
 
 // GET /api/payments/:id - Get single payment
-router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.get('/:id', authenticateToken, zeroTrustAuth, zeroTrustPolicy, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -146,7 +148,7 @@ router.get('/:id', authenticateToken, param('id').isMongoId(), async (req, res) 
 });
 
 // POST /api/payments - Create new payment
-router.post('/', authenticateToken, paymentLimiter, validateRequest(PaymentSchemas.create), async (req, res) => {
+router.post('/', authenticateToken, zeroTrustAuth, zeroTrustPolicy, paymentLimiter, validateRequest(PaymentSchemas.create), async (req, res) => {
     try {
         const payment = await PaymentService.createPayment(req.user.userId, req.body);
         
@@ -164,7 +166,7 @@ router.post('/', authenticateToken, paymentLimiter, validateRequest(PaymentSchem
 
 // PUT /api/payments/:id - Update payment
 // Risk-based step-up auth: requireSensitive2FA for payout changes
-router.put('/:id', authenticateToken, requireSensitive2FA, param('id').isMongoId(), async (req, res) => {
+router.put('/:id', authenticateToken, zeroTrustAuth, zeroTrustPolicy, requireSensitive2FA, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -191,7 +193,7 @@ router.put('/:id', authenticateToken, requireSensitive2FA, param('id').isMongoId
 
 // POST /api/payments/:id/refund - Process refund
 // Risk-based step-up auth: requireSensitive2FA for payout changes
-router.post('/:id/refund', authenticateToken, requireSensitive2FA, param('id').isMongoId(), async (req, res) => {
+router.post('/:id/refund', authenticateToken, zeroTrustAuth, zeroTrustPolicy, requireSensitive2FA, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -228,7 +230,7 @@ router.post('/:id/refund', authenticateToken, requireSensitive2FA, param('id').i
 
 // POST /api/payments/:id/reconcile - Mark payment as reconciled
 // Risk-based step-up auth: requireSensitive2FA for payout changes
-router.post('/:id/reconcile', authenticateToken, requireSensitive2FA, param('id').isMongoId(), async (req, res) => {
+router.post('/:id/reconcile', authenticateToken, zeroTrustAuth, zeroTrustPolicy, requireSensitive2FA, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -251,7 +253,7 @@ router.post('/:id/reconcile', authenticateToken, requireSensitive2FA, param('id'
 
 // POST /api/payments/reconcile/bulk - Reconcile multiple payments
 // Risk-based step-up auth: requireSensitive2FA for payout changes
-router.post('/reconcile/bulk', authenticateToken, requireSensitive2FA, async (req, res) => {
+router.post('/reconcile/bulk', authenticateToken, zeroTrustAuth, zeroTrustPolicy, requireSensitive2FA, async (req, res) => {
     try {
         const { payment_ids } = req.body;
         
@@ -278,7 +280,7 @@ router.post('/reconcile/bulk', authenticateToken, requireSensitive2FA, async (re
 });
 
 // GET /api/payments/:id/receipt - Generate and download receipt PDF
-router.get('/:id/receipt', authenticateToken, param('id').isMongoId(), async (req, res) => {
+router.get('/:id/receipt', authenticateToken, zeroTrustAuth, zeroTrustPolicy, param('id').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -297,7 +299,7 @@ router.get('/:id/receipt', authenticateToken, param('id').isMongoId(), async (re
 });
 
 // GET /api/payments/client/:clientId/history - Get payment history for a client
-router.get('/client/:clientId/history', authenticateToken, param('clientId').isMongoId(), async (req, res) => {
+router.get('/client/:clientId/history', authenticateToken, zeroTrustAuth, zeroTrustPolicy, param('clientId').isMongoId(), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
