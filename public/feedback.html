@@ -1,356 +1,206 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Feedback • ExpenseFlow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Feedback • ExpenseFlow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Fonts & Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="expensetracker.css" />
+    <link rel="stylesheet" href="feedback.css" />
+    <link rel="stylesheet" href="index.css" />
 
-  <!-- SweetAlert -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
 
-<style>
-/* ================= THEME ================= */
-:root{
-  --primary-gradient: linear-gradient(135deg,#667eea,#764ba2);
-  --bg-primary:#0f0f23;
-  --card-bg:rgba(255,255,255,.06);
-  --text-primary:#fff;
-  --text-secondary:#b4b4b4;
-  --accent-primary:#64ffda;
-  --border-glass:rgba(255,255,255,.12);
-  --shadow-glass:0 15px 45px rgba(31,38,135,.45);
-}
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-logo">
+            <i class="fas fa-wallet"></i>
+            <span>ExpenseFlow</span>
+          </div>
+          <div class="nav-menu" id="nav-menu">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="accounts.html" class="nav-link">Accounts</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="feedback.html" class="nav-link active">Feedback</a>
+            <a href="goals.html" class="nav-link">Goals</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+            <!-- <a href="Monthlysummary.html" class="nav-link">Monthly/Yearly Summary</a> -->
+            <a href="./contributor.html" class="nav-link">Contributors</a>
+          </div>
+          <div class="nav-toggle" id="nav-toggle">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+          <div class="user-profile">
+            <div id="workspace-selector" class="workspace-selector"></div>
+            <select
+              id="language-switcher"
+              class="language-select"
+              aria-label="Language"
+            >
+              <option value="en">EN</option>
+              <option value="es">ES</option>
+              <option value="fr">FR</option>
+            </select>
+            <button
+              class="currency-btn"
+              onclick="openCurrencyModal()"
+              title="Currency Settings"
+            >
+              <i class="fas fa-coins"></i>
+              <span id="current-currency">INR</span>
+            </button>
+            <img
+              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+              alt="User"
+              class="profile-img"
+            />
+            <span class="username" id="navUsername"></span>
+            <div id="redirect">
+              <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
 
-body.light{
-  --bg-primary:#f5f7fb;
-  --card-bg:#fff;
-  --text-primary:#1a1a1a;
-  --text-secondary:#555;
-  --border-glass:#ddd;
-  --shadow-glass:0 12px 25px rgba(0,0,0,.12);
-}
+    <main class="main-content">
+      <section class="hero">
+        <h1>Your Feedback Matters</h1>
+        <p>Help us improve ExpenseFlow 💙</p>
+      </section>
 
-/* ================= BASE ================= */
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:Inter,sans-serif;
-  background:var(--bg-primary);
-  color:var(--text-primary);
-  min-height:100vh;
-  transition:.35s;
-}
+      <div class="container">
+        <div class="feedback-card">
+          <h3>Share Your Experience</h3>
 
-/* ================= NAVBAR ================= */
-.header{
-  position:fixed;
-  top:0;
-  width:100%;
-  z-index:1000;
-  background:var(--card-bg);
-  backdrop-filter:blur(22px);
-  border-bottom:1px solid var(--border-glass);
-}
+          <form class="feedback-form" onsubmit="submitFeedback(event)">
+            <input type="text" placeholder="Your Name" required />
+            <input type="email" placeholder="Email Address" required />
 
-.nav-container{
-  max-width:1200px;
-  margin:auto;
-  padding:1.1rem 2rem;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+            <select required>
+              <option value="">Select Feedback Type</option>
+              <option>Bug Report</option>
+              <option>Feature Request</option>
+              <option>General Feedback</option>
+            </select>
 
-.nav-logo{
-  font-weight:700;
-  font-size:1.1rem;
-  display:flex;
-  gap:.5rem;
-  align-items:center;
-}
+            <div class="rating">
+              <span>★</span><span>★</span><span>★</span><span>★</span
+              ><span>★</span>
+            </div>
 
-.nav-menu{
-  display:flex;
-  gap:1.5rem;
-  align-items:center;
-}
+            <textarea
+              placeholder="Write your feedback here..."
+              required
+            ></textarea>
 
-.nav-link{
-  text-decoration:none;
-  color:var(--text-secondary);
-}
+            <button class="submit-btn">Submit Feedback</button>
+          </form>
+        </div>
+      </div>
+    </main>
 
-.nav-link:hover{
-  color:var(--accent-primary);
-}
+    <!-- < !--FOOTER -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <div class="footer-logo">
+            <i class="fas fa-wallet"></i>
+            <span>ExpenseFlow</span>
+          </div>
 
-.theme-toggle{
-  cursor:pointer;
-  font-size:1.3rem;
-}
+          <p class="footer-description">
+            Smart money management made simple. Track, analyze, and optimize
+            your financial habits.
+          </p>
 
-/* ================= MAIN ================= */
-.main-content{
-  padding-top:100px;
-}
+          <div class="social-links">
+            <a
+              href="https://x.com/9504_renu"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="X (Twitter)"
+            >
+              <i class="fab fa-x-twitter"></i>
+            </a>
 
-.hero{
-  text-align:center;
-  padding:3rem 2rem;
-}
+            <a
+              href="https://github.com/Renu-code123/ExpenseFlow"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Github"
+            >
+              <i class="fab fa-github"></i>
+            </a>
 
-.hero h1{
-  font-size:3rem;
-  background:var(--primary-gradient);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
+            <a
+              href="mailto:renu89857@gmail.com"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Email"
+            >
+              <i class="far fa-envelope"></i>
+            </a>
 
-.hero p{
-  color:var(--text-secondary);
-  margin-top:.6rem;
-}
-
-.container{
-  max-width:600px;
-  margin:auto;
-  padding:0 2rem;
-}
-
-/* ================= FEEDBACK CARD ================= */
-.feedback-card{
-  background:var(--card-bg);
-  border-radius:22px;
-  border:1px solid var(--border-glass);
-  box-shadow:var(--shadow-glass);
-  padding:2.4rem;
-  position:relative;
-  overflow:hidden;
-  animation:fadeUp .8s ease;
-}
-
-.feedback-card::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:radial-gradient(circle at top left,
-    rgba(100,255,218,.15),transparent 60%);
-  opacity:0;
-  transition:.4s;
-  pointer-events:none; /* ✅ FIX INPUT */
-}
-
-.feedback-card:hover::before{opacity:1}
-
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(18px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-.feedback-card h3{
-  text-align:center;
-  margin-bottom:1.5rem;
-}
-
-/* ================= FORM ================= */
-.feedback-form input,
-.feedback-form textarea,
-.feedback-form select{
-  width:100%;
-  padding:1rem 1.1rem;
-  margin-bottom:1rem;
-  background:transparent;
-  border:1px solid var(--border-glass);
-  border-radius:12px;
-  color:var(--text-primary);
-  transition:.3s;
-}
-
-.feedback-form textarea{resize:none;height:120px}
-
-.feedback-form input:focus,
-.feedback-form textarea:focus,
-.feedback-form select:focus{
-  outline:none;
-  border-color:var(--accent-primary);
-  box-shadow:0 0 0 3px rgba(100,255,218,.25);
-}
-
-/* ================= RATING ================= */
-.rating{
-  display:flex;
-  justify-content:center;
-  gap:.6rem;
-  margin-bottom:1.4rem;
-}
-
-.rating span{
-  font-size:1.9rem;
-  cursor:pointer;
-  color:var(--text-secondary);
-  transition:.25s;
-}
-
-.rating span.active,
-.rating span:hover{
-  color:#ffd700;
-  transform:scale(1.15);
-}
-
-/* ================= BUTTON ================= */
-.submit-btn{
-  width:100%;
-  padding:1rem;
-  border:none;
-  border-radius:14px;
-  background:var(--primary-gradient);
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-  transition:.35s;
-}
-
-.submit-btn:hover{
-  transform:translateY(-3px);
-  box-shadow:0 14px 32px rgba(102,126,234,.45);
-}
-
-/* ================= FOOTER ================= */
-.footer{
-  margin-top:4rem;
-  padding:2rem;
-  border-top:1px solid var(--border-glass);
-  text-align:center;
-  color:var(--text-secondary);
-  font-size:.9rem;
-}
-/* ===== FIX SELECT DROPDOWN VISIBILITY ===== */
-.feedback-form select {
-  background-color: var(--card-bg);
-  color: var(--text-primary);
-  appearance: none;
-}
-
-/* Dropdown options */
-.feedback-form select option {
-  background-color: #ffffff;
-  color: #1a1a1a;
-}
-
-/* Dark mode safety */
-body:not(.light) .feedback-form select option {
-  background-color: #1a1a2e;
-  color: #ffffff;
-}
-
-/* Hover highlight */
-.feedback-form select option:hover {
-  background-color: #667eea;
-  color: #ffffff;
-}
-
-</style>
-</head>
-
-<body>
-
-<header class="header">
-  <div class="nav-container">
-    <div class="nav-logo">
-      <i class="fas fa-wallet"></i> ExpenseFlow
-    </div>
-    <div class="nav-menu">
-      <a class="nav-link" href="login.html">Home</a>
-      <a class="nav-link" href="Community.html">Community</a>
-      <a class="nav-link" href="feedback.html">Feedback</a>
-      <i class="fas fa-moon theme-toggle" onclick="toggleTheme()"></i>
-    </div>
-  </div>
-</header>
-
-<main class="main-content">
-  <section class="hero">
-    <h1>Your Feedback Matters</h1>
-    <p>Help us improve ExpenseFlow 💙</p>
-  </section>
-
-  <div class="container">
-    <div class="feedback-card">
-      <h3>Share Your Experience</h3>
-
-      <form class="feedback-form" onsubmit="submitFeedback(event)">
-        <input type="text" placeholder="Your Name" required>
-        <input type="email" placeholder="Email Address" required>
-
-        <select required>
-          <option value="">Select Feedback Type</option>
-          <option>Bug Report</option>
-          <option>Feature Request</option>
-          <option>General Feedback</option>
-        </select>
-
-        <div class="rating">
-          <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            <a
+              href="https://www.linkedin.com/in/renu-kumari-prajapati"
+              class="social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+            >
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+          </div>
         </div>
 
-        <textarea placeholder="Write your feedback here..." required></textarea>
+        <div class="footer-section">
+          <h4>Company</h4>
+          <ul class="footer-links">
+            <li><a href="AboutUs.html">About Us</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+      </div>
 
-        <button class="submit-btn">Submit Feedback</button>
-      </form>
-    </div>
-  </div>
-</main>
-
-<footer class="footer">
-  © 2026 ExpenseFlow. All rights reserved.
-</footer>
-
-<script>
-let ratingValue = 0;
-const stars = document.querySelectorAll('.rating span');
-
-stars.forEach((star,i)=>{
-  star.onclick=()=>{
-    ratingValue=i+1;
-    stars.forEach(s=>s.classList.remove('active'));
-    for(let j=0;j<=i;j++)stars[j].classList.add('active');
-  }
-});
-
-function submitFeedback(e){
-  e.preventDefault();
-
-  if(ratingValue===0){
-    Swal.fire({
-      icon:'warning',
-      title:'Rating Required',
-      text:'Please select a star rating ⭐',
-      confirmButtonColor:'#667eea'
-    });
-    return;
-  }
-
-  Swal.fire({
-    icon:'success',
-    title:'Thank You!',
-    text:'Your feedback has been submitted successfully 💙',
-    confirmButtonColor:'#667eea',
-    background:getComputedStyle(document.body).getPropertyValue('--card-bg'),
-    color:getComputedStyle(document.body).getPropertyValue('--text-primary')
-  });
-
-  e.target.reset();
-  stars.forEach(s=>s.classList.remove('active'));
-  ratingValue=0;
-}
-
-function toggleTheme(){
-  document.body.classList.toggle('light');
-}
-</script>
-
-</body>
+      <div class="footer-bottom">
+        <div class="footer-container">
+          <p id="copyright" style="text-align: center"></p>
+          <script>
+            document.getElementById("copyright").innerHTML =
+              `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+          </script>
+          <div class="footer-stats">
+            <span>🏆 Trusted by 10,000+ users</span>
+            <span>💰 ₹50M+ tracked</span>
+            <span>📊 99.9% uptime</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script src="protect.js"></script>
+    <script src="feedback.js"></script>
+  </body>
 </html>

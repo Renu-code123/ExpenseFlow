@@ -21,6 +21,7 @@
   <!-- Styles -->
   <link rel="stylesheet" href="expensetracker.css">
   <link rel="stylesheet" href="accounts-dashboard.css">
+   <link rel="stylesheet" href="index.css">
   
   <style>
     /* Page specific overrides */
@@ -89,25 +90,39 @@
           <a href="accounts.html" class="nav-link active">Accounts</a>
           <a href="analytics.html" class="nav-link">Analytics</a>
           <a href="goals.html" class="nav-link">Goals</a>
-          <a href="settings.html" class="nav-link">Settings</a>
-          <a href="Monthlysummary.html" class="nav-link">Summary</a>
+
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle">More</a>
+            <div class="dropdown-menu">
+              <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
+              <a href="settings.html" class="dropdown-link">Overview</a>
+              <a href="./contributor.html" class="dropdown-link">Contributors</a>
+            </div>
+          </div>
         </div>
+        
         <div class="nav-toggle" id="nav-toggle">
           <span class="bar"></span>
           <span class="bar"></span>
           <span class="bar"></span>
         </div>
         <div class="user-profile">
-          <select id="currency-select" class="currency-select" onchange="changeCurrency(this.value)">
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="INR">INR</option>
-            <option value="JPY">JPY</option>
+          <div id="workspace-selector" class="workspace-selector"></div>
+          <select id="language-switcher" class="language-select" aria-label="Language">
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="fr">FR</option>
           </select>
-          <button id="logout-btn" class="logout-btn" onclick="logout()">
-            <i class="fas fa-sign-out-alt"></i>
+          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
           </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username" id="navUsername"></span>
+          <div id="redirect">
+            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+          </div>
         </div>
       </div>
     </nav>
@@ -136,10 +151,15 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2024 ExpenseFlow. All rights reserved.</p>
+      <p id="copyright" style="text-align:center;"></p>
+      <script>
+        document.getElementById("copyright").innerHTML =
+          `&copy; ${new Date().getFullYear()} Expense Flow . All rights reserved.`;
+      </script>
+
     </div>
   </footer>
-
+<script src="protect.js"></script>
   <!-- Scripts -->
   <script src="auth-check.js"></script>
   <script src="auth.js"></script>
@@ -149,7 +169,7 @@
     // Initialize page
     document.addEventListener('DOMContentLoaded', () => {
       // Check authentication
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      const token = localStorage.getItem('token') || localStorage.getItem('token');
       if (!token) {
         window.location.href = 'index.html';
         return;
@@ -175,7 +195,7 @@
     // Logout function
     function logout() {
       localStorage.removeItem('token');
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
       window.location.href = 'index.html';
     }
 

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const currencyService = require('../services/currencyService');
+const forexService = require('../services/forexService');
+const revaluationService = require('../services/revaluationService');
 const Joi = require('joi');
 
 /**
@@ -153,6 +155,233 @@ router.get('/symbols', auth, async (req, res) => {
         console.error('[Currency Routes] Get symbols error:', error);
         res.status(500).json({
             error: 'Failed to fetch currency symbols'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/currency/realtime/:from/:to
+ * @desc    Get real-time exchange rate with caching
+ * @access  Private
+ * Issue #521: Advanced Multi-Currency Intelligence
+ */
+router.get('/realtime/:from/:to', auth, async (req, res) => {
+    try {
+        const { from, to } = req.params;
+
+        if (!currencyService.isValidCurrency(from) || !currencyService.isValidCurrency(to)) {
+            return res.status(400).json({
+                error: 'Invalid currency code(s)'
+            });
+        }
+
+        const rateData = await forexService.getRealTimeRate(from.toUpperCase(), to.toUpperCase());
+
+        res.json({
+            success: true,
+            data: rateData
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Real-time rate error:', error);
+        res.status(500).json({
+            error: 'Failed to fetch real-time rate'
+        });
+    }
+});
+
+/**
+ * @route   POST /api/currency/batch-convert
+ * @desc    Batch convert multiple amounts
+ * @access  Private
+ */
+router.post('/batch-convert', auth, async (req, res) => {
+    try {
+        const { conversions } = req.body;
+
+        if (!Array.isArray(conversions) || conversions.length === 0) {
+            return res.status(400).json({
+                error: 'Conversions array is required'
+            });
+        }
+
+        const result = await forexService.batchConvert(conversions);
+
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Batch convert error:', error);
+        res.status(500).json({
+            error: 'Failed to batch convert'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/currency/portfolio-pl
+ * @desc    Get unrealized P&L for multi-currency portfolio
+ * @access  Private
+ */
+router.get('/portfolio-pl', auth, async (req, res) => {
+    try {
+        const { baseCurrency = 'USD' } = req.query;
+        const plData = await revaluationService.calculateCurrentUnrealizedPL(req.user._id, baseCurrency);
+
+        res.json({
+            success: true,
+            data: plData
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Portfolio P&L error:', error);
+        res.status(500).json({
+            error: 'Failed to calculate P&L'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/currency/exposure
+ * @desc    Get currency exposure breakdown
+ * @access  Private
+ */
+router.get('/exposure', auth, async (req, res) => {
+    try {
+        const { baseCurrency = 'USD' } = req.query;
+        const exposure = await revaluationService.getCurrencyExposure(req.user._id, baseCurrency);
+
+        res.json({
+            success: true,
+            data: exposure
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Currency exposure error:', error);
+        res.status(500).json({
+            error: 'Failed to calculate currency exposure'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/currency/revaluation-report
+ * @desc    Get historical revaluation report
+ * @access  Private
+ */
+router.get('/revaluation-report', auth, async (req, res) => {
+    try {
+        const { baseCurrency = 'USD', startDate, endDate } = req.query;
+
+        const start = startDate ? new Date(startDate) : undefined;
+        const end = endDate ? new Date(endDate) : undefined;
+
+        const report = await revaluationService.generateRevaluationReport(
+            req.user._id,
+            baseCurrency,
+            start,
+            end
+        );
+
+        res.json({
+            success: true,
+            data: report
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Revaluation report error:', error);
+        res.status(500).json({
+            error: 'Failed to generate revaluation report'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/currency/risk-assessment
+ * @desc    Get currency risk assessment
+ * @access  Private
+ */
+router.get('/risk-assessment', auth, async (req, res) => {
+    try {
+        const { baseCurrency = 'USD' } = req.query;
+        const assessment = await revaluationService.generateRiskAssessment(req.user._id, baseCurrency);
+
+        res.json({
+            success: true,
+            data: assessment
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Risk assessment error:', error);
+        res.status(500).json({
+            error: 'Failed to generate risk assessment'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/currency/strength/:currency
+ * @desc    Get currency strength index
+ * @access  Private
+ */
+router.get('/strength/:currency', auth, async (req, res) => {
+    try {
+        const { currency } = req.params;
+
+        if (!currencyService.isValidCurrency(currency)) {
+            return res.status(400).json({
+                error: 'Invalid currency code'
+            });
+        }
+
+        const strengthIndex = await forexService.getCurrencyStrengthIndex(currency.toUpperCase());
+
+        res.json({
+            success: true,
+            data: strengthIndex
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Currency strength error:', error);
+        res.status(500).json({
+            error: 'Failed to calculate currency strength'
+        });
+    }
+});
+
+/**
+ * @route   DELETE /api/currency/cache
+ * @desc    Clear currency rate cache
+ * @access  Private
+ */
+router.delete('/cache', auth, async (req, res) => {
+    try {
+        const result = forexService.clearCache();
+
+        res.json({
+            success: true,
+            message: result.message
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Clear cache error:', error);
+        res.status(500).json({
+            error: 'Failed to clear cache'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/currency/cache-stats
+ * @desc    Get cache statistics
+ * @access  Private
+ */
+router.get('/cache-stats', auth, async (req, res) => {
+    try {
+        const stats = forexService.getCacheStats();
+
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        console.error('[Currency Routes] Cache stats error:', error);
+        res.status(500).json({
+            error: 'Failed to get cache stats'
         });
     }
 });

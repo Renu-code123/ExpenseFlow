@@ -27,6 +27,7 @@
 
     <title>Contributors | ExpenseFlow</title>
     <link rel="stylesheet" href="expensetracker.css" />
+    <link rel="stylesheet" href="index.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
@@ -237,6 +238,90 @@
     transform: translate(-50%, -50%) scale(1.3);
     background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
   }
+  /* Scroll To Top Button */
+#scrollTopBtn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #64ffda, #667eea);
+    color: #0f0f23;
+    border: none;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    font-size: 20px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(100, 255, 218, 0.3);
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+#scrollTopBtn:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 12px 30px rgba(100, 255, 218, 0.5);
+}/* ===============================
+   THEME VARIABLES
+================================= */
+
+:root {
+    --bg-primary: #0f0f23;
+    --bg-secondary: rgba(255,255,255,0.06);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255,255,255,0.7);
+    --accent: #64ffda;
+    --card-bg: rgba(255,255,255,0.06);
+}
+
+/* LIGHT MODE */
+body.light-mode {
+    --bg-primary: #f5f7fb;
+    --bg-secondary: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555;
+    --accent: #667eea;
+    --card-bg: #ffffff;
+}
+
+/* Apply variables */
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Cards */
+.contributor-card,
+.footer,
+.navbar {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+/* Links */
+a {
+    color: var(--accent);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+}
+
+.theme-toggle:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
 </style>
 
 <div class="cursor-trail-container" id="cursor-trail"></div>
@@ -397,42 +482,60 @@
 </script>
 
 
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-wallet"></i>
+          <span>ExpenseFlow</span>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="dashboard.html" class="nav-link ">Dashboard</a>
+          <a href="accounts.html" class="nav-link">Accounts</a>
+          <a href="analytics.html" class="nav-link ">Analytics</a>
+          <a href="goals.html" class="nav-link ">Goals</a>
 
-    <!-- Header -->
-    <header class="header">
-        <nav class="navbar">
-            <div class="nav-container">
-                <div class="nav-logo">
-                    <i class="fas fa-wallet"></i>
-                    <span>ExpenseFlow</span>
-                </div>
-                <div class="nav-menu" id="nav-menu">
-                    <a href="./index.html" class="nav-link">Dashboard</a>
-                    <a href="#analytics" class="nav-link">Analytics</a>
-                    <a href="#goals" class="nav-link">Goals</a>
-                    <a href="#settings" class="nav-link">Settings</a>
-                    <a href="#contributors" class="nav-link active">Contributors</a>
-                </div>
-                <div class="nav-toggle" id="nav-toggle">
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                </div>
-                <div class="user-profile">
-                    <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
-                        <i class="fas fa-coins"></i>
-                        <span id="current-currency">INR</span>
-                    </button>
-                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
-                        alt="User" class="profile-img" />
-                    <span class="username" id="navUsername"></span>
-                    <div id="redirect">
-                        <a href="#" id="logoutLink" onclick="logout()">Logout</a>
-                    </div>
-                </div>
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle">More</a>
+            <div class="dropdown-menu">
+              <a href="Monthlysummary.html" class="dropdown-link">Summary</a>
+              <a href="settings.html" class="dropdown-link">Overview</a>
+              <a href="./contributor.html" class="dropdown-link active">Contributors</a>
             </div>
-        </nav>
-    </header>
+          </div>
+        </div>
+        
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="user-profile">
+          <div id="workspace-selector" class="workspace-selector"></div>
+          <select id="language-switcher" class="language-select" aria-label="Language">
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="fr">FR</option>
+          </select>
+          <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
+    <i class="fas fa-moon"></i>
+</button>
+          <button class="currency-btn" onclick="openCurrencyModal()" title="Currency Settings">
+            <i class="fas fa-coins"></i>
+            <span id="current-currency">INR</span>
+          </button>
+          <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+            alt="User" class="profile-img">
+          <span class="username" id="navUsername"></span>
+          <div id="redirect">
+            <a href="#" id="logoutLink" onclick="logout()">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
 
     <!-- Main Content -->
     <main class="main-content contributors-page">
@@ -507,8 +610,10 @@
             </div>
         </div>
     </footer>
-
-    <script src="auth-check.js"></script>
+<!-- Scroll To Top Button -->
+<button id="scrollTopBtn" title="Go to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
     <script src="auth.js"></script>
 
     <script>
@@ -609,6 +714,45 @@
 
         document.addEventListener('DOMContentLoaded', loadContributors);
     </script>
+    <script>
+    const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 300) {
+            scrollTopBtn.style.display = "flex";
+        } else {
+            scrollTopBtn.style.display = "none";
+        }
+    });
+
+    scrollTopBtn.addEventListener("click", () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
+</script>
+<script>
+const themeToggle = document.getElementById("themeToggle");
+
+// Load saved theme
+if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light-mode");
+    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+}
+
+themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("light-mode");
+
+    if (document.body.classList.contains("light-mode")) {
+        localStorage.setItem("theme", "light");
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        localStorage.setItem("theme", "dark");
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+});
+</script>
 </body>
 
 </html>

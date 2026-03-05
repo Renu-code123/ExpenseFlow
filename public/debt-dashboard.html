@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debt Management - ExpenseFlow</title>
+    <link rel="stylesheet" href="/expensetracker.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>💳 Debt Management & Amortization</h1>
+                <p class="subtitle">Track loans, compare strategies, and accelerate payoff</p>
+            </div>
+            <div class="header-actions">
+                <button id="add-debt-btn" class="btn-primary">+ Add Debt</button>
+                <button id="compare-strategies-btn" class="btn-secondary">⚖️ Compare Strategies</button>
+                <a href="/" class="btn-secondary">← Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">💰</div>
+                <div class="metric-content">
+                    <h3>Total Debt</h3>
+                    <div class="metric-value" id="total-debt">$--</div>
+                    <div class="metric-label">Across all accounts</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📅</div>
+                <div class="metric-content">
+                    <h3>Monthly Payments</h3>
+                    <div class="metric-value" id="monthly-payments">$--</div>
+                    <div class="metric-label">Total per month</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📊</div>
+                <div class="metric-content">
+                    <h3>DTI Ratio</h3>
+                    <div class="metric-value" id="dti-ratio">--%</div>
+                    <div class="metric-label" id="dti-status">Enter income to calculate</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📈</div>
+                <div class="metric-content">
+                    <h3>Overall Progress</h3>
+                    <div class="metric-value" id="overall-progress">--%</div>
+                    <div class="metric-label">Paid off</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-grid">
+            <!-- Debt List -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2>🏦 Active Debts</h2>
+                    <span class="badge" id="debt-count-badge">0 debts</span>
+                </div>
+                <div class="card-body">
+                    <div id="debt-list" class="debt-list">
+                        <p class="loading-text">Loading debts...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy Comparison -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2>⚖️ Repayment Strategy Comparison</h2>
+                    <div class="strategy-controls">
+                        <label>Extra Monthly Payment:</label>
+                        <input type="number" id="extra-payment-input" placeholder="$0" min="0" step="50">
+                        <button class="btn-sm" id="run-comparison-btn">Run Analysis</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="strategy-comparison" class="strategy-comparison hidden">
+                        <div class="strategy-grid"></div>
+                    </div>
+                    <p id="comparison-empty" class="empty-text">Enter extra payment amount and click "Run Analysis"</p>
+                </div>
+            </div>
+
+            <!-- Amortization Chart -->
+            <div class="chart-card full-width">
+                <div class="card-header">
+                    <h2>📉 Selected Debt Amortization</h2>
+                    <select id="debt-selector" class="debt-selector">
+                        <option value="">Select a debt...</option>
+                    </select>
+                </div>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="amortization-chart"></canvas>
+                </div>
+                <div id="amortization-stats" class="amortization-stats hidden"></div>
+            </div>
+
+            <!-- Payoff Calculator -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🎯 Payoff Accelerator</h2>
+                </div>
+                <div class="card-body">
+                    <div class="calculator-form">
+                        <select id="accelerator-debt-select" class="form-select">
+                            <option value="">Select debt...</option>
+                        </select>
+                        <label>Extra Monthly Payment</label>
+                        <input type="number" id="accelerator-extra" placeholder="$100" step="10" min="0">
+                        <button class="btn-primary full-width" id="calculate-acceleration-btn">Calculate
+                            Savings</button>
+                    </div>
+                    <div id="acceleration-result" class="acceleration-result hidden"></div>
+                </div>
+            </div>
+
+            <!-- Loan Calculator -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🧮 Loan Payment Calculator</h2>
+                </div>
+                <div class="card-body">
+                    <div class="calculator-form">
+                        <label>Loan Amount</label>
+                        <input type="number" id="calc-principal" placeholder="$10,000" step="100">
+
+                        <label>Interest Rate (%)</label>
+                        <input type="number" id="calc-rate" placeholder="5.5" step="0.1">
+
+                        <label>Term (Months)</label>
+                        <input type="number" id="calc-term" placeholder="60" step="1">
+
+                        <button class="btn-primary full-width" id="calculate-payment-btn">Calculate</button>
+                    </div>
+                    <div id="calculator-result" class="calculator-result hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Debt Modal -->
+        <div id="debt-modal" class="modal hidden">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2 id="modal-title">Add New Debt</h2>
+                    <button class="modal-close" onclick="closeDebtModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="debt-form" class="debt-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Debt Name *</label>
+                                <input type="text" id="debt-name" required placeholder="e.g., Student Loan">
+                            </div>
+                            <div class="form-group">
+                                <label>Debt Type *</label>
+                                <select id="debt-type" required>
+                                    <option value="">Select type...</option>
+                                    <option value="mortgage">Mortgage</option>
+                                    <option value="car_loan">Car Loan</option>
+                                    <option value="personal_loan">Personal Loan</option>
+                                    <option value="student_loan">Student Loan</option>
+                                    <option value="credit_card">Credit Card</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Lender</label>
+                                <input type="text" id="debt-lender" placeholder="e.g., Bank of America">
+                            </div>
+                            <div class="form-group">
+                                <label>Account Number</label>
+                                <input type="text" id="debt-account-number" placeholder="Optional">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Original Principal *</label>
+                                <input type="number" id="debt-principal" required min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Current Balance *</label>
+                                <input type="number" id="debt-balance" required min="0" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Interest Rate (%) *</label>
+                                <input type="number" id="debt-rate" required min="0" max="100" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Interest Type *</label>
+                                <select id="debt-interest-type">
+                                    <option value="fixed">Fixed</option>
+                                    <option value="variable">Variable</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Monthly Payment *</label>
+                                <input type="number" id="debt-monthly-payment" required min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Term (Months) *</label>
+                                <input type="number" id="debt-term" required min="1" step="1">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Origination Date *</label>
+                                <input type="date" id="debt-origination-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>First Payment Date *</label>
+                                <input type="date" id="debt-first-payment-date" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="debt-notes" rows="3" placeholder="Optional notes..."></textarea>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-secondary" onclick="closeDebtModal()">Cancel</button>
+                            <button type="submit" class="btn-primary">Save Debt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/debt-logic.js"></script>
+</body>
+
+</html>

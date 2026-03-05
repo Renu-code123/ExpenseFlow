@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory & Supply Chain Hub - ExpenseFlow</title>
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Inventory & Supply Chain Hub</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Inventory Header -->
+        <div class="inventory-header">
+            <div class="header-main">
+                <h1>Multi-Entity Inventory Command Center</h1>
+                <p>Decentralized stock management across warehouses with automated replenishment</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openAddStockModal()">
+                    <i class="fas fa-plus-circle"></i> Add Stock
+                </button>
+                <button class="btn-secondary" onclick="openWarehouseModal()">
+                    <i class="fas fa-warehouse"></i> New Warehouse
+                </button>
+                <button class="btn-accent" onclick="generateReplenishment()">
+                    <i class="fas fa-sync"></i> Auto Replenish
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(100, 255, 218, 0.15);">
+                    <i class="fas fa-warehouse" style="color: #64ffda;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Active Warehouses</label>
+                    <h2 id="total-warehouses">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(72, 219, 251, 0.15);">
+                    <i class="fas fa-boxes" style="color: #48dbfb;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Total Stock Items</label>
+                    <h2 id="total-items">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 159, 67, 0.15);">
+                    <i class="fas fa-rupee-sign" style="color: #ff9f43;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Inventory Value</label>
+                    <h2 id="inventory-value">₹0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon" style="background: rgba(255, 107, 107, 0.15);">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i>
+                </div>
+                <div class="stat-content">
+                    <label>Low Stock Alerts</label>
+                    <h2 id="low-stock-count">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="inventory-grid">
+            <!-- Left: Stock Items -->
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-inventory"></i> Stock Items</h3>
+                    <div class="filter-controls">
+                        <select id="warehouse-filter" class="filter-select" onchange="filterStockItems()">
+                            <option value="">All Warehouses</option>
+                        </select>
+                        <select id="status-filter" class="filter-select" onchange="filterStockItems()">
+                            <option value="">All Status</option>
+                            <option value="in_stock">In Stock</option>
+                            <option value="low_stock">Low Stock</option>
+                            <option value="out_of_stock">Out of Stock</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="stock-items-list" class="stock-items-list">
+                    <div class="loading-placeholder">Loading stock items...</div>
+                </div>
+            </section>
+
+            <!-- Right: Warehouses & Alerts -->
+            <div class="right-panel">
+                <section class="glass-card section-card mb-20">
+                    <div class="card-header">
+                        <h3><i class="fas fa-warehouse"></i> Warehouses</h3>
+                    </div>
+                    <div id="warehouses-list" class="warehouses-list">
+                        <!-- Loaded via JS -->
+                    </div>
+                </section>
+
+                <section class="glass-card section-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bell"></i> Replenishment Alerts</h3>
+                    </div>
+                    <div id="replenishment-alerts" class="alerts-list">
+                        <!-- Loaded via JS -->
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Back Orders Section -->
+        <section class="glass-card section-card mt-20">
+            <div class="card-header">
+                <h3><i class="fas fa-clock"></i> Back Orders</h3>
+                <span class="badge" id="backorders-count">0</span>
+            </div>
+            <div id="backorders-list" class="backorders-list">
+                <!-- Loaded via JS -->
+            </div>
+        </section>
+
+        <!-- Analytics Charts -->
+        <div class="analytics-row mt-20">
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-pie"></i> Stock Distribution</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="stockDistChart"></canvas>
+                </div>
+            </section>
+
+            <section class="glass-card section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-bar"></i> ABC Classification</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="abcChart"></canvas>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Add Stock Modal -->
+    <div id="add-stock-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Add Stock</h3>
+                <span class="close-modal" onclick="closeAddStockModal()">&times;</span>
+            </div>
+            <form id="add-stock-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>SKU</label>
+                        <input type="text" id="stock-sku" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Item Name</label>
+                        <input type="text" id="stock-name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="stock-category" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Warehouse</label>
+                        <select id="stock-warehouse" required>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" id="stock-quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cost Price</label>
+                        <input type="number" id="stock-cost" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Reorder Point</label>
+                        <input type="number" id="stock-reorder" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Safety Stock</label>
+                        <input type="number" id="stock-safety" value="5">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Add Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Warehouse Modal -->
+    <div id="warehouse-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>Create Warehouse</h3>
+                <span class="close-modal" onclick="closeWarehouseModal()">&times;</span>
+            </div>
+            <form id="warehouse-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Warehouse Code</label>
+                        <input type="text" id="wh-code" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Warehouse Name</label>
+                        <input type="text" id="wh-name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="wh-type">
+                            <option value="main">Main</option>
+                            <option value="regional">Regional</option>
+                            <option value="distribution">Distribution</option>
+                            <option value="retail">Retail</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="wh-city">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-primary full-width">Create Warehouse</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stock Details Modal -->
+    <div id="stock-details-modal" class="modal hidden">
+        <div class="modal-content glass-card modal-large">
+            <div class="modal-header">
+                <h3>Stock Details</h3>
+                <span class="close-modal" onclick="closeStockDetailsModal()">&times;</span>
+            </div>
+            <div id="stock-details-content">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/inventory-controller.js"></script>
+</body>
+
+</html>

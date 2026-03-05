@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Inventory & Procurement - ExpenseFlow</title>
+
+    <!-- Step 1 & 4 – Shared / Global CSS -->
+    <link rel="stylesheet" href="expensetracker.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* =============================================
+           Base Reset
+           ============================================= */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* =============================================
+           Step 1 – Nav Bar: Home button + title
+           ============================================= */
+        .nav-bar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0 1.5rem;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        /* Styled Home / Back button */
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 1.1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            text-decoration: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-back:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        .nav-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+        }
+
+        #user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* =============================================
+           Step 1 – Centered Page Title (hero header)
+           ============================================= */
+        .page-title-section {
+            text-align: center;
+            padding: 2.5rem 1rem 1.25rem;
+        }
+
+        .page-title-section h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #64ffda);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.25;
+        }
+
+        .page-title-section p {
+            color: #a8b3cf;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* =============================================
+           Step 4 – Main Container Layout Wrapper
+           ============================================= */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        /* =============================================
+           Step 3 – Dashboard Header actions
+           ============================================= */
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .header-main h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .header-main p {
+            color: #a8b3cf;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* =============================================
+           Step 2 – Buttons (primary / secondary)
+           ============================================= */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.3rem;
+            border-radius: 9px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.88;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.45);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.3rem;
+            border-radius: 9px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-2px);
+        }
+
+        /* =============================================
+           Step 3 – Stats Grid + Cards spacing
+           ============================================= */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-card label {
+            display: block;
+            font-size: 0.85rem;
+            color: #a8b3cf;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card h2 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            color: #ffffff;
+        }
+
+        .stat-delta {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .stat-delta.positive { color: #64ffda; }
+        .stat-delta.negative { color: #ff5252; }
+        .stat-delta.neutral  { color: #ffc107; }
+
+        /* =============================================
+           Inventory layout (sidebar + content)
+           ============================================= */
+        .inventory-layout {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .inventory-sidebar {
+            width: 200px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .side-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 0.9rem;
+            border-radius: 9px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #a8b3cf;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s ease, color 0.2s ease;
+            width: 100%;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: rgba(102, 126, 234, 0.2);
+            color: #ffffff;
+        }
+
+        .inventory-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 9px;
+            padding: 0.45rem 0.85rem;
+        }
+
+        .search-box i { color: #a8b3cf; font-size: 0.85rem; }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 0.875rem;
+            font-family: inherit;
+            width: 220px;
+        }
+
+        .search-box input::placeholder { color: #a8b3cf; }
+
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .loading-state {
+            color: #a8b3cf;
+            text-align: center;
+            padding: 3rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        .orders-table-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.6rem 0.9rem;
+            color: #a8b3cf;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 0.65rem 0.9rem;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(102, 126, 234, 0.07);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .chart-container h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0 0 1rem 0;
+        }
+
+        .hidden { display: none !important; }
+        .active-section { display: block; }
+
+        /* =============================================
+           Step 2 – PR Modal: open/close + animation
+           ============================================= */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: #1b1b2f;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 560px;
+            backdrop-filter: blur(16px);
+            transform: translateY(24px) scale(0.97);
+            transition: transform 0.28s ease, opacity 0.28s ease;
+            opacity: 0;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal.open .modal-content {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal-content.large { max-width: 680px; }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #a8b3cf;
+            line-height: 1;
+            transition: color 0.2s ease;
+        }
+
+        .close-modal:hover { color: #ffffff; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: #a8b3cf;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 9px;
+            color: #ffffff;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #667eea;
+        }
+
+        .form-group select option { background: #1b1b2f; }
+
+        .items-editor {
+            margin-bottom: 1.25rem;
+        }
+
+        .items-editor > label {
+            display: block;
+            font-size: 0.85rem;
+            color: #a8b3cf;
+            margin-bottom: 0.6rem;
+            font-weight: 500;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 1fr 70px 110px 36px;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .item-row input {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: #ffffff;
+            padding: 0.5rem 0.7rem;
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .item-row input:focus { border-color: #667eea; }
+
+        .remove-item {
+            background: rgba(255, 82, 82, 0.15);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            border-radius: 7px;
+            color: #ff5252;
+            cursor: pointer;
+            padding: 0.45rem;
+            font-size: 0.8rem;
+            transition: background 0.2s ease;
+        }
+
+        .remove-item:hover { background: rgba(255, 82, 82, 0.3); }
+
+        .btn-text {
+            background: transparent;
+            border: none;
+            color: #667eea;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0;
+            transition: color 0.2s ease;
+        }
+
+        .btn-text:hover { color: #a0b0ff; }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-cancel {
+            padding: 0.6rem 1.2rem;
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.07);
+            color: #a8b3cf;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-cancel:hover { background: rgba(255, 255, 255, 0.12); }
+
+        /* =============================================
+           Step 5 – Responsive Improvements
+           ============================================= */
+        @media (max-width: 900px) {
+            .inventory-layout {
+                flex-direction: column;
+            }
+
+            .inventory-sidebar {
+                width: 100%;
+            }
+
+            .side-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .nav-btn { flex: 1 1 auto; justify-content: center; }
+        }
+
+        @media (max-width: 768px) {
+            .page-title-section h1 { font-size: 1.65rem; }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .item-row {
+                grid-template-columns: 1fr 60px 90px 36px;
+            }
+
+            .modal-content {
+                padding: 1.25rem;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .btn-cancel,
+            .btn-primary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .search-box input { width: 140px; }
+        }
+
+        @media (max-width: 480px) {
+            .main-container { padding: 0 0.75rem 2rem; }
+
+            .page-title-section { padding: 1.75rem 0.75rem 1rem; }
+
+            .page-title-section h1 { font-size: 1.35rem; }
+
+            .stat-card h2 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+
+<body class="glass-theme">
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="dashboard-clean.html" class="nav-back"><i class="fas fa-arrow-left"></i> Home</a>
+            <div class="nav-title">Asset Management</div>
+            <div id="user-profile"></div>
+        </div>
+    </nav>
+
+    <!-- Step 1 – Centered, themed page title -->
+    <div class="page-title-section">
+        <h1><i class="fas fa-boxes"></i> Asset Inventory &amp; Procurement</h1>
+        <p>Track lifecycle, depreciation, and procurement orders across your organisation</p>
+    </div>
+
+    <!-- Step 4 – Main layout wrapper -->
+    <div class="main-container">
+        <div class="dashboard-header">
+            <div class="header-main">
+                <h1>Enterprise Assets</h1>
+                <p>Tracking lifecycle, depreciation, and procurement orders</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openPRModal()"><i class="fas fa-plus"></i> New Requisition</button>
+                <button class="btn-secondary" onclick="runDepreciation()"><i class="fas fa-calculator"></i> Run
+                    Depreciation</button>
+            </div>
+        </div>
+
+        <!-- Macro Stats -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card">
+                <label>Total Book Value</label>
+                <h2 id="total-book-value">₹0</h2>
+                <div class="stat-delta positive"><i class="fas fa-trend-up"></i> Active Inventory</div>
+            </div>
+            <div class="stat-card glass-card">
+                <label>Accumulated Depreciation</label>
+                <h2 id="accumulated-depreciation">₹0</h2>
+                <div class="stat-delta negative">Asset Value Loss</div>
+            </div>
+            <div class="stat-card glass-card">
+                <label>Pending PRs</label>
+                <h2 id="pending-pr-count">0</h2>
+                <div class="stat-delta neutral">In Approval Pipeline</div>
+            </div>
+        </div>
+
+        <div class="inventory-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="inventory-sidebar glass-card">
+                <div class="side-nav">
+                    <button class="nav-btn active" onclick="switchSection('inventory')"><i class="fas fa-boxes"></i>
+                        Inventory</button>
+                    <button class="nav-btn" onclick="switchSection('procurement')"><i class="fas fa-shuttle-van"></i>
+                        Procurement</button>
+                    <button class="nav-btn" onclick="switchSection('analytics')"><i class="fas fa-chart-pie"></i>
+                        Analytics</button>
+                </div>
+            </aside>
+
+            <!-- Main Inventory List -->
+            <main class="inventory-content">
+                <section id="inventory-section" class="active-section">
+                    <div class="section-header">
+                        <h2>Fixed Assets</h2>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search by serial or name..."
+                                onkeyup="filterAssets(this.value)">
+                        </div>
+                    </div>
+                    <div id="assets-grid" class="assets-grid">
+                        <div class="loading-state">Syncing inventory...</div>
+                    </div>
+                </section>
+
+                <section id="procurement-section" class="hidden">
+                    <div class="section-header">
+                        <h2>Recent Orders</h2>
+                    </div>
+                    <div class="orders-table-container glass-card">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-list">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="analytics-section" class="hidden">
+                    <div class="charts-grid">
+                        <div class="chart-container glass-card">
+                            <h3>Asset Value Distribution</h3>
+                            <canvas id="assetCategoryChart"></canvas>
+                        </div>
+                        <div class="chart-container glass-card">
+                            <h3>Depreciation Projection</h3>
+                            <canvas id="depreciationTrendChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div><!-- /.inventory-layout -->
+    </div><!-- /.main-container -->
+
+    <!-- Step 2 – PR Modal (uses .open / .hidden for animation) -->
+    <div id="pr-modal" class="modal hidden">
+        <div class="modal-content glass-card large">
+            <div class="modal-header">
+                <h3>New Purchase Requisition</h3>
+                <span class="close-modal" onclick="closePRModal()">&times;</span>
+            </div>
+            <form id="pr-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Requisition Title</label>
+                        <input type="text" id="pr-title" required placeholder="e.g. Workstation Upgrade - Q1">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="pr-dept">
+                            <option value="IT">IT Infrastructure</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Sales">Sales & Marketing</option>
+                            <option value="Admin">Administration</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="items-editor">
+                    <label>Items</label>
+                    <div id="pr-items-list">
+                        <div class="item-row">
+                            <input type="text" placeholder="Item name" class="item-name">
+                            <input type="number" placeholder="Qty" class="item-qty" value="1">
+                            <input type="number" placeholder="Unit Price" class="item-price">
+                            <button type="button" class="remove-item"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-text" onclick="addPRItemRow()"><i class="fas fa-plus"></i> Add Line
+                        Item</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closePRModal()">Discard</button>
+                    <button type="submit" class="btn-primary">Generate PR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="js/asset-controller.js"></script>
+
+    <script>
+        /* =============================================
+           Step 2 – Modal open / close with animation
+           ============================================= */
+        function openPRModal() {
+            const modal = document.getElementById('pr-modal');
+            modal.classList.remove('hidden');
+            // Trigger reflow so transition plays
+            requestAnimationFrame(() => modal.classList.add('open'));
+        }
+
+        function closePRModal() {
+            const modal = document.getElementById('pr-modal');
+            modal.classList.remove('open');
+            // Re-hide after transition ends
+            modal.addEventListener('transitionend', () => {
+                modal.classList.add('hidden');
+            }, { once: true });
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('pr-modal').addEventListener('click', function (e) {
+            if (e.target === this) closePRModal();
+        });
+
+        // PR form validation & submission
+        document.getElementById('pr-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const title = document.getElementById('pr-title').value.trim();
+            if (!title) {
+                alert('Please enter a Requisition Title.');
+                return;
+            }
+            // Validate that at least one item row has a name
+            const itemNames = document.querySelectorAll('.item-name');
+            const hasItem = Array.from(itemNames).some(i => i.value.trim() !== '');
+            if (!hasItem) {
+                alert('Please add at least one item.');
+                return;
+            }
+            alert('Purchase Requisition "' + title + '" submitted successfully!');
+            this.reset();
+            closePRModal();
+        });
+
+        /* =============================================
+           Step 2 – Add item row to PR form
+           ============================================= */
+        function addPRItemRow() {
+            const list = document.getElementById('pr-items-list');
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Item name" class="item-name">
+                <input type="number" placeholder="Qty" class="item-qty" value="1" min="1">
+                <input type="number" placeholder="Unit Price" class="item-price" min="0">
+                <button type="button" class="remove-item" onclick="this.closest('.item-row').remove()">
+                    <i class="fas fa-trash"></i>
+                </button>`;
+            list.appendChild(row);
+        }
+
+        // Wire existing remove button
+        document.querySelector('.remove-item').addEventListener('click', function () {
+            const rows = document.querySelectorAll('.item-row');
+            if (rows.length > 1) this.closest('.item-row').remove();
+        });
+
+        /* =============================================
+           Section switching (sidebar nav)
+           ============================================= */
+        function switchSection(name) {
+            document.querySelectorAll('.inventory-content section').forEach(s => {
+                s.classList.remove('active-section');
+                s.classList.add('hidden');
+            });
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            const target = document.getElementById(name + '-section');
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('active-section');
+            }
+            event.currentTarget.classList.add('active');
+        }
+
+        /* =============================================
+           Stub: Run Depreciation
+           ============================================= */
+        function runDepreciation() {
+            alert('Depreciation calculation initiated. Results will appear shortly.');
+        }
+    </script>
+</body>
+
+</html>

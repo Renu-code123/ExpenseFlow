@@ -48,7 +48,7 @@ async function loadInvestments() {
     `;
 
     try {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('token');
         if (!token) return;
 
         const response = await fetch(INVESTMENT_API_URL, {
@@ -79,7 +79,7 @@ async function handleAddInvestment(e) {
     const buyPrice = document.getElementById('inv-buy-price').value;
 
     try {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('token');
         const response = await fetch(INVESTMENT_API_URL, {
             method: 'POST',
             headers: {
@@ -116,7 +116,7 @@ async function removeInvestment(id) {
     if (!confirm('Are you sure you want to remove this holding?')) return;
 
     try {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('token');
         const response = await fetch(`${INVESTMENT_API_URL}/${id}`, {
             method: 'DELETE',
             headers: {

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ExpenseFlow | Project Masthead</title>
+
+<style>
+
+/* Base */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #1a1a2e, #0f0f1f);
+  color: #ffffff;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #7f7cff;
+}
+
+.subtitle {
+  text-align: center;
+  color: #aaa;
+  margin-bottom: 50px;
+}
+
+
+/* Sections */
+
+.section {
+  background: rgba(255,255,255,0.05);
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 40px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+.section h2 {
+  color: #9a97ff;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  padding-bottom: 10px;
+  margin-bottom: 25px;
+}
+
+
+/* Card Grid */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 22px;
+}
+
+/* Contributors Grid (4 per row) */
+
+.contributors-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+
+@media(max-width:900px){
+  .contributors-grid{
+    grid-template-columns: repeat(2,1fr);
+  }
+}
+
+@media(max-width:500px){
+  .contributors-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Cards */
+
+.info-card {
+  background: linear-gradient(145deg, #1c1c35, #14142a);
+  padding: 22px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  transition: 0.3s;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(127,124,255,0.4);
+}
+
+.info-card h3 {
+  color: #7f7cff;
+  margin-bottom: 8px;
+}
+
+.info-card p {
+  color: #ddd;
+  font-size: 15px;
+}
+
+
+/* Profile Cards */
+
+.profile-card img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 3px solid #7f7cff;
+  margin-bottom: 10px;
+}
+
+.profile-card h4 {
+  margin: 5px 0;
+}
+
+.profile-card span {
+  font-size: 14px;
+  color: #bbb;
+}
+
+.profile-card a {
+  color: #7f7cff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+
+/* Buttons */
+
+.btn {
+  display: block;
+  width: fit-content;
+  margin: 30px auto 0;
+  padding: 12px 30px;
+  background: #7f7cff;
+  color: #000;
+  border-radius: 25px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  opacity: 0.8;
+}
+
+
+/* Footer */
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #aaa;
+  font-size: 14px;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+<!-- Header -->
+
+<h1>📘 ExpenseFlow Project Masthead</h1>
+<p class="subtitle">Centralized Project Information & Contributor Overview</p>
+
+
+<!-- Project Info -->
+
+<div class="section">
+
+<h2>📌 Project Information</h2>
+
+<div class="card-grid">
+
+  <div class="info-card">
+    <h3>Project Name</h3>
+    <p>ExpenseFlow</p>
+  </div>
+
+  <div class="info-card">
+    <h3>Description</h3>
+    <p>Smart full-stack expense tracking and financial management system.</p>
+  </div>
+
+  <div class="info-card">
+    <h3>Vision</h3>
+    <p>To simplify personal finance using modern technology.</p>
+  </div>
+
+  <div class="info-card">
+    <h3>Mission</h3>
+    <p>Provide secure, intuitive and data-driven tools.</p>
+  </div>
+
+</div>
+
+</div>
+
+
+<!-- Team (Only Renu) -->
+
+<div class="section">
+
+<h2>👩‍💻 Project Admin</h2>
+
+<div id="adminCard" class="card-grid"></div>
+
+</div>
+
+
+<!-- Contribution Details -->
+
+<div class="section">
+
+<h2>📊 Contribution Details</h2>
+
+<div class="card-grid">
+
+  <div class="info-card">
+    <h3>Commit History</h3>
+    <p>Tracked via GitHub</p>
+  </div>
+
+  <div class="info-card">
+    <h3>Issues</h3>
+    <p>Managed on GitHub</p>
+  </div>
+
+  <div class="info-card">
+    <h3>Pull Requests</h3>
+    <p>Reviewed via workflow</p>
+  </div>
+
+  <div class="info-card">
+    <h3>Open Source</h3>
+    <p>Community Driven</p>
+  </div>
+
+</div>
+
+</div>
+
+
+<!-- Top Contributors -->
+
+<div class="section">
+
+<h2>🌟 Project Contributors</h2>
+
+<div id="contributorsGrid" class="contributors-grid"></div>
+
+<button id="loadMoreBtn" class="btn">
+Load All Contributors
+</button>
+
+</div>
+
+
+<!-- Contact -->
+
+<div class="section">
+
+<h2>📞 Contact (Project Admin)</h2>
+
+<div class="card-grid">
+
+  <div class="info-card">
+    <h3>Name</h3>
+    <p>Renu Kumari Prajapati</p>
+  </div>
+
+  <div class="info-card">
+    <h3>GitHub</h3>
+    <p>
+      <a href="https://github.com/Renu-code123" target="_blank">
+        @Renu-code123
+      </a>
+    </p>
+  </div>
+
+  <div class="info-card">
+    <h3>Support</h3>
+    <p>Via GitHub Issues</p>
+  </div>
+
+</div>
+
+</div>
+
+
+<a href="index.html" class="btn">⬅ Back to Home</a>
+
+</div>
+
+
+<footer>
+© 2026 ExpenseFlow | Masthead
+</footer>
+
+
+<!-- Scripts -->
+
+<script>
+
+/* Admin */
+
+async function loadAdmin(){
+
+  const res = await fetch("https://api.github.com/users/Renu-code123");
+  const data = await res.json();
+
+  document.getElementById("adminCard").innerHTML = `
+    <div class="info-card profile-card">
+      <img src="${data.avatar_url}">
+      <h4>${data.name}</h4>
+      <span>@${data.login}</span><br>
+      <a href="${data.html_url}" target="_blank">View Profile</a>
+    </div>
+  `;
+}
+
+loadAdmin();
+
+
+/* Contributors */
+
+let allContributors = [];
+let showing = 8;
+
+async function loadContributors(){
+
+  const res = await fetch(
+    "https://api.github.com/repos/Riya-Kharade/ExpenseFlow/contributors"
+  );
+
+  allContributors = await res.json();
+
+  showContributors();
+}
+
+function showContributors(){
+
+  const grid = document.getElementById("contributorsGrid");
+  grid.innerHTML = "";
+
+  allContributors.slice(0,showing).forEach(user=>{
+
+    const card = document.createElement("div");
+    card.className = "info-card profile-card";
+
+    card.innerHTML = `
+      <img src="${user.avatar_url}">
+      <h4>${user.login}</h4>
+      <span>Commits: ${user.contributions}</span><br>
+      <a href="${user.html_url}" target="_blank">Profile</a>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+
+document.getElementById("loadMoreBtn").onclick = ()=>{
+
+  showing = allContributors.length;
+  showContributors();
+  document.getElementById("loadMoreBtn").style.display="none";
+};
+
+
+loadContributors();
+
+</script>
+
+</body>
+</html>
