@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const zeroTrustAuth = require('../middleware/zeroTrustAuth');
+const zeroTrustPolicy = require('../middleware/zeroTrustPolicy');
 const {
   validateCreateLinkToken,
   validateExchangeToken,
@@ -36,7 +38,7 @@ const { requireSensitive2FA } = require('../middleware/twoFactorAuthMiddleware')
  * @access  Private
  */
 // Risk-based step-up auth: requireSensitive2FA for bank linking
-router.post('/link/token', auth, requireSensitive2FA, validateCreateLinkToken, async (req, res) => {
+router.post('/link/token', auth, zeroTrustAuth, zeroTrustPolicy, requireSensitive2FA, validateCreateLinkToken, async (req, res) => {
   try {
     const { provider, products, countries, language, accountTypes } = req.body;
     
@@ -64,7 +66,7 @@ router.post('/link/token', auth, requireSensitive2FA, validateCreateLinkToken, a
  * @access  Private
  */
 // Risk-based step-up auth: requireSensitive2FA for bank linking
-router.post('/link/exchange', auth, requireSensitive2FA, validateExchangeToken, async (req, res) => {
+router.post('/link/exchange', auth, zeroTrustAuth, zeroTrustPolicy, requireSensitive2FA, validateExchangeToken, async (req, res) => {
   try {
     const { publicToken, provider, metadata } = req.body;
     
@@ -101,7 +103,7 @@ router.post('/link/exchange', auth, requireSensitive2FA, validateExchangeToken, 
  * @desc    Get all bank connections for user
  * @access  Private
  */
-router.get('/connections', auth, async (req, res) => {
+router.get('/connections', auth, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
   try {
     const connections = await openBankingService.getUserConnections(req.user.id);
     
@@ -120,7 +122,7 @@ router.get('/connections', auth, async (req, res) => {
  * @desc    Get connection status and details
  * @access  Private
  */
-router.get('/connections/:connectionId', auth, validateConnectionId, async (req, res) => {
+router.get('/connections/:connectionId', auth, zeroTrustAuth, zeroTrustPolicy, validateConnectionId, async (req, res) => {
   try {
     const status = await openBankingService.getConnectionStatus(
       req.params.connectionId,
@@ -143,7 +145,7 @@ router.get('/connections/:connectionId', auth, validateConnectionId, async (req,
  * @desc    Update connection sync configuration
  * @access  Private
  */
-router.put('/connections/:connectionId/sync-config', auth, validateConnectionId, validateUpdateSyncConfig, async (req, res) => {
+router.put('/connections/:connectionId/sync-config', auth, zeroTrustAuth, zeroTrustPolicy, validateConnectionId, validateUpdateSyncConfig, async (req, res) => {
   try {
     const connection = await BankConnection.findOneAndUpdate(
       { _id: req.params.connectionId, user: req.user.id },
@@ -170,7 +172,7 @@ router.put('/connections/:connectionId/sync-config', auth, validateConnectionId,
  * @desc    Trigger manual sync for a connection
  * @access  Private
  */
-router.post('/connections/:connectionId/sync', auth, validateConnectionId, async (req, res) => {
+router.post('/connections/:connectionId/sync', auth, zeroTrustAuth, zeroTrustPolicy, validateConnectionId, async (req, res) => {
   try {
     // Verify ownership
     const connection = await BankConnection.findOne({
@@ -203,7 +205,7 @@ router.post('/connections/:connectionId/sync', auth, validateConnectionId, async
  * @desc    Initiate re-authentication flow
  * @access  Private
  */
-router.post('/connections/:connectionId/reauth', auth, validateConnectionId, async (req, res) => {
+router.post('/connections/:connectionId/reauth', auth, zeroTrustAuth, zeroTrustPolicy, validateConnectionId, async (req, res) => {
   try {
     const linkToken = await openBankingService.initiateReauth(
       req.params.connectionId,
@@ -226,7 +228,7 @@ router.post('/connections/:connectionId/reauth', auth, validateConnectionId, asy
  * @desc    Complete re-authentication
  * @access  Private
  */
-router.post('/connections/:connectionId/reauth/complete', auth, validateConnectionId, validateCompleteReauth, async (req, res) => {
+router.post('/connections/:connectionId/reauth/complete', auth, zeroTrustAuth, zeroTrustPolicy, validateConnectionId, validateCompleteReauth, async (req, res) => {
   try {
     await openBankingService.completeReauth(
       req.params.connectionId,
@@ -246,7 +248,7 @@ router.post('/connections/:connectionId/reauth/complete', auth, validateConnecti
  * @desc    Disconnect a bank connection
  * @access  Private
  */
-router.delete('/connections/:connectionId', auth, validateConnectionId, async (req, res) => {
+router.delete('/connections/:connectionId', auth, zeroTrustAuth, zeroTrustPolicy, validateConnectionId, async (req, res) => {
   try {
     await openBankingService.disconnectBank(
       req.params.connectionId,
@@ -268,7 +270,7 @@ router.delete('/connections/:connectionId', auth, validateConnectionId, async (r
  * @desc    Get all linked accounts
  * @access  Private
  */
-router.get('/accounts', auth, async (req, res) => {
+router.get('/accounts', auth, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
   try {
     const accounts = await LinkedAccount.find({ user: req.user.id, status: 'active' })
       .populate('bankConnection', 'institution status');
@@ -301,7 +303,7 @@ router.get('/accounts', auth, async (req, res) => {
  * @desc    Get dashboard summary of all accounts
  * @access  Private
  */
-router.get('/accounts/summary', auth, async (req, res) => {
+router.get('/accounts/summary', auth, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
   try {
     const summary = await LinkedAccount.getDashboardSummary(req.user.id);
     res.json({ success: true, ...summary });
@@ -316,7 +318,7 @@ router.get('/accounts/summary', auth, async (req, res) => {
  * @desc    Get account details
  * @access  Private
  */
-router.get('/accounts/:accountId', auth, validateAccountId, async (req, res) => {
+router.get('/accounts/:accountId', auth, zeroTrustAuth, zeroTrustPolicy, validateAccountId, async (req, res) => {
   try {
     const account = await LinkedAccount.findOne({
       _id: req.params.accountId,
@@ -358,7 +360,7 @@ router.get('/accounts/:accountId', auth, validateAccountId, async (req, res) => 
  * @desc    Update account preferences
  * @access  Private
  */
-router.put('/accounts/:accountId/preferences', auth, validateAccountId, validateUpdateAccountPreferences, async (req, res) => {
+router.put('/accounts/:accountId/preferences', auth, zeroTrustAuth, zeroTrustPolicy, validateAccountId, validateUpdateAccountPreferences, async (req, res) => {
   try {
     const account = await LinkedAccount.findOneAndUpdate(
       { _id: req.params.accountId, user: req.user.id },
@@ -385,7 +387,7 @@ router.put('/accounts/:accountId/preferences', auth, validateAccountId, validate
  * @desc    Get balance history for account
  * @access  Private
  */
-router.get('/accounts/:accountId/balance-history', auth, validateAccountId, async (req, res) => {
+router.get('/accounts/:accountId/balance-history', auth, zeroTrustAuth, zeroTrustPolicy, validateAccountId, async (req, res) => {
   try {
     const account = await LinkedAccount.findOne({
       _id: req.params.accountId,
@@ -418,7 +420,7 @@ router.get('/accounts/:accountId/balance-history', auth, validateAccountId, asyn
  * @desc    Get imported transactions
  * @access  Private
  */
-router.get('/transactions', auth, validateGetTransactions, async (req, res) => {
+router.get('/transactions', auth, zeroTrustAuth, zeroTrustPolicy, validateGetTransactions, async (req, res) => {
   try {
     const {
       accountId, startDate, endDate, status, reviewStatus, matchStatus,
@@ -489,7 +491,7 @@ router.get('/transactions', auth, validateGetTransactions, async (req, res) => {
  * @desc    Get transactions pending review
  * @access  Private
  */
-router.get('/transactions/pending', auth, async (req, res) => {
+router.get('/transactions/pending', auth, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     
@@ -519,7 +521,7 @@ router.get('/transactions/pending', auth, async (req, res) => {
  * @desc    Get unmatched transactions
  * @access  Private
  */
-router.get('/transactions/unmatched', auth, async (req, res) => {
+router.get('/transactions/unmatched', auth, zeroTrustAuth, zeroTrustPolicy, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     const transactions = await ImportedTransaction.getUnmatched(req.user.id, limit);
@@ -539,7 +541,7 @@ router.get('/transactions/unmatched', auth, async (req, res) => {
  * @desc    Get transaction details
  * @access  Private
  */
-router.get('/transactions/:transactionId', auth, validateTransactionId, async (req, res) => {
+router.get('/transactions/:transactionId', auth, zeroTrustAuth, zeroTrustPolicy, validateTransactionId, async (req, res) => {
   try {
     const transaction = await ImportedTransaction.findOne({
       _id: req.params.transactionId,
@@ -568,7 +570,7 @@ router.get('/transactions/:transactionId', auth, validateTransactionId, async (r
  * @desc    Bulk review transactions (approve/reject)
  * @access  Private
  */
-router.post('/transactions/review', auth, validateReviewTransactions, async (req, res) => {
+router.post('/transactions/review', auth, zeroTrustAuth, zeroTrustPolicy, validateReviewTransactions, async (req, res) => {
   try {
     const { transactionIds, status, notes } = req.body;
 
@@ -593,7 +595,7 @@ router.post('/transactions/review', auth, validateReviewTransactions, async (req
  * @desc    Match transaction with an expense
  * @access  Private
  */
-router.post('/transactions/:transactionId/match', auth, validateTransactionId, validateMatchTransaction, async (req, res) => {
+router.post('/transactions/:transactionId/match', auth, zeroTrustAuth, zeroTrustPolicy, validateTransactionId, validateMatchTransaction, async (req, res) => {
   try {
     const result = await transactionImportService.matchTransactions(
       req.params.transactionId,
@@ -617,7 +619,7 @@ router.post('/transactions/:transactionId/match', auth, validateTransactionId, v
  * @desc    Unmatch a transaction
  * @access  Private
  */
-router.delete('/transactions/:transactionId/match', auth, validateTransactionId, async (req, res) => {
+router.delete('/transactions/:transactionId/match', auth, zeroTrustAuth, zeroTrustPolicy, validateTransactionId, async (req, res) => {
   try {
     await transactionImportService.unmatchTransaction(req.params.transactionId);
     res.json({ success: true, message: 'Transaction unmatched' });
@@ -632,7 +634,7 @@ router.delete('/transactions/:transactionId/match', auth, validateTransactionId,
  * @desc    Convert imported transactions to expenses
  * @access  Private
  */
-router.post('/transactions/convert', auth, validateConvertTransactions, async (req, res) => {
+router.post('/transactions/convert', auth, zeroTrustAuth, zeroTrustPolicy, validateConvertTransactions, async (req, res) => {
   try {
     const { transactionIds, defaultCategory } = req.body;
     
@@ -658,7 +660,7 @@ router.post('/transactions/convert', auth, validateConvertTransactions, async (r
  * @desc    Bulk categorize transactions
  * @access  Private
  */
-router.post('/transactions/categorize', auth, validateBulkCategorize, async (req, res) => {
+router.post('/transactions/categorize', auth, zeroTrustAuth, zeroTrustPolicy, validateBulkCategorize, async (req, res) => {
   try {
     const { transactionIds, categoryId } = req.body;
     
@@ -685,7 +687,7 @@ router.post('/transactions/categorize', auth, validateBulkCategorize, async (req
  * @desc    Get reconciliation status for an account
  * @access  Private
  */
-router.get('/accounts/:accountId/reconciliation', auth, validateAccountId, async (req, res) => {
+router.get('/accounts/:accountId/reconciliation', auth, zeroTrustAuth, zeroTrustPolicy, validateAccountId, async (req, res) => {
   try {
     const status = await transactionImportService.getReconciliationStatus(
       req.params.accountId,
@@ -707,7 +709,7 @@ router.get('/accounts/:accountId/reconciliation', auth, validateAccountId, async
  * @desc    Mark account as reconciled
  * @access  Private
  */
-router.post('/accounts/:accountId/reconcile', auth, validateAccountId, validateReconcileAccount, async (req, res) => {
+router.post('/accounts/:accountId/reconcile', auth, zeroTrustAuth, zeroTrustPolicy, validateAccountId, validateReconcileAccount, async (req, res) => {
   try {
     const account = await transactionImportService.reconcileAccount(
       req.params.accountId,
@@ -732,7 +734,7 @@ router.post('/accounts/:accountId/reconcile', auth, validateAccountId, validateR
  * @desc    Search for supported institutions
  * @access  Private
  */
-router.get('/institutions/search', auth, validateSearchInstitutions, async (req, res) => {
+router.get('/institutions/search', auth, zeroTrustAuth, zeroTrustPolicy, validateSearchInstitutions, async (req, res) => {
   try {
     const { query, provider, country } = req.query;
     
@@ -755,7 +757,7 @@ router.get('/institutions/search', auth, validateSearchInstitutions, async (req,
  * @desc    Get import statistics
  * @access  Private
  */
-router.get('/stats', auth, validateDateRange, async (req, res) => {
+router.get('/stats', auth, zeroTrustAuth, zeroTrustPolicy, validateDateRange, async (req, res) => {
   try {
     const days = req.query.days || 30;
     const stats = await ImportedTransaction.getImportStats(req.user.id, days);
@@ -775,7 +777,7 @@ router.get('/stats', auth, validateDateRange, async (req, res) => {
  * @desc    Get import summary report
  * @access  Private
  */
-router.get('/reports/summary', auth, validateDateRange, async (req, res) => {
+router.get('/reports/summary', auth, zeroTrustAuth, zeroTrustPolicy, validateDateRange, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
