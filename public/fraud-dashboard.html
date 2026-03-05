@@ -1,0 +1,20 @@
+/* fraud-dashboard.html
+   Main HTML for AI-powered fraud detection dashboard
+*/
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-Powered Fraud Detection Dashboard</title>
+  <link rel="stylesheet" href="fraud-dashboard.css">
+</head>
+<body>
+  <div id="fraud-dashboard-container"></div>
+  <script type="module" src="fraud-dashboard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      new window.FraudDashboard('fraud-dashboard-container');
+    });
+  </script>
+</body>
+</html>

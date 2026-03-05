@@ -1,0 +1,32 @@
+/* fraud-dashboard.css
+   Styles for AI-powered fraud detection dashboard
+*/
+.fraud-header {
+  background: #222;
+  color: #fff;
+  padding: 16px 24px;
+  border-bottom: 2px solid #444;
+}
+#fraud-alerts, #fraud-defenses, #fraud-transactions {
+  margin: 20px 0;
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h3 {
+  margin-top: 0;
+  color: #007bff;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+li:last-child {
+  border-bottom: none;
+}
