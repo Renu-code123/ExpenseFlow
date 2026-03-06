@@ -467,6 +467,60 @@
     opacity: 1;
     transform: translateY(0);
   }
+}/* Toggle Button */
+
+.theme-toggle {
+  background: linear-gradient(135deg,#6366f1,#64ffda);
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover{
+  transform: scale(1.1);
+}
+
+/* LIGHT MODE */
+
+body.light-mode{
+  background:#f5f7fb;
+  color:#222;
+}
+
+body.light-mode .navbar{
+  background:white;
+}
+
+body.light-mode .feature-card{
+  background:white;
+  color:#222;
+}
+
+body.light-mode .balance-card{
+  background:white;
+}
+
+body.light-mode .history-section{
+  background:white;
+}
+
+/* inputs */
+
+body.light-mode input,
+body.light-mode select{
+  background:white;
+  color:#222;
+  border:1px solid #ddd;
 }
   </style>
   <!-- Clerk Authentication SDK -->
@@ -506,7 +560,16 @@
             </div>
           </div>
         </div>
+        <div class="user-profile">
 
+  <button id="themeToggle" class="theme-toggle">
+    <i class="fas fa-moon"></i>
+  </button>
+
+  <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
+  alt="User" class="profile-img">
+
+</div>
         <div class="nav-toggle" id="nav-toggle">
           <span class="bar"></span>
           <span class="bar"></span>
@@ -523,6 +586,7 @@
             <i class="fas fa-coins"></i>
             <span id="current-currency">INR</span>
           </button>
+          
           <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face"
             alt="User" class="profile-img">
           <span class="username" id="navUsername"></span>
@@ -1793,6 +1857,33 @@ renderRecurring();
       behavior: "smooth"
     });
   });
+</script>
+<script>
+
+const toggleBtn = document.getElementById("themeToggle");
+const body = document.body;
+
+// load saved theme
+if(localStorage.getItem("theme") === "light"){
+    body.classList.add("light-mode");
+    toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+}
+
+toggleBtn.addEventListener("click", () => {
+
+    body.classList.toggle("light-mode");
+
+    if(body.classList.contains("light-mode")){
+        localStorage.setItem("theme","light");
+        toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    else{
+        localStorage.setItem("theme","dark");
+        toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+
+});
+
 </script>
 </body>
 </html>
