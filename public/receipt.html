@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Receipt Scanner | ExpenseFlow</title>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+<link rel="stylesheet" href="receipt.css">
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<nav class="navbar">
+
+<div class="logo">💰 ExpenseFlow</div>
+
+<ul>
+<li><a href="#">Dashboard</a></li>
+<li><a href="#">Expenses</a></li>
+<li><a href="#">Analytics</a></li>
+<li><a href="#">Scanner</a></li>
+</ul>
+
+<button id="themeToggle">🌙</button>
+
+</nav>
+
+
+<!-- MAIN -->
+
+<section class="scanner">
+
+<h1>🧾 Smart Receipt Scanner</h1>
+<p>Upload a receipt and ExpenseFlow will detect your expense automatically</p>
+
+<div class="upload-area">
+
+<input type="file" id="fileInput" accept="image/*">
+
+<p>Drag receipt or upload image</p>
+
+</div>
+
+<img id="preview" style="max-width:300px; display:none; margin-top:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2);">
+
+<button id="scanBtn">Scan Receipt</button>
+
+<div class="result">
+
+<h3>Detected Expense</h3>
+
+<p>💰 Amount: <span id="amount">-</span></p>
+<p>📅 Date: <span id="date">-</span></p>
+<p>🏷 Category: <span id="category">-</span></p>
+
+<button id="saveBtn">Save Expense</button>
+
+</div>
+
+<div class="ocr-box">
+<h3>🔍 Scanned Receipt Text</h3>
+<pre id="ocrText">No scan yet</pre>
+</div>
+
+</section>
+
+
+<!-- SAVED RECEIPTS -->
+
+<section class="saved">
+
+<h2>Saved Expenses</h2>
+
+<div id="receiptList"></div>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+<p>© 2026 ExpenseFlow • Smart Personal Finance</p>
+
+</footer>
+<!-- BEAUTIFUL POPUP -->
+
+<div id="popup" class="popup">
+
+<span id="popupMsg"></span>
+
+</div>
+<script src="receipt.js"></script>
+
+</body>
+</html>
