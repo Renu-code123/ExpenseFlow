@@ -4,6 +4,21 @@ const router = express.Router();
 const reportGenerator = require('../compliance/reportGenerator');
 const scheduler = require('../compliance/scheduler');
 const submissionService = require('../compliance/submissionService');
+const rateLimiter = require('../adaptive/rate-limiter');
+
+function rateLimitMiddleware(req, res, next) {
+  const userId = req.body.userId || req.ip;
+  const endpoint = req.path;
+  // Assume status is success for initial request, can be extended for error handling
+  rateLimiter.recordRequest(userId, endpoint, 'success');
+  if (!rateLimiter.isAllowed(userId)) {
+    return res.status(429).json({ success: false, error: 'Rate limit exceeded', limit: rateLimiter.getUserLimit(userId), riskScore: rateLimiter.getUserRiskScore(userId) });
+  }
+  next();
+}
+
+// Apply rate limiting to all compliance routes
+router.use(rateLimitMiddleware);
 
 // Generate GDPR report
 router.post('/gdpr', async (req, res) => {
