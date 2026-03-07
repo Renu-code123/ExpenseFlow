@@ -495,3 +495,58 @@ html{
     transform: translate(-50%, -50%) scale(1.3);
     background: linear-gradient(135deg, #00b4d8 0%, #64ffda 100%) !important;
   }
+/* Dark mode without changing existing colors */
+
+body.dark-mode{
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Fix images & icons */
+body.dark-mode img,
+body.dark-mode video,
+body.dark-mode iframe{
+  filter: invert(1) hue-rotate(180deg);
+}/* ======================
+   THEME VARIABLES
+====================== */
+
+:root{
+  --bg-color:#ffffff;
+  --card-bg:#f8fafc;
+  --text-color:#1e293b;
+  --accent:#22c55e;
+}
+
+[data-theme="dark"]{
+  --bg-color:#0f172a;
+  --card-bg:#1e293b;
+  --text-color:#f1f5f9;
+  --accent:#4ade80;
+}
+
+/* Apply theme */
+
+body{
+  background:var(--bg-color);
+  color:var(--text-color);
+  transition:0.3s;
+}
+
+.balance-card{
+  background:var(--card-bg);
+}
+
+.hero-section{
+  background:linear-gradient(135deg,var(--accent),#15803d);
+}
+
+/* Toggle button */
+
+.theme-toggle{
+  border:none;
+  background:transparent;
+  font-size:18px;
+  cursor:pointer;
+  color:var(--text-color);
+  margin-left:15px;
+}
