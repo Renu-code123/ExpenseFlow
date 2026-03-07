@@ -5,6 +5,7 @@ const reportGenerator = require('../compliance/reportGenerator');
 const scheduler = require('../compliance/scheduler');
 const submissionService = require('../compliance/submissionService');
 const rateLimiter = require('../adaptive/rate-limiter');
+const dlpMiddleware = require('../dlp/dlp-middleware');
 
 function rateLimitMiddleware(req, res, next) {
   const userId = req.body.userId || req.ip;
@@ -19,6 +20,9 @@ function rateLimitMiddleware(req, res, next) {
 
 // Apply rate limiting to all compliance routes
 router.use(rateLimitMiddleware);
+
+// Apply DLP middleware to all compliance routes
+router.use(dlpMiddleware);
 
 // Generate GDPR report
 router.post('/gdpr', async (req, res) => {
